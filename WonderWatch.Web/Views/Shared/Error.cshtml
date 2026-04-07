@@ -1,0 +1,43 @@
+﻿@model WonderWatch.Web.ViewModels.ErrorViewModel
+@{
+    ViewData["Title"] = "System Anomaly";
+    // We do not want this page indexed by search engines
+    ViewData["MetaDescription"] = "An error occurred within the Wonder Watch atelier.";
+}
+
+<section class="min-h-[70vh] flex flex-col items-center justify-center text-center px-[32px] max-w-3xl mx-auto">
+    
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square" class="mb-[32px]">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+    </svg>
+
+    <span class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[16px] block">Error 500</span>
+    
+    <h1 class="font-serif text-[48px] md:text-[64px] text-parchment tracking-[-1.2px] leading-none mb-[24px]">
+        Lost in <span class="italic text-gold">Time</span>
+    </h1>
+    
+    <p class="font-sans text-[14px] text-muted leading-relaxed mb-[32px]">
+        An anomaly has occurred within the continuum. Our artisans have been notified and are currently realigning the mechanism.
+    </p>
+
+    @if (Model != null && Model.ShowRequestId)
+    {
+        <div class="bg-surface border border-white-faint px-[24px] py-[12px] mb-[48px]">
+            <p class="font-mono text-[12px] text-gold-dim">
+                Reference Code: <span class="text-parchment">@Model.RequestId</span>
+            </p>
+        </div>
+    }
+
+    <div class="flex items-center gap-[24px]">
+        <a href="/" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600">
+            Return to Atelier
+        </a>
+        <a href="/contact" class="text-gold font-sans font-bold text-[11px] tracking-[2.2px] uppercase border-b border-gold pb-1 hover:text-parchment hover:border-parchment transition-colors duration-600">
+            Contact Concierge
+        </a>
+    </div>
+
+</section>

@@ -1,0 +1,214 @@
+﻿@model WonderWatch.Web.ViewModels.CatalogIndexViewModel
+@{
+    var selectedBrands = Context.Request.Query["brands"].ToArray();
+    var selectedSize = Context.Request.Query["size"].ToString();
+    var selectedSort = Context.Request.Query["sort"].ToString();
+    var selectedStrap = Context.Request.Query["strap"].ToString();
+    
+    if (string.IsNullOrEmpty(selectedSort)) selectedSort = "newest";
+
+    // Parse current price range or set defaults
+    var minPriceQuery = Context.Request.Query["minPrice"].ToString();
+    var maxPriceQuery = Context.Request.Query["maxPrice"].ToString();
+    int currentMin = string.IsNullOrEmpty(minPriceQuery) ? 5000 : int.Parse(minPriceQuery);
+    int currentMax = string.IsNullOrEmpty(maxPriceQuery) ? 150000 : int.Parse(maxPriceQuery);
+}
+
+<style>
+    /* Dual Range Slider CSS - Bypasses Tailwind JIT for guaranteed rendering */
+    .dual-range {
+        position: relative;
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+        .dual-range input[type=range] {
+            position: absolute;
+            width: 100%;
+            top: -5px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            pointer-events: none;
+            outline: none;
+        }
+
+            .dual-range input[type=range]::-webkit-slider-thumb {
+                pointer-events: all;
+                width: 14px;
+                height: 14px;
+                -webkit-appearance: none;
+                background: #C9A74A;
+                border: 2px solid #0A0A0A;
+                cursor: pointer;
+                border-radius: 0;
+            }
+
+            .dual-range input[type=range]::-moz-range-thumb {
+                pointer-events: all;
+                width: 14px;
+                height: 14px;
+                background: #C9A74A;
+                border: 2px solid #0A0A0A;
+                cursor: pointer;
+                border-radius: 0;
+            }
+</style>
+
+<form method="get" action="/catalog" class="cat-filter-form flex flex-col" style="gap:28px;">
+
+    @* Preserve sort across filter changes *@
+    <input type="hidden" name="sort" value="@selectedSort" class="hidden-sort-input" />
+
+    @* ── BRANDS (Dynamic) ─────────────────────────────────────────────────── *@
+    <div>
+        <span class="block font-sans font-bold text-muted uppercase mb-4"
+              style="font-size:9px; letter-spacing:2.5px;">Brands</span>
+        <div class="flex flex-col" style="gap:12px;">
+            @foreach (var brand in Model.AvailableBrands)
+            {
+                bool isChecked = selectedBrands.Contains(brand);
+                <label class="flex items-center cursor-pointer group" style="gap:12px;">
+                    <span class="relative flex-shrink-0 border transition-colors duration-200"
+                          style="width:16px; height:16px; border-color: @(isChecked ? "#C9A74A" : "rgba(255,255,255,0.18)");">
+                        
+                        <input type="checkbox"
+                               name="brands"
+                               value="@brand"
+                               class="absolute inset-0 opacity-0 w-full h-full cursor-pointer m-0"
+                               style="z-index: 50;"
+                        @(isChecked ? "checked" : "")
+                               onchange="this.nextElementSibling.style.opacity = this.checked ? '1' : '0'; this.parentElement.style.borderColor = this.checked ? '#C9A74A' : 'rgba(255,255,255,0.18)';" />
+                        
+                        <span class="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200"
+                              style="opacity: @(isChecked ? "1" : "0"); background-color: #C9A74A; z-index: 10;">
+                            <svg style="width:10px;height:10px;color:#0A0A0A;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                    </span>
+                    <span class="font-sans text-muted group-hover:text-parchment transition-colors uppercase"
+                          style="font-size:10px; letter-spacing:1.5px;">@brand</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    @* ── PRICE RANGE (Functional Dual Slider) ─── *@
+    <div>
+        <span class="block font-sans font-bold text-muted uppercase mb-3"
+              style="font-size:9px; letter-spacing:2.5px;">Price Range</span>
+        
+        <div class="dual-range">
+            <div id="range-fill" class="absolute h-full bg-gold" style="left: 0%; width: 100%;"></div>
+            <input type="range" name="minPrice" id="minPrice" min="5000" max="150000" step="1000" value="@currentMin">
+            <input type="range" name="maxPrice" id="maxPrice" min="5000" max="150000" step="1000" value="@currentMax">
+        </div>
+        
+        <div class="flex justify-between font-mono text-[10px] text-muted mt-2">
+            <span id="minPriceVal">₹@currentMin.ToString("N0")</span>
+            <span id="maxPriceVal">₹@currentMax.ToString("N0")@(currentMax == 150000 ? "+" : "")</span>
+        </div>
+    </div>
+
+    @* ── STRAP MATERIAL (Functional) ──────────────────────────────────────── *@
+    <div>
+        <span class="block font-sans font-bold text-muted uppercase mb-3"
+              style="font-size:9px; letter-spacing:2.5px;">Strap Material</span>
+        <div class="flex" style="gap:8px;">
+            @foreach (var material in new[] { "Gold", "Steel", "Leather", "Rubber" })
+            {
+                bool isStrapActive = selectedStrap == material.ToLower();
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="strap" value="@material.ToLower()" class="sr-only" @(isStrapActive ? "checked" : "")
+                           onchange="document.querySelectorAll('.cat-strap-box').forEach(b => { b.style.borderColor='rgba(255,255,255,0.18)'; b.style.transform='scale(1)'; }); this.nextElementSibling.style.borderColor='#C9A74A'; this.nextElementSibling.style.transform='scale(1.1)';" />
+                    
+                    <div class="cat-strap-box transition-all duration-300"
+                         style="width:36px; height:36px; border: 1px solid @(isStrapActive ? "#C9A74A" : "rgba(255,255,255,0.18)"); transform: @(isStrapActive ? "scale(1.1)" : "scale(1)"); background-color: @(material == "Gold" ? "#C9A74A" : material == "Steel" ? "#5a5a5a" : material == "Leather" ? "#4a3525" : "#1c1c1c");">
+                    </div>
+                </label>
+            }
+        </div>
+    </div>
+
+    @* ── CASE DIAMETER (Dynamic) ───────────────────────────────────────────── *@
+    <div>
+        <span class="block font-sans font-bold text-muted uppercase mb-3"
+              style="font-size:9px; letter-spacing:2.5px;">Case Diameter</span>
+        <div class="cat-sizes">
+            @foreach (var size in Model.AvailableSizes)
+            {
+                var sizeString = $"{size}MM";
+                bool isActive = selectedSize == sizeString;
+                <label class="relative cursor-pointer block">
+                    <input type="radio" name="size" value="@sizeString" class="sr-only" @(isActive ? "checked" : "")
+                           onchange="document.querySelectorAll('.size-box').forEach(b => { b.style.borderColor='rgba(255,255,255,0.18)'; b.style.color='#B4AFA2'; }); this.nextElementSibling.style.borderColor='#C9A74A'; this.nextElementSibling.style.color='#C9A74A';" />
+                    
+                    <div class="size-box border font-sans uppercase transition-colors text-center"
+                         style="font-size:9px; letter-spacing:1.5px; padding:8px 4px; background:transparent; border-color: @(isActive ? "#C9A74A" : "rgba(255,255,255,0.18)"); color: @(isActive ? "#C9A74A" : "#B4AFA2");">
+                        @sizeString
+                    </div>
+                </label>
+            }
+        </div>
+    </div>
+
+    @* ── APPLY ─────────────────────────────────────────────────────────────── *@
+    <button type="submit"
+            class="w-full font-sans font-bold text-void uppercase transition-colors hover:bg-parchment"
+            style="background:#C9A74A; font-size:11px; letter-spacing:2px; padding:14px; border:none; cursor:pointer; margin-top:4px;">
+        Apply Filters
+    </button>
+
+    @* Clear link *@
+    @if (selectedBrands.Any() || !string.IsNullOrEmpty(selectedSize) || !string.IsNullOrEmpty(selectedStrap) || currentMin > 5000 || currentMax < 150000)
+    {
+        <a href="/catalog" class="text-center font-sans text-muted hover:text-gold transition-colors"
+               style="font-size:10px; letter-spacing:1px; text-decoration:none; margin-top:-8px;">
+            Clear all filters
+        </a>
+    }
+
+</form>
+
+<!-- DUAL SLIDER JAVASCRIPT LOGIC -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const minSlider = document.getElementById('minPrice');
+        const maxSlider = document.getElementById('maxPrice');
+        const rangeFill = document.getElementById('range-fill');
+        const minVal = document.getElementById('minPriceVal');
+        const maxVal = document.getElementById('maxPriceVal');
+
+        if(!minSlider || !maxSlider) return;
+
+        function updateSlider() {
+            let min = parseInt(minSlider.value);
+            let max = parseInt(maxSlider.value);
+            
+            // Prevent sliders from crossing over each other
+            if (min > max) {
+                let tmp = min;
+                min = max;
+                max = tmp;
+            }
+            
+            const minPercent = ((min - minSlider.min) / (minSlider.max - minSlider.min)) * 100;
+            const maxPercent = ((max - maxSlider.min) / (maxSlider.max - maxSlider.min)) * 100;
+            
+            rangeFill.style.left = minPercent + '%';
+            rangeFill.style.width = (maxPercent - minPercent) + '%';
+            
+            minVal.textContent = '₹' + min.toLocaleString('en-IN');
+            maxVal.textContent = '₹' + max.toLocaleString('en-IN') + (max == maxSlider.max ? '+' : '');
+        }
+
+        minSlider.addEventListener('input', updateSlider);
+        maxSlider.addEventListener('input', updateSlider);
+        
+        // Initialize on load
+        updateSlider();
+    });
+</script>

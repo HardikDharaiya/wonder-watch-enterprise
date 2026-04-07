@@ -1,0 +1,166 @@
+@{
+    Layout = "_Layout";
+
+    // Local function to determine active navigation state
+    string GetActiveClasses(string action, string controller = "Vault")
+    {
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+
+        if (string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase))
+        {
+            return "bg-[rgba(201,167,74,0.1)] border-r-2 border-gold text-gold font-bold";
+        }
+        return "text-[rgba(255,255,255,0.6)] font-normal hover:bg-white-faint hover:text-parchment border-r-2 border-transparent";
+    }
+}
+
+<div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row min-h-[calc(100vh-131px)] relative">
+    
+    <!-- MOBILE TOGGLE BAR (Visible only on small screens) -->
+    <div class="md:hidden flex items-center justify-between p-[24px] border-b border-white-faint bg-surface sticky top-[131px] z-[30]">
+        <span class="font-sans font-bold text-[12px] text-gold tracking-[2px] uppercase">Vault Menu</span>
+        <button id="vault-sidebar-toggle" aria-label="Toggle Vault Menu" class="text-parchment hover:text-gold transition-colors focus:outline-none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- MOBILE BACKDROP -->
+    <div id="vault-sidebar-backdrop" class="fixed inset-0 bg-void/80 backdrop-blur-sm z-[40] hidden md:hidden transition-opacity duration-600 opacity-0 pointer-events-none"></div>
+
+    <!-- VAULT SIDEBAR (288px Wide) -->
+    <aside id="vault-sidebar" class="fixed md:static top-[131px] left-0 w-[288px] h-[calc(100vh-131px)] md:h-auto bg-void md:bg-transparent border-r border-white-faint py-[24px] px-[24px] flex flex-col z-[50] transform -translate-x-full md:translate-x-0 transition-transform duration-600 overflow-y-auto flex-shrink-0">
+        
+        <div class="flex items-center justify-between mb-4 px-[16px]">
+            <h3 class="text-[10px] font-sans font-bold tracking-[2px] text-muted/40 uppercase">
+                Account Access
+            </h3>
+            <button id="vault-sidebar-close" class="md:hidden text-muted hover:text-gold transition-colors focus:outline-none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="flex flex-col gap-[4px] flex-grow">
+            
+            <a href="/Vault" class="flex items-center gap-3 py-[12px] px-[16px] text-[14px] tracking-[0.35px] transition-colors duration-600 @GetActiveClasses("Index")">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                DASHBOARD
+            </a>
+
+            <a href="/Vault/Orders" class="flex items-center gap-3 py-[12px] px-[16px] text-[14px] tracking-[0.35px] transition-colors duration-600 @GetActiveClasses("Orders")">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+                MY ORDERS
+            </a>
+
+            <a href="/Vault/Wishlist" class="flex items-center gap-3 py-[12px] px-[16px] text-[14px] tracking-[0.35px] transition-colors duration-600 @GetActiveClasses("Wishlist")">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+                </svg>
+                WISHLIST
+            </a>
+
+            <a href="/Vault/Profile" class="flex items-center gap-3 py-[12px] px-[16px] text-[14px] tracking-[0.35px] transition-colors duration-600 @GetActiveClasses("Profile")">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                PROFILE SETTINGS
+            </a>
+
+            <a href="/Vault/Addresses" class="flex items-center gap-3 py-[12px] px-[16px] text-[14px] tracking-[0.35px] transition-colors duration-600 @GetActiveClasses("Addresses")">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                ADDRESSES
+            </a>
+
+            <a href="/Vault/Notifications" class="flex items-center gap-3 py-[12px] px-[16px] text-[14px] tracking-[0.35px] transition-colors duration-600 @GetActiveClasses("Notifications")">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                NOTIFICATIONS
+            </a>
+
+        </nav>
+
+        <!-- EXACTLY ONE SIGN OUT FORM -->
+        <div class="mt-auto pt-4 border-t border-white-faint">
+            <form asp-controller="Account" asp-action="Logout" method="post" class="w-full">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="w-full flex items-center gap-3 py-[12px] px-[16px] text-[14px] font-sans font-bold text-[rgba(248,113,113,0.8)] hover:bg-white-faint transition-colors duration-600 text-left focus:outline-none">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    SIGN OUT
+                </button>
+            </form>
+        </div>
+
+    </aside>
+
+    <!-- VAULT MAIN CONTENT -->
+    <div class="flex-grow p-[24px] md:pl-[48px] md:py-[32px] md:pr-[24px] w-full overflow-x-hidden">
+        @RenderBody()
+    </div>
+
+</div>
+
+<!-- VAULT SIDEBAR INTERACTIVITY SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebarToggle = document.getElementById('vault-sidebar-toggle');
+        const sidebarClose = document.getElementById('vault-sidebar-close');
+        const sidebar = document.getElementById('vault-sidebar');
+        const backdrop = document.getElementById('vault-sidebar-backdrop');
+
+        const openSidebar = () => {
+            sidebar.classList.remove('-translate-x-full');
+            backdrop.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                backdrop.classList.add('opacity-100');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeSidebar = () => {
+            sidebar.classList.add('-translate-x-full');
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+            }, 600); // Match transition duration
+            document.body.style.overflow = '';
+        };
+
+        if (sidebarToggle) sidebarToggle.addEventListener('click', openSidebar);
+        if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
+        if (backdrop) backdrop.addEventListener('click', closeSidebar);
+    });
+</script>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

@@ -1,0 +1,209 @@
+@{
+    ViewData["Title"] = "The Houses of Horology";
+    ViewData["MetaDescription"] = "Explore Wonder Watch's curated collections by the world's most prestigious horological houses.";
+}
+
+<!-- PAGE HEADER (Unbreakable Layout using Inline Styles for Spacing & Watermark) -->
+<section class="relative w-full border-b border-white-faint bg-void overflow-hidden flex flex-col items-center justify-center text-center" style="min-height: 55vh; padding-top: 180px; padding-bottom: 80px;">
+    
+    <!-- Giant XII Watermark (Fixed Opacity and Z-Index using inline styles to bypass JIT compiler issues) -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none" style="z-index: 0;">
+        <span class="font-serif leading-none tracking-tighter" style="font-size: clamp(200px, 35vw, 450px); color: rgba(255,255,255,0.03); transform: translateY(10px);">XII</span>
+    </div>
+
+    <!-- Text Content (Elevated to z-10) -->
+    <div class="relative flex flex-col items-center" style="z-index: 10;">
+        <span class="font-sans font-bold text-[10px] text-gold tracking-[3.3px] uppercase mb-[24px] block drop-shadow-md">Home / Collections</span>
+        <h1 class="font-serif-italic text-[48px] md:text-[64px] lg:text-[80px] text-parchment tracking-[-1.2px] leading-[1.1] mb-[24px] drop-shadow-lg">
+            The Houses of Horology.
+        </h1>
+        <p class="font-sans text-[16px] text-muted leading-relaxed drop-shadow-md">
+            Five centuries of craft. One curated destination.
+        </p>
+    </div>
+</section>
+
+<!-- THE HOUSES GRID -->
+<section class="py-[96px] px-[32px] md:px-[64px] max-w-[1440px] mx-auto bg-void">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-[32px]">
+        
+        <!-- HOUSE 01: ROLEX -->
+        <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 flex flex-col relative overflow-hidden">
+            <!-- Image Header -->
+            <div class="w-full aspect-[16/9] bg-surface-alt relative overflow-hidden flex items-center justify-center p-[48px]">
+                <img src="/images/collections/deep-sea.webp" alt="Rolex Collection" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl opacity-80" loading="lazy" onerror="this.src='/images/placeholder.webp'" />
+                <div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600 pointer-events-none"></div>
+            </div>
+            <!-- Content Footer -->
+            <div class="p-[32px] border-t border-white-faint flex flex-col sm:flex-row sm:items-end justify-between gap-[24px] bg-surface relative z-10">
+                <div>
+                    <h2 class="font-serif text-[24px] md:text-[30px] text-parchment tracking-[-0.5px] leading-tight mb-[8px]">
+                        <span class="font-sans font-bold uppercase tracking-[1px] text-[20px] md:text-[24px]">ROLEX</span> &mdash; "The Crown Collection"
+                    </h2>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">48 References</span>
+                </div>
+                <a href="/catalog?searchQuery=rolex" class="inline-flex items-center justify-center gap-[8px] border border-white-faint text-muted font-sans font-bold text-[10px] tracking-[2px] uppercase px-[24px] py-[12px] group-hover:border-gold group-hover:text-gold transition-colors duration-300 whitespace-nowrap">
+                    Explore &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- HOUSE 02: PATEK PHILIPPE -->
+        <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 flex flex-col relative overflow-hidden">
+            <!-- Image Header -->
+            <div class="w-full aspect-[16/9] bg-surface-alt relative overflow-hidden flex items-center justify-center p-[48px]">
+                <img src="/images/collections/legacy-gold.webp" alt="Patek Philippe Collection" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl opacity-80" loading="lazy" onerror="this.src='/images/placeholder.webp'" />
+                <div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600 pointer-events-none"></div>
+            </div>
+            <!-- Content Footer -->
+            <div class="p-[32px] border-t border-white-faint flex flex-col sm:flex-row sm:items-end justify-between gap-[24px] bg-surface relative z-10">
+                <div>
+                    <h2 class="font-serif text-[24px] md:text-[30px] text-parchment tracking-[-0.5px] leading-tight mb-[8px]">
+                        <span class="font-sans font-bold uppercase tracking-[1px] text-[20px] md:text-[24px]">PATEK PHILIPPE</span> &mdash; "Perpetual Complications"
+                    </h2>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">32 References</span>
+                </div>
+                <a href="/catalog?searchQuery=patek" class="inline-flex items-center justify-center gap-[8px] border border-white-faint text-muted font-sans font-bold text-[10px] tracking-[2px] uppercase px-[24px] py-[12px] group-hover:border-gold group-hover:text-gold transition-colors duration-300 whitespace-nowrap">
+                    Explore &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- HOUSE 03: AUDEMARS PIGUET -->
+        <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 flex flex-col relative overflow-hidden">
+            <!-- Image Header -->
+            <div class="w-full aspect-[16/9] bg-surface-alt relative overflow-hidden flex items-center justify-center p-[48px]">
+                <img src="/images/collections/void-series.webp" alt="Audemars Piguet Collection" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl opacity-80" loading="lazy" onerror="this.src='/images/placeholder.webp'" />
+                <div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600 pointer-events-none"></div>
+            </div>
+            <!-- Content Footer -->
+            <div class="p-[32px] border-t border-white-faint flex flex-col sm:flex-row sm:items-end justify-between gap-[24px] bg-surface relative z-10">
+                <div>
+                    <h2 class="font-serif text-[24px] md:text-[30px] text-parchment tracking-[-0.5px] leading-tight mb-[8px]">
+                        <span class="font-sans font-bold uppercase tracking-[1px] text-[20px] md:text-[24px]">AUDEMARS PIGUET</span> &mdash; "The Royal Atelier"
+                    </h2>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">28 References</span>
+                </div>
+                <a href="/catalog?searchQuery=audemars" class="inline-flex items-center justify-center gap-[8px] border border-white-faint text-muted font-sans font-bold text-[10px] tracking-[2px] uppercase px-[24px] py-[12px] group-hover:border-gold group-hover:text-gold transition-colors duration-300 whitespace-nowrap">
+                    Explore &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- HOUSE 04: VACHERON CONSTANTIN -->
+        <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 flex flex-col relative overflow-hidden">
+            <!-- Image Header -->
+            <div class="w-full aspect-[16/9] bg-surface-alt relative overflow-hidden flex items-center justify-center p-[48px]">
+                <img src="/images/about/material-gold.webp" alt="Vacheron Constantin Collection" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl opacity-80" loading="lazy" onerror="this.src='/images/placeholder.webp'" />
+                <div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600 pointer-events-none"></div>
+            </div>
+            <!-- Content Footer -->
+            <div class="p-[32px] border-t border-white-faint flex flex-col sm:flex-row sm:items-end justify-between gap-[24px] bg-surface relative z-10">
+                <div>
+                    <h2 class="font-serif text-[24px] md:text-[30px] text-parchment tracking-[-0.5px] leading-tight mb-[8px]">
+                        <span class="font-sans font-bold uppercase tracking-[1px] text-[20px] md:text-[24px]">VACHERON CONSTANTIN</span> &mdash; "Patrimony & Beyond"
+                    </h2>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">19 References</span>
+                </div>
+                <a href="/catalog?searchQuery=vacheron" class="inline-flex items-center justify-center gap-[8px] border border-white-faint text-muted font-sans font-bold text-[10px] tracking-[2px] uppercase px-[24px] py-[12px] group-hover:border-gold group-hover:text-gold transition-colors duration-300 whitespace-nowrap">
+                    Explore &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- HOUSE 05: WONDER WATCH ORIGINALS -->
+        <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 flex flex-col relative overflow-hidden">
+            
+            <!-- Exclusive Badge -->
+            <div class="absolute top-[24px] left-[24px] z-20 bg-gold text-void font-sans font-bold text-[9px] tracking-[1px] uppercase px-[12px] py-[6px] flex items-center gap-[6px]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Exclusive
+            </div>
+
+            <!-- Image Header -->
+            <div class="w-full aspect-[16/9] bg-surface-alt relative overflow-hidden flex items-center justify-center p-[48px]">
+                <img src="/images/about/material-titanium.webp" alt="Wonder Watch Originals" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl opacity-80" loading="lazy" onerror="this.src='/images/placeholder.webp'" />
+                <div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600 pointer-events-none"></div>
+            </div>
+            <!-- Content Footer -->
+            <div class="p-[32px] border-t border-white-faint flex flex-col sm:flex-row sm:items-end justify-between gap-[24px] bg-surface relative z-10">
+                <div>
+                    <h2 class="font-serif text-[24px] md:text-[30px] text-parchment tracking-[-0.5px] leading-tight mb-[8px]">
+                        <span class="font-sans font-bold uppercase tracking-[1px] text-[20px] md:text-[24px]">WONDER WATCH</span> &mdash; "In-House Creations"
+                    </h2>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">12 References</span>
+                </div>
+                <a href="/catalog?searchQuery=wonder" class="inline-flex items-center justify-center gap-[8px] border border-white-faint text-muted font-sans font-bold text-[10px] tracking-[2px] uppercase px-[24px] py-[12px] group-hover:border-gold group-hover:text-gold transition-colors duration-300 whitespace-nowrap">
+                    Explore &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- HOUSE 06: PRE-OWNED -->
+        <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 flex flex-col relative overflow-hidden">
+            
+            <!-- Certified Badge -->
+            <div class="absolute top-[24px] left-[24px] z-20 bg-gold text-void font-sans font-bold text-[9px] tracking-[1px] uppercase px-[12px] py-[6px] flex items-center gap-[6px]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Certified
+            </div>
+
+            <!-- Image Header -->
+            <div class="w-full aspect-[16/9] bg-surface-alt relative overflow-hidden flex items-center justify-center p-[48px]">
+                <img src="/images/about/material-carbon.webp" alt="Pre-Owned Collection" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 drop-shadow-2xl opacity-80" loading="lazy" onerror="this.src='/images/placeholder.webp'" />
+                <div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-600 pointer-events-none"></div>
+            </div>
+            <!-- Content Footer -->
+            <div class="p-[32px] border-t border-white-faint flex flex-col sm:flex-row sm:items-end justify-between gap-[24px] bg-surface relative z-10">
+                <div>
+                    <h2 class="font-serif text-[24px] md:text-[30px] text-parchment tracking-[-0.5px] leading-tight mb-[8px]">
+                        <span class="font-sans font-bold uppercase tracking-[1px] text-[20px] md:text-[24px]">PRE-OWNED</span> &mdash; "Authenticated Rarities"
+                    </h2>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">67 References</span>
+                </div>
+                <a href="/catalog?searchQuery=preowned" class="inline-flex items-center justify-center gap-[8px] border border-white-faint text-muted font-sans font-bold text-[10px] tracking-[2px] uppercase px-[24px] py-[12px] group-hover:border-gold group-hover:text-gold transition-colors duration-300 whitespace-nowrap">
+                    Explore &rarr;
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- GOLD KPI BANNER -->
+<section class="w-full bg-gold border-y border-white-faint text-void">
+    <div class="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-void/20">
+        
+        <div class="py-[48px] px-[32px] flex flex-col items-center justify-center text-center">
+            <span class="font-sans font-bold text-[48px] tracking-[-2px] leading-none mb-[8px]">240+</span>
+            <span class="font-sans font-bold text-[10px] tracking-[3px] uppercase">References</span>
+        </div>
+
+        <div class="py-[48px] px-[32px] flex flex-col items-center justify-center text-center">
+            <span class="font-sans font-bold text-[48px] tracking-[-2px] leading-none mb-[8px]">5</span>
+            <span class="font-sans font-bold text-[10px] tracking-[3px] uppercase">Prestigious Brands</span>
+        </div>
+
+        <div class="py-[48px] px-[32px] flex flex-col items-center justify-center text-center">
+            <span class="font-sans font-bold text-[48px] tracking-[-2px] leading-none mb-[8px]">100%</span>
+            <span class="font-sans font-bold text-[10px] tracking-[3px] uppercase">Authenticated</span>
+        </div>
+
+    </div>
+</section>
+
+<!-- DARK MARQUEE TICKER -->
+<div class="w-full bg-void py-[16px] overflow-hidden flex whitespace-nowrap border-b border-white-faint">
+    <div class="js-marquee flex items-center font-sans font-bold text-[12px] text-gold tracking-[2px] uppercase opacity-50">
+        <span class="mx-[32px]">ROLEX</span> &middot;
+        <span class="mx-[32px]">PATEK PHILIPPE</span> &middot;
+        <span class="mx-[32px]">AUDEMARS PIGUET</span> &middot;
+        <span class="mx-[32px]">VACHERON CONSTANTIN</span> &middot;
+        <span class="mx-[32px]">WONDER WATCH ORIGINALS</span> &middot;
+        <span class="mx-[32px]">PRE-OWNED CERTIFIED</span> &middot;
+        <span class="mx-[32px]">ROLEX</span> &middot;
+        <span class="mx-[32px]">PATEK PHILIPPE</span> &middot;
+        <span class="mx-[32px]">AUDEMARS PIGUET</span> &middot;
+        <span class="mx-[32px]">VACHERON CONSTANTIN</span> &middot;
+    </div>
+</div>

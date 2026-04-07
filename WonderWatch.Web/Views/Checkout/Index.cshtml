@@ -1,0 +1,158 @@
+@model WonderWatch.Web.ViewModels.CheckoutIndexViewModel
+@{
+    ViewData["Title"] = "Secure Checkout";
+    ViewData["MetaDescription"] = "Complete your acquisition securely. Wonder Watch ensures encrypted transactions and insured delivery.";
+}
+
+<section class="pt-[131px] min-h-screen bg-void border-b border-white-faint pb-[96px]">
+    <div class="max-w-7xl mx-auto px-[32px] md:px-[64px] mt-[48px]">
+        
+        <div class="mb-[48px]">
+            <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Secure Checkout</h1>
+            <p class="font-sans text-[14px] text-muted">Please provide your shipping details to complete the acquisition.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-[64px]">
+            
+            <!-- LEFT COLUMN: FORM -->
+            <div class="lg:col-span-7">
+                <form id="checkout-form" class="flex flex-col gap-[32px]">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- Contact Information -->
+                    <div class="bg-surface border border-white-faint p-[32px]">
+                        <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px]">Contact Information</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                            <div class="md:col-span-2">
+                                <label for="FullName" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Full Name</label>
+                                <input type="text" id="FullName" name="FullName" value="@Model.FullName" readonly
+                                       class="w-full bg-surface-alt border border-white-faint text-muted font-sans text-[14px] px-[16px] py-[12px] rounded-none cursor-not-allowed" />
+                            </div>
+                            <div>
+                                <label for="Email" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Email Address</label>
+                                <input type="email" id="Email" name="Email" value="@Model.Email" readonly
+                                       class="w-full bg-surface-alt border border-white-faint text-muted font-sans text-[14px] px-[16px] py-[12px] rounded-none cursor-not-allowed" />
+                            </div>
+                            <div>
+                                <label for="Phone" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="Phone" name="Phone" value="@Model.Phone" required
+                                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Address -->
+                    <div class="bg-surface border border-white-faint p-[32px]">
+                        <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px]">Shipping Address</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                            <div class="md:col-span-2">
+                                <label for="Line1" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Address Line 1 <span class="text-danger">*</span></label>
+                                <input type="text" id="Line1" name="Line1" required placeholder="Street address, P.O. box, company name"
+                                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="Line2" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Address Line 2</label>
+                                <input type="text" id="Line2" name="Line2" placeholder="Apartment, suite, unit, building, floor, etc."
+                                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            </div>
+                            <div>
+                                <label for="City" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">City <span class="text-danger">*</span></label>
+                                <input type="text" id="City" name="City" required
+                                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            </div>
+                            <div>
+                                <label for="State" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">State / Province <span class="text-danger">*</span></label>
+                                <input type="text" id="State" name="State" required
+                                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            </div>
+                            <div>
+                                <label for="PinCode" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Postal / Zip Code <span class="text-danger">*</span></label>
+                                <input type="text" id="PinCode" name="PinCode" required
+                                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            </div>
+                            <div>
+                                <label class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Country</label>
+                                <input type="text" value="India" readonly
+                                       class="w-full bg-surface-alt border border-white-faint text-muted font-sans text-[14px] px-[16px] py-[12px] rounded-none cursor-not-allowed" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Message Container -->
+                    <div id="checkout-error" class="hidden bg-[rgba(127,29,29,0.2)] border border-danger/50 text-danger font-sans text-[14px] p-[16px] rounded-none">
+                        <!-- Error text injected via JS -->
+                    </div>
+
+                    <button type="submit" id="btn-pay-now" class="w-full bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[20px] hover:bg-parchment transition-colors duration-600 flex items-center justify-center gap-[12px] focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                        <span>Place Order & Pay</span>
+                        <svg id="btn-spinner" class="animate-spin hidden h-5 w-5 text-void" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="flex items-center justify-center gap-[8px] text-muted">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span class="font-sans text-[11px] tracking-[1px] uppercase">Encrypted & Secure Transaction</span>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- RIGHT COLUMN: ORDER SUMMARY -->
+            <div class="lg:col-span-5">
+                <div class="bg-surface border border-white-faint p-[32px] sticky top-[163px]">
+                    <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[32px]">Order Summary</h2>
+                    
+                    <div class="flex flex-col gap-[24px] mb-[32px] max-h-[400px] overflow-y-auto pr-[8px]">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="flex gap-[16px]">
+                                <div class="w-[80px] h-[100px] bg-surface-alt border border-white-faint p-[8px] flex-shrink-0">
+                                    <img src="@item.ImageUrl" alt="@item.WatchName" class="w-full h-full object-contain drop-shadow-lg" />
+                                </div>
+                                <div class="flex flex-col justify-center flex-grow">
+                                    <span class="font-sans font-bold text-[9px] text-gold tracking-[2px] uppercase mb-[4px]">@item.Brand</span>
+                                    <span class="font-sans font-medium text-[14px] text-parchment leading-tight mb-[8px] line-clamp-2">@item.WatchName</span>
+                                    <div class="flex items-center justify-between mt-auto">
+                                        <span class="font-sans text-[12px] text-muted">Qty: @item.Quantity</span>
+                                        <span class="font-sans font-bold text-[14px] text-parchment">@item.TotalFormatted</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="border-t border-white-faint pt-[24px] flex flex-col gap-[12px]">
+                        <div class="flex justify-between items-center">
+                            <span class="font-sans text-[14px] text-muted">Subtotal</span>
+                            <span class="font-sans font-bold text-[14px] text-parchment">@Model.SubtotalFormatted</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-sans text-[14px] text-muted">Insured Shipping</span>
+                            <span class="font-sans font-bold text-[14px] text-parchment">Complimentary</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-[12px] pt-[24px] border-t border-white-faint">
+                            <span class="font-sans font-bold text-[14px] text-parchment uppercase tracking-[1px]">Total</span>
+                            <span class="font-sans font-bold text-[24px] text-gold tracking-[-0.45px]">@Model.SubtotalFormatted</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <!-- Razorpay SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Custom Checkout Logic -->
+    <script src="~/js/checkout.js" type="module" asp-append-version="true"></script>
+}

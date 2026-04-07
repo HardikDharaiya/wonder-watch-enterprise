@@ -1,0 +1,154 @@
+@model WonderWatch.Web.ViewModels.WatchDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["MetaDescription"] = Model.Description;
+    
+    // Server-side mobile check for Three.js initialization logic
+    var userAgent = Context.Request.Headers["User-Agent"].ToString().ToLower();
+    var isMobile = userAgent.Contains("mobi") || userAgent.Contains("android") || userAgent.Contains("iphone");
+}
+
+<section class="pt-[131px] min-h-screen bg-void border-b border-white-faint">
+    <div class="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-2">
+        
+        <!-- LEFT COLUMN: 3D VIEWER / IMAGE GALLERY -->
+        <div class="relative w-full h-[60vh] lg:h-[calc(100vh-131px)] bg-surface-alt border-r border-white-faint flex flex-col items-center justify-center overflow-hidden group">
+            
+            @if (isMobile || string.IsNullOrEmpty(Model.GlbAssetPath))
+            {
+                <!-- Mobile / No-3D Fallback -->
+                <img src="@Model.ImageUrls.FirstOrDefault()" alt="@Model.Name" class="w-full h-full object-contain p-[32px] drop-shadow-2xl" />
+            }
+            else
+            {
+                <!-- Desktop 3D Canvas -->
+                <canvas id="three-canvas"
+                        data-model-path="@Model.GlbAssetPath"
+                        data-mobile="@isMobile.ToString().ToLower()"
+                        class="w-full h-full cursor-move outline-none"
+                        aria-label="Interactive 3D model of @Model.Name. Use mouse to rotate and zoom.">
+                </canvas>
+                
+                <!-- 3D Viewer Controls Overlay -->
+                <div class="absolute bottom-[32px] left-1/2 transform -translate-x-1/2 flex items-center gap-[16px] bg-[rgba(10,10,10,0.8)] backdrop-blur-[4px] border border-white-faint px-[24px] py-[12px] opacity-0 group-hover:opacity-100 transition-opacity duration-600 z-10">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="2" stroke-linecap="square">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.44-5.44" />
+                    </svg>
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">Drag to Rotate &middot; Scroll to Zoom</span>
+                    <button id="reset-camera-btn" class="ml-[16px] font-sans font-bold text-[10px] text-parchment tracking-[2px] uppercase hover:text-gold transition-colors focus:outline-none">
+                        Reset
+                    </button>
+                </div>
+            }
+
+            <noscript>
+                <img src="@Model.ImageUrls.FirstOrDefault()" alt="@Model.Name" class="absolute inset-0 w-full h-full object-contain p-[32px] bg-surface-alt z-20" />
+            </noscript>
+        </div>
+
+        <!-- RIGHT COLUMN: PRODUCT DETAILS -->
+        <div class="p-[32px] md:p-[64px] lg:p-[96px] flex flex-col justify-center lg:min-h-[calc(100vh-131px)]">
+            
+            <!-- Breadcrumb -->
+            <nav class="flex items-center gap-[8px] mb-[32px]">
+                <a href="/catalog" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">Catalog</a>
+                <span class="text-muted text-[10px]">&slash;</span>
+                <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">@Model.Brand</span>
+            </nav>
+
+            <!-- Header -->
+            <div class="mb-[48px]">
+                <h1 class="font-serif text-[48px] md:text-[64px] text-parchment tracking-[-1.2px] leading-[1.1] mb-[16px]">@Model.Name</h1>
+                <div class="flex items-center gap-[16px]">
+                    <span class="font-mono text-[14px] text-muted">REF: @Model.ReferenceNumber</span>
+                    @if (Model.IsSoldOut)
+                    {
+                        <span class="bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px]">
+                            Sold Out
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <!-- Price -->
+            <div class="mb-[48px] pb-[48px] border-b border-white-faint">
+                <span class="font-sans font-bold text-[24px] md:text-[30px] text-gold tracking-[-1.5px]">@Model.PriceFormatted</span>
+                <span class="font-sans text-[12px] text-muted block mt-[8px]">Inclusive of all taxes. Free secure shipping within India.</span>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-[48px]">
+                <p class="font-sans text-[14px] text-body leading-relaxed">
+                    @Model.Description
+                </p>
+            </div>
+
+            <!-- Specifications Grid -->
+            <div class="grid grid-cols-2 gap-[32px] mb-[64px]">
+                <div>
+                    <span class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase block mb-[8px]">Case Size</span>
+                    <span class="font-sans text-[16px] text-parchment">@(Model.CaseSize)mm</span>
+                </div>
+                <div>
+                    <span class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase block mb-[8px]">Movement</span>
+                    <span class="font-sans text-[16px] text-parchment">@Model.MovementType</span>
+                </div>
+                <div>
+                    <span class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase block mb-[8px]">Material</span>
+                    <span class="font-sans text-[16px] text-parchment">Proprietary Alloy</span>
+                </div>
+                <div>
+                    <span class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase block mb-[8px]">Availability</span>
+                    <span class="font-sans text-[16px] text-parchment">@(Model.IsSoldOut ? "Unavailable" : "In Stock")</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row items-center gap-[16px]">
+                @if (Model.IsSoldOut)
+                {
+                    <button disabled class="w-full sm:w-auto flex-grow bg-surface border border-white-faint text-muted font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[20px] cursor-not-allowed text-center">
+                        Out of Stock
+                    </button>
+                }
+                else
+                {
+                    <button type="button" data-watch-id="@Model.Id" class="js-add-to-cart w-full sm:w-auto flex-grow bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[20px] hover:bg-parchment transition-colors duration-600 text-center focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                        Acquire Timepiece
+                    </button>
+                }
+
+                <button type="button" data-watch-id="@Model.Id" class="js-toggle-wishlist w-full sm:w-auto flex-shrink-0 border border-gold text-gold font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[20px] hover:bg-[rgba(201,167,74,0.1)] transition-colors duration-600 flex items-center justify-center gap-[12px] focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" class="wishlist-icon">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+                    </svg>
+                    <span class="wishlist-text">Wishlist</span>
+                </button>
+            </div>
+
+            <!-- Concierge Note -->
+            <div class="mt-[48px] pt-[32px] border-t border-white-faint flex items-start gap-[16px]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1.5" stroke-linecap="square" class="flex-shrink-0 mt-1">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
+                </svg>
+                <p class="font-sans text-[12px] text-muted leading-relaxed">
+                    Need assistance? Our Chief Curator is available for private consultations regarding this reference. <a href="/contact" class="text-gold hover:text-parchment transition-colors border-b border-gold/30 hover:border-parchment">Contact Concierge</a>.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <!-- Three.js and DRACOLoader dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Custom 3D Viewer Logic -->
+    <script src="~/js/viewer.js" type="module" asp-append-version="true"></script>
+}
