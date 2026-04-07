@@ -1,0 +1,94 @@
+@model WonderWatch.Web.ViewModels.VaultNotificationsViewModel
+@{
+    Layout = "_VaultLayout";
+    ViewData["Title"] = "Notification Preferences";
+}
+
+<div class="mb-[48px]">
+    <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Notifications</h1>
+    <p class="font-sans text-[14px] text-muted">Manage how the Wonder Watch atelier communicates with you.</p>
+</div>
+
+<div class="max-w-4xl">
+    <form action="#" method="post" class="flex flex-col gap-[32px]">
+        @Html.AntiForgeryToken()
+
+        <!-- ORDER UPDATES -->
+        <div class="bg-surface border border-white-faint p-[32px] md:p-[48px]">
+            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Acquisition Updates</h2>
+            
+            <div class="flex flex-col gap-[24px]">
+                <div class="flex items-center justify-between gap-[24px]">
+                    <div>
+                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Order Status (Email)</span>
+                        <span class="font-sans text-[12px] text-muted">Receive updates when your timepiece is processing, shipped, and delivered.</span>
+                    </div>
+                    <!-- Sharp Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input type="checkbox" name="OrderEmail" value="true" class="sr-only peer" checked>
+                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
+                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
+                    </label>
+                </div>
+
+                <div class="w-full h-[1px] bg-white-faint"></div>
+
+                <div class="flex items-center justify-between gap-[24px]">
+                    <div>
+                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Delivery Alerts (SMS)</span>
+                        <span class="font-sans text-[12px] text-muted">Real-time text messages on the day of delivery.</span>
+                    </div>
+                    <!-- Sharp Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input type="checkbox" name="OrderSms" value="true" class="sr-only peer" checked>
+                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
+                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXCLUSIVE ACCESS -->
+        <div class="bg-surface border border-white-faint p-[32px] md:p-[48px]">
+            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">The Vault Exclusives</h2>
+            
+            <div class="flex flex-col gap-[24px]">
+                <div class="flex items-center justify-between gap-[24px]">
+                    <div>
+                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">New Reference Announcements</span>
+                        <span class="font-sans text-[12px] text-muted">Be the first to know when a new horological masterpiece enters the catalog.</span>
+                    </div>
+                    <!-- Sharp Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input type="checkbox" name="MarketingEmail" value="true" class="sr-only peer" checked>
+                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
+                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
+                    </label>
+                </div>
+
+                <div class="w-full h-[1px] bg-white-faint"></div>
+
+                <div class="flex items-center justify-between gap-[24px]">
+                    <div>
+                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Concierge Communications</span>
+                        <span class="font-sans text-[12px] text-muted">Direct messages from our Chief Curator regarding your wishlist or bespoke requests.</span>
+                    </div>
+                    <!-- Sharp Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input type="checkbox" name="ConciergeEmail" value="true" class="sr-only peer" checked>
+                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
+                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex justify-end mt-[16px]">
+            <button type="submit" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[48px] py-[20px] hover:bg-parchment transition-colors duration-600 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                Save Preferences
+            </button>
+        </div>
+
+    </form>
+</div>

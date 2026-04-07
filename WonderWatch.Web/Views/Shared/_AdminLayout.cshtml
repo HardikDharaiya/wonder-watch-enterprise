@@ -1,0 +1,129 @@
+@{
+    Layout = null; // Standalone layout
+
+    // Local function to determine active navigation state
+    string GetActiveClasses(string controller, string action = "Index")
+    {
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+        if (string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+            (string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase) || action == "Any"))
+        {
+            return "bg-[rgba(201,167,74,0.1)] border-l-2 border-gold text-gold";
+        }
+        return "text-gold-dim hover:bg-white-faint hover:text-parchment border-l-2 border-transparent";
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en" class="bg-void text-parchment antialiased">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Wonder Watch Admin</title>
+    <link rel="stylesheet" href="~/css/global.css" asp-append-version="true" />
+</head>
+<body class="min-h-screen flex selection:bg-gold selection:text-void">
+
+    <!-- ADMIN SIDEBAR (256px Wide, Fixed) -->
+    <aside class="fixed top-0 left-0 w-[256px] h-screen bg-surface border-r border-gold-faint flex flex-col z-50">
+        
+        <!-- Top Header -->
+        <div class="p-[32px] border-b border-[rgba(201,167,74,0.1)] flex items-center gap-[12px]">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                <rect width="48" height="48" fill="transparent" />
+                <path d="M12 16L24 36L36 16M18 16L24 26L30 16" stroke="#C9A74A" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" />
+            </svg>
+            <div class="flex flex-col">
+                <span class="font-sans font-bold text-[18px] text-gold tracking-[1.8px] leading-none">Wonder</span>
+                <span class="font-sans font-normal text-[10px] text-gold-dim tracking-[2px] mt-1 leading-none">ADMIN PANEL</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex flex-col gap-[8px] py-[32px] flex-grow overflow-y-auto">
+            
+            <a href="/Admin" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Index")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                DASHBOARD
+            </a>
+
+            <a href="/Admin/Watches" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Watches")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <circle cx="12" cy="12" r="7" />
+                    <polyline points="12 9 12 12 13.5 13.5" />
+                    <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83" />
+                </svg>
+                WATCHES
+            </a>
+
+            <a href="/Admin/Orders" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Orders")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+                ORDERS
+            </a>
+
+            <a href="/Admin/Reviews" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Reviews")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                REVIEWS
+            </a>
+
+            <a href="/Admin/Settings" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Settings")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                SETTINGS
+            </a>
+
+            <!-- Sign Out -->
+            <div class="mt-4">
+                <form asp-controller="Account" asp-action="Logout" method="post" class="w-full">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="w-full flex items-center gap-3 py-[8px] px-[16px] text-[12px] font-sans font-bold text-[rgba(248,113,113,0.8)] tracking-[1.2px] uppercase hover:bg-white-faint transition-colors duration-600 text-left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        SIGN OUT
+                    </button>
+                </form>
+            </div>
+
+        </nav>
+
+        <!-- Bottom User Card -->
+        <div class="border-t border-[rgba(201,167,74,0.1)] bg-surface-alt bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)] px-[17px] py-[9px] flex items-center gap-[12px]">
+            <div class="w-[32px] h-[32px] rounded-full bg-[rgba(201,167,74,0.2)] border border-gold/40 flex items-center justify-center flex-shrink-0">
+                <span class="font-sans font-bold text-[12px] text-gold">AV</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="font-sans font-bold text-[11px] text-body leading-tight">Alexander V.</span>
+                <span class="font-sans font-normal text-[9px] text-gold-dim tracking-[-0.45px] leading-tight mt-[2px]">CHIEF CURATOR</span>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ADMIN MAIN CONTENT -->
+    <main class="flex-grow ml-[256px] min-h-screen bg-void">
+        @RenderBody()
+    </main>
+
+    <!-- GLOBAL SCRIPTS -->
+    <script src="~/js/animation.js" type="module" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

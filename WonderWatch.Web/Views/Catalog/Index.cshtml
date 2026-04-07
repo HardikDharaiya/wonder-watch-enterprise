@@ -1,0 +1,360 @@
+@model WonderWatch.Web.ViewModels.CatalogIndexViewModel
+@{
+    ViewData["Title"] = "The Complete Reference";
+    ViewData["MetaDescription"] = "Browse the complete Wonder Watch catalog. Curated excellence for the discerning collector.";
+
+    var selectedBrands = Context.Request.Query["brands"].ToArray();
+    var selectedSize = Context.Request.Query["size"].ToString();
+    var selectedSort = Context.Request.Query["sort"].ToString();
+    if (string.IsNullOrEmpty(selectedSort)) selectedSort = "newest";
+}
+
+@section Meta {
+    <link rel="stylesheet" href="~/css/catalog.css" asp-append-version="true" />
+}
+
+@* Body class for margin reset *@
+<script>document.body.classList.add('page-catalog');</script>
+
+@* ═══════════════════════════════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════════════════════════════ *@
+<section class="relative w-full overflow-hidden flex items-center justify-center text-center border-b border-white-faint bg-void"
+         style="height:340px; padding-top:96px;">
+    <div class="cat-watermark" aria-hidden="true">XII</div>
+    <div class="relative flex flex-col items-center" style="z-index:1; gap:10px;">
+        <span class="font-sans font-bold text-gold uppercase"
+              style="font-size:10px; letter-spacing:4px;">Home / Catalog</span>
+        <h1 class="font-serif text-parchment m-0"
+            style="font-size:clamp(36px,5vw,64px); letter-spacing:-0.02em; line-height:1.05;">
+            The Complete Reference
+        </h1>
+        <p class="font-sans text-muted m-0"
+               style="font-size:10px; letter-spacing:3px; text-transform:uppercase; opacity:0.65;">
+            Curated excellence for the discerning collector
+        </p>
+    </div>
+</section>
+
+@* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE FILTER BAR  (visible only below lg)
+   ═══════════════════════════════════════════════════════════════════════════ *@
+<div class="lg:hidden flex items-center justify-between border-b border-white-faint bg-void px-[16px] py-3">
+    <span class="font-sans font-bold text-muted uppercase" style="font-size:9px; letter-spacing:2px;">
+        @Model.TotalItems Results
+    </span>
+    <button id="mobile-filter-btn"
+            class="flex items-center gap-2 font-sans font-bold text-gold uppercase border border-gold px-3 py-1 transition-colors hover:bg-gold hover:text-void"
+            style="font-size:9px; letter-spacing:2px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="8" y1="12" x2="20" y2="12" />
+            <line x1="12" y1="18" x2="20" y2="18" />
+        </svg>
+        Filters
+    </button>
+</div>
+
+@* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE FILTER DRAWER  (slides in from left)
+   ═══════════════════════════════════════════════════════════════════════════ *@
+<div id="cat-filter-drawer" class="cat-filter-drawer lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+    <div class="cat-filter-overlay" id="cat-filter-overlay"></div>
+    <div class="cat-filter-panel">
+        @* Drawer header *@
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div style="width:22px; height:1px; background:#C9A74A;"></div>
+                <span class="font-sans font-bold text-gold uppercase" style="font-size:10px; letter-spacing:3px;">Refine</span>
+            </div>
+            <button id="cat-filter-close" aria-label="Close filters"
+                    class="text-muted hover:text-gold transition-colors"
+                    style="background:none; border:none; cursor:pointer; padding:4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        @* Reuse the same filter form (mobile) *@
+        @await Html.PartialAsync("_CatalogFilters", Model)
+    </div>
+</div>
+
+@* ═══════════════════════════════════════════════════════════════════════════
+   MAIN LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ *@
+<div class="w-full bg-void">
+    <!-- FIXED: Adjusted padding to px-[16px] on mobile, md:px-[48px] on desktop -->
+    <div class="max-w-[1440px] mx-auto px-[16px] md:px-[48px] flex items-start" style="min-height:80vh;">
+
+        @* ── DESKTOP SIDEBAR ──────────────────────────────────────────────────── *@
+        <aside class="cat-sidebar hidden lg:block flex-shrink-0 border-r border-white-faint bg-void" style="width:240px; min-width:240px; margin-right: 48px;">
+            <div class="py-10 pr-8">
+                <div class="flex items-center gap-3 mb-8">
+                    <div style="width:24px; height:1px; background:#C9A74A;"></div>
+                    <span class="font-sans font-bold text-gold uppercase" style="font-size:10px; letter-spacing:3px;">Refine</span>
+                </div>
+                @await Html.PartialAsync("_CatalogFilters", Model)
+            </div>
+        </aside>
+
+        @* ── MAIN CONTENT ──────────────────────────────────────────────────────── *@
+        <!-- FIXED: Removed horizontal padding from main tag to prevent double-padding squashing -->
+        <main class="flex-grow bg-void py-[32px] md:py-[48px] w-full" style="min-width:0;">
+
+            @* Toolbar *@
+            <!-- FIXED: Changed from hidden lg:flex to flex flex-col sm:flex-row to ensure visibility on mobile -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-[24px] mb-[48px] border-b border-white-faint pb-[24px]">
+                <span class="font-sans font-bold text-muted uppercase hidden sm:block" style="font-size:10px; letter-spacing:2px;">
+                    Showing @Model.Watches.Count of @Model.TotalItems Results
+                </span>
+                
+                <div class="flex items-center justify-between w-full sm:w-auto" style="gap:20px;">
+                    @* Sort *@
+                    <form method="get" action="/catalog" id="sort-form" class="flex items-center" style="gap:8px;">
+                        @foreach (var b in selectedBrands)
+                        {
+                            <input type="hidden" name="brands" value="@b" />
+                        }
+                        @if (!string.IsNullOrEmpty(selectedSize))
+                        {
+                            <input type="hidden" name="size" value="@selectedSize" />
+                        }
+                        <span class="font-sans font-bold text-muted uppercase" style="font-size:10px; letter-spacing:2px;">Sort:</span>
+                        
+                        <select name="sort"
+                                onchange="document.getElementById('sort-form').submit()"
+                                class="font-sans font-bold text-parchment uppercase cursor-pointer focus:outline-none"
+                                style="background:transparent; border:none; font-size:10px; letter-spacing:2px; appearance:none; -webkit-appearance:none;">
+                            
+                            @if (selectedSort == "newest")
+                            {
+                                <option value="newest" style="background:#0A0A0A;" selected>Newest First</option>
+                            }
+                            else
+                            {
+                                <option value="newest" style="background:#0A0A0A;">Newest First</option>
+                            }
+
+                            @if (selectedSort == "price-desc")
+                            {
+                                <option value="price-desc" style="background:#0A0A0A;" selected>Price: High to Low</option>
+                            }
+                            else
+                            {
+                                <option value="price-desc" style="background:#0A0A0A;">Price: High to Low</option>
+                            }
+
+                            @if (selectedSort == "price-asc")
+                            {
+                                <option value="price-asc" style="background:#0A0A0A;" selected>Price: Low to High</option>
+                            }
+                            else
+                            {
+                                <option value="price-asc" style="background:#0A0A0A;">Price: Low to High</option>
+                            }
+                            
+                        </select>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
+                    </form>
+                    
+                    @* View toggle (Now visible on mobile) *@
+                    <div class="flex items-center" style="gap:10px;">
+                        <button type="button" id="view-grid" aria-label="Grid view"
+                                class="text-gold" style="background:none; border:none; padding:0; cursor:pointer; display:flex; opacity:1;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                        </button>
+                        <button type="button" id="view-list" aria-label="List view"
+                                class="text-gold" style="background:none; border:none; padding:0; cursor:pointer; display:flex; opacity:0.35;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6" />
+                                <line x1="8" y1="12" x2="21" y2="12" />
+                                <line x1="8" y1="18" x2="21" y2="18" />
+                                <line x1="3" y1="6" x2="3.01" y2="6" />
+                                <line x1="3" y1="12" x2="3.01" y2="12" />
+                                <line x1="3" y1="18" x2="3.01" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @* Watch Grid *@
+            <div class="cat-grid" id="watch-grid">
+                @if (!Model.Watches.Any())
+                {
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-24">
+                        <p class="font-sans text-muted" style="font-size:14px; letter-spacing:1px;">No timepieces match your current filters.</p>
+                        <a href="/catalog" class="font-sans font-bold text-gold uppercase mt-4 inline-block hover:text-parchment transition-colors"
+                           style="font-size:11px; letter-spacing:2px;">Clear Filters</a>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var watch in Model.Watches)
+                    {
+                        <a href="/catalog/@watch.Slug" class="cat-card block border border-white-faint hover:border-white-faint transition-colors"
+                               style="background:#0c0c0c; text-decoration:none; overflow:hidden;">
+
+                            <!-- FIXED: Sold Out badge is now safely inside the relative image container -->
+                            <div class="relative flex items-center justify-center"
+                                 style="height:280px; padding:28px; overflow:hidden; background:#0c0c0c;">
+                                <img src="@watch.ImageUrl"
+                                     alt="@watch.Name"
+                                     class="cat-card-img w-full h-full"
+                                     style="object-fit:contain;"
+                                     loading="lazy" />
+                                
+                                @if (watch.IsSoldOut)
+                                {
+                                    <span class="absolute font-sans font-bold text-[#EF4444] uppercase"
+                                          style="top:12px; right:12px; border:1px solid rgba(239,68,68,0.3); font-size:9px; letter-spacing:2px; padding:3px 9px; background:rgba(26,26,26,0.8); z-index: 20;">
+                                        Sold Out
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="flex flex-col items-center text-center border-t border-white-faint"
+                                 style="padding:18px 20px 22px; gap:7px;">
+                                <span class="font-sans text-gold" style="font-size:10px; letter-spacing:1.5px; opacity:0.75;">
+                                    @watch.PriceFormatted
+                                </span>
+                                <h3 class="font-serif text-parchment m-0" style="font-size:17px; line-height:1.25;">
+                                    @watch.Name
+                                </h3>
+                                <span class="font-sans font-bold text-gold" style="font-size:12px; letter-spacing:1px;">
+                                    @watch.PriceFormatted
+                                </span>
+                            </div>
+
+                        </a>
+                    }
+                }
+            </div>
+
+            @* Pagination *@
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="flex items-center justify-center" style="margin-top:56px; gap:20px;" aria-label="Catalog pages">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="?page=@(Model.CurrentPage - 1)&sort=@selectedSort@(string.Join("", selectedBrands.Select(b => $"&brands={b}")))"
+                               class="text-gold flex items-center" style="text-decoration:none;" aria-label="Previous">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6" /></svg>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted flex items-center" style="opacity:0.3;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6" /></svg>
+                        </span>
+                    }
+
+                    <div class="flex items-center font-sans font-bold" style="gap:16px; font-size:11px; letter-spacing:2px;">
+                        @for (int p = 1; p <= Model.TotalPages; p++)
+                        {
+                            if (p == Model.CurrentPage)
+                            {
+                                <span class="text-gold" style="border-bottom:2px solid #C9A74A; padding-bottom:2px; cursor:default;">
+                                    @p.ToString("D2")
+                                </span>
+                            }
+                            else if (p <= 3 || p == Model.TotalPages)
+                            {
+                                <a href="?page=@p&sort=@selectedSort@(string.Join("", selectedBrands.Select(b => $"&brands={b}")))"
+                                       class="text-muted hover:text-parchment transition-colors" style="text-decoration:none;">
+                                    @p.ToString("D2")
+                                </a>
+                            }
+                            else if (p == 4 && Model.TotalPages > 5)
+                            {
+                                <span class="text-muted">...</span>
+                            }
+                        }
+                    </div>
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="?page=@(Model.CurrentPage + 1)&sort=@selectedSort@(string.Join("", selectedBrands.Select(b => $"&brands={b}")))"
+                               class="text-gold flex items-center" style="text-decoration:none;" aria-label="Next">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6" /></svg>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted flex items-center" style="opacity:0.3;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6" /></svg>
+                        </span>
+                    }
+                </nav>
+            }
+
+        </main>
+    </div>
+</div>
+
+@* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE DRAWER + VIEW TOGGLE JS
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@section Scripts {
+    <script>
+        (function () {
+        /* ── Mobile filter drawer ─────────────────────────────────────────────── */
+        const drawer  = document.getElementById('cat-filter-drawer');
+        const overlay = document.getElementById('cat-filter-overlay');
+        const openBtn = document.getElementById('mobile-filter-btn');
+        const closeBtn= document.getElementById('cat-filter-close');
+
+        function openDrawer()  { drawer.classList.add('open');  document.body.style.overflow = 'hidden'; }
+        function closeDrawer() { drawer.classList.remove('open'); document.body.style.overflow = ''; }
+
+        if (openBtn)  openBtn.addEventListener('click', openDrawer);
+        if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+        if (overlay)  overlay.addEventListener('click', closeDrawer);
+
+        /* Close on Escape */
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+        /* ── View toggle (grid / list) ────────────────────────────────────────── */
+        const gridBtn  = document.getElementById('view-grid');
+        const listBtn  = document.getElementById('view-list');
+        const watchGrid= document.getElementById('watch-grid');
+
+        if (gridBtn && listBtn && watchGrid) {
+        gridBtn.addEventListener('click', () => {
+        watchGrid.style.gridTemplateColumns = '';
+        watchGrid.classList.add('cat-grid');
+        gridBtn.style.opacity = '1';
+        listBtn.style.opacity = '0.35';
+        });
+        listBtn.addEventListener('click', () => {
+        watchGrid.style.gridTemplateColumns = '1fr';
+        listBtn.style.opacity = '1';
+        gridBtn.style.opacity = '0.35';
+        });
+        }
+
+        /* ── Sort Dropdown Sync ───────────────────────────────────────────────── */
+        const sortSelect = document.getElementById('master-sort-select');
+        if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+        // Find the visible filter form (desktop or mobile)
+        const activeForm = document.querySelector('.cat-filter-form:not(:hidden)') || document.querySelector('.cat-filter-form');
+        if (activeForm) {
+        const hiddenSortInput = activeForm.querySelector('.hidden-sort-input');
+        if (hiddenSortInput) {
+        hiddenSortInput.value = e.target.value;
+        activeForm.submit();
+        }
+        }
+        });
+        }
+        })();
+    </script>
+}

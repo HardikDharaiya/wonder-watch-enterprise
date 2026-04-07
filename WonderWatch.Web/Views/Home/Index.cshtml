@@ -1,0 +1,184 @@
+﻿@model List<WonderWatch.Application.DTOs.WatchCardDto>
+@{
+    ViewData["Title"] = "The Atelier";
+    ViewData["MetaDescription"] = "Discover Wonder Watch, India's premier dark-luxury horological boutique. Explore our curated collection of masterpieces.";
+    
+    // Server-side mobile check for Three.js initialization logic
+    var userAgent = Context.Request.Headers["User-Agent"].ToString().ToLower();
+    var isMobile = userAgent.Contains("mobi") || userAgent.Contains("android") || userAgent.Contains("iphone");
+}
+
+<!-- HERO SECTION (Full-Bleed Immersive 3D Background) -->
+<section class="relative w-full min-h-screen flex items-center overflow-hidden border-b border-white-faint bg-void">
+    
+    <!-- LAYER 0: The 3D Canvas Background -->
+    <!-- Inline style pointer-events: none ensures the mouse wheel scrolls the page -->
+    <div class="absolute inset-0 flex items-center justify-center" style="z-index: 0; pointer-events: none;">
+        @if (isMobile)
+        {
+            <!-- Mobile / No-3D Fallback -->
+            <img src="/images/watches/11111111-1111-1111-1111-111111111111/1.webp" alt="Wonder Watch Masterpiece" class="w-full h-full object-cover opacity-30" />
+        }
+        else
+        {
+            <!-- Desktop 3D Canvas -->
+            <!-- Increased scale to 12 and light to 3.0 for maximum visibility -->
+            <canvas id="three-canvas"
+                    data-model-path="/models/hero-watch.glb"
+                    data-mobile="@isMobile.ToString().ToLower()"
+                    data-camera-z="4"
+                    data-interactive="false"
+                    data-auto-rotate="true"
+                    data-model-scale="12"
+                    data-ambient-light="3.0"
+                    class="w-full h-full object-cover">
+            </canvas>
+        }
+    </div>
+
+    <!-- LAYER 1: Dark Gradients (pointer-events: none) -->
+    <div class="absolute inset-0 bg-gradient-to-r from-void via-void/80 to-transparent" style="z-index: 10; pointer-events: none;"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/80" style="z-index: 10; pointer-events: none;"></div>
+
+    <!-- LAYER 2: Editorial Content -->
+    <div class="relative w-full max-w-[1440px] mx-auto px-[32px] md:px-[64px] pt-[131px]" style="z-index: 20; pointer-events: none;">
+        <div class="max-w-xl" style="pointer-events: auto;">
+            <span class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] block drop-shadow-md">
+                Est. 2024 &middot; India's Finest
+            </span>
+            <h1 class="font-serif text-[64px] md:text-[80px] lg:text-[100px] text-parchment tracking-[-2px] leading-[1.05] mb-[48px] drop-shadow-2xl">
+                TIME IS <br />
+                THE <br />
+                ONLY <br />
+                LUXURY.
+            </h1>
+            <!-- FIXED: Explicit pointer-events: auto to ensure clickability -->
+            <a href="/collections" class="inline-block bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[48px] py-[20px] hover:bg-parchment transition-all duration-600 shadow-[0_0_20px_rgba(201,167,74,0.2)] hover:shadow-[0_0_30px_rgba(245,240,232,0.3)]" style="pointer-events: auto;">
+                Explore Collection
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- GOLD MARQUEE TICKER -->
+<div class="w-full bg-gold py-[16px] overflow-hidden flex whitespace-nowrap border-b border-white-faint">
+    <div class="js-marquee flex items-center font-sans font-bold text-[12px] text-void tracking-[2px] uppercase">
+        <span class="mx-[32px]">Craftsmanship Beyond Measure</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="text-void"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path></svg>
+        <span class="mx-[32px]">Limited Edition Releases</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="text-void"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path></svg>
+        <span class="mx-[32px]">Precision Engineering</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="text-void"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path></svg>
+        <span class="mx-[32px]">Heritage Defined</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="text-void"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path></svg>
+    </div>
+</div>
+
+<!-- FEATURED ACQUISITIONS -->
+<section class="py-[96px] px-[32px] md:px-[64px] max-w-[1440px] mx-auto">
+    <div class="flex items-end justify-between mb-[64px] border-b border-white-faint pb-[24px]">
+        <div>
+            <h2 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[8px]">Featured Acquisitions</h2>
+            <p class="font-sans text-[14px] text-muted">The latest additions to our vault.</p>
+        </div>
+        <a href="/catalog" class="hidden md:flex items-center gap-[8px] font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase hover:text-parchment transition-colors duration-600">
+            View All <span class="text-[16px] leading-none">&rarr;</span>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-[32px]">
+        @foreach (var watch in Model)
+        {
+            <a href="/catalog/@watch.Slug" class="group block bg-surface border border-white-faint hover:border-gold-faint transition-all duration-600 hover:shadow-[0_20px_40px_rgba(0,0,0,0.8)] flex flex-col h-full relative">
+                
+                @if (watch.IsSoldOut)
+                {
+                    <div class="absolute top-[16px] right-[16px] z-20 bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px]">
+                        Sold Out
+                    </div>
+                }
+
+                <div class="w-full aspect-[4/5] bg-surface-alt relative overflow-hidden p-[32px] flex items-center justify-center">
+                    <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-600 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]" loading="lazy" />
+                    
+                    <div class="absolute inset-0 bg-void/60 opacity-0 group-hover:opacity-100 transition-opacity duration-600 flex items-center justify-center backdrop-blur-[2px]">
+                        <span class="border border-gold text-gold font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[32px] py-[16px] hover:bg-gold hover:text-void transition-colors duration-300">
+                            View Details
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-[32px] border-t border-white-faint group-hover:border-gold-faint transition-colors duration-600 flex-grow flex flex-col justify-end bg-surface">
+                    <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase block mb-[8px]">@watch.Brand</span>
+                    <h3 class="font-sans font-medium text-[24px] text-parchment tracking-normal mb-[16px] line-clamp-1 group-hover:text-gold transition-colors duration-300">@watch.Name</h3>
+                    <div class="font-sans font-bold text-[18px] text-gold tracking-[-0.45px]">
+                        @watch.PriceFormatted
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+</section>
+
+<!-- EDITORIAL QUOTE -->
+<section class="py-[128px] px-[32px] bg-surface-alt border-y border-white-faint text-center flex items-center justify-center relative overflow-hidden">
+    <div class="absolute inset-0 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(255,255,255,0.1)_2px,rgba(255,255,255,0.1)_4px)] pointer-events-none"></div>
+    <h2 class="relative z-10 font-serif-italic text-[40px] md:text-[56px] lg:text-[64px] text-parchment tracking-[-1.2px] leading-[1.2] max-w-4xl mx-auto drop-shadow-lg">
+        "Every second, accounted for."
+    </h2>
+</section>
+
+<!-- PATRON STORIES -->
+<section class="py-[96px] px-[32px] md:px-[64px] max-w-[1440px] mx-auto">
+    <div class="text-center mb-[64px]">
+        <span class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase block mb-[16px]">Patron Stories</span>
+        <h2 class="font-serif text-[36px] md:text-[48px] text-parchment tracking-[-1.2px] leading-none">The Measure of Excellence</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-[32px]">
+        <div class="bg-surface-alt border border-white-faint p-[48px] flex flex-col items-center text-center hover:border-gold-faint transition-all duration-600 hover:-translate-y-2 shadow-lg">
+            <div class="flex items-center gap-[4px] mb-[32px] text-gold">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                }
+            </div>
+            <p class="font-sans text-[15px] text-muted leading-relaxed mb-[48px] flex-grow">
+                "The craftsmanship rivaling European houses. A true statement of Indian luxury horology."
+            </p>
+            <span class="font-sans font-bold text-[9px] text-gold tracking-[2px] uppercase border-t border-white-faint pt-[24px] w-full block">&mdash; Aditya S., Collector</span>
+        </div>
+        <div class="bg-surface-alt border border-white-faint p-[48px] flex flex-col items-center text-center hover:border-gold-faint transition-all duration-600 hover:-translate-y-2 shadow-lg">
+            <div class="flex items-center gap-[4px] mb-[32px] text-gold">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                }
+            </div>
+            <p class="font-sans text-[15px] text-muted leading-relaxed mb-[48px] flex-grow">
+                "The Sovereign Noir is more than a watch; it's an heirloom. The attention to detail is breathtaking."
+            </p>
+            <span class="font-sans font-bold text-[9px] text-gold tracking-[2px] uppercase border-t border-white-faint pt-[24px] w-full block">&mdash; Vikram R., Architect</span>
+        </div>
+        <div class="bg-surface-alt border border-white-faint p-[48px] flex flex-col items-center text-center hover:border-gold-faint transition-all duration-600 hover:-translate-y-2 shadow-lg">
+            <div class="flex items-center gap-[4px] mb-[32px] text-gold">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                }
+            </div>
+            <p class="font-sans text-[15px] text-muted leading-relaxed mb-[48px] flex-grow">
+                "Exceptional service and an unparalleled piece of engineering. Highly recommend the vault access."
+            </p>
+            <span class="font-sans font-bold text-[9px] text-gold tracking-[2px] uppercase border-t border-white-faint pt-[24px] w-full block">&mdash; Priya M., Designer</span>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="~/js/viewer.js" type="module" asp-append-version="true"></script>
+}

@@ -1,0 +1,134 @@
+@model WonderWatch.Web.ViewModels.AdminDashboardViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="p-[32px] md:p-[48px] max-w-[1600px] mx-auto">
+    
+    <!-- HEADER -->
+    <div class="mb-[48px] flex flex-col md:flex-row md:items-end justify-between gap-[24px]">
+        <div>
+            <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Dashboard</h1>
+            <p class="font-sans text-[14px] text-muted">Overview & Key Performance Indicators.</p>
+        </div>
+        <div class="font-sans text-[12px] text-muted">
+            System Time: <span class="text-parchment font-mono">@DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") UTC</span>
+        </div>
+    </div>
+
+    <!-- KPI GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[24px] mb-[64px]">
+        
+        <!-- Total Revenue -->
+        <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px] relative overflow-hidden group hover:border-gold-faint transition-colors duration-600">
+            <div class="absolute top-0 right-0 p-[24px] opacity-10 group-hover:opacity-20 transition-opacity duration-600">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </div>
+            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Total Revenue</span>
+            <span class="font-sans font-light text-[30px] text-gold tracking-[-1.5px] relative z-10">@Model.TotalRevenueFormatted</span>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px] relative overflow-hidden group hover:border-gold-faint transition-colors duration-600">
+            <div class="absolute top-0 right-0 p-[24px] opacity-10 group-hover:opacity-20 transition-opacity duration-600">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Pending Orders</span>
+            <span class="font-sans font-light text-[30px] text-gold tracking-[-1.5px] relative z-10">@Model.OrdersPending</span>
+        </div>
+
+        <!-- Active Users -->
+        <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px] relative overflow-hidden group hover:border-gold-faint transition-colors duration-600">
+            <div class="absolute top-0 right-0 p-[24px] opacity-10 group-hover:opacity-20 transition-opacity duration-600">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Active Users</span>
+            <span class="font-sans font-light text-[30px] text-gold tracking-[-1.5px] relative z-10">@Model.ActiveUsers</span>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px] relative overflow-hidden group hover:border-danger/50 transition-colors duration-600">
+            <div class="absolute top-0 right-0 p-[24px] opacity-10 group-hover:opacity-20 transition-opacity duration-600">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1" stroke-linecap="square">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Low Stock Alerts</span>
+            <span class="font-sans font-light text-[30px] @(Model.LowStockCount > 0 ? "text-danger" : "text-gold") tracking-[-1.5px] relative z-10">@Model.LowStockCount</span>
+        </div>
+
+    </div>
+
+    <!-- INVENTORY ALERTS TABLE -->
+    <div class="bg-surface border border-white-faint">
+        <div class="p-[24px] border-b border-white-faint flex items-center justify-between">
+            <h2 class="font-sans font-bold text-[14px] text-parchment tracking-[1.4px] uppercase">Inventory Alerts (Stock &le; 4)</h2>
+            <a href="/admin/watches" class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">View All Inventory &rarr;</a>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Reference</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Watch Name</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Stock Level</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.InventoryAlerts.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="p-[48px] text-center">
+                                <span class="font-sans text-[14px] text-muted">Inventory levels are optimal. No alerts at this time.</span>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var alert in Model.InventoryAlerts)
+                        {
+                            <tr class="border-b border-white-faint hover:bg-surface-alt transition-colors duration-600 last:border-0">
+                                <td class="p-[24px]">
+                                    <span class="font-mono text-[12px] text-gold">@alert.ReferenceNumber</span>
+                                </td>
+                                <td class="p-[24px]">
+                                    <span class="font-sans font-medium text-[14px] text-body">@alert.Name</span>
+                                </td>
+                                <td class="p-[24px]">
+                                    <div class="flex items-center gap-[12px]">
+                                        <span class="font-sans font-bold text-[14px] text-parchment">@alert.StockQuantity</span>
+                                        <span class="bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px] rounded-none">
+                                            Low Stock
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="p-[24px] text-right">
+                                    <a href="/admin/watches/edit/@alert.WatchId" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">
+                                        Update Stock
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

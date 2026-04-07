@@ -1,0 +1,126 @@
+@model WonderWatch.Web.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Request Access";
+    ViewData["MetaDescription"] = "Apply for membership to The Vault. Join India's most exclusive horological society.";
+}
+
+<section class="min-h-[calc(100vh-131px)] flex bg-void">
+    
+    <!-- LEFT COLUMN: EDITORIAL IMAGE (Hidden on Mobile) -->
+    <div class="hidden lg:block lg:w-1/2 relative border-r border-white-faint">
+        <img src="/images/brand/register-bg.webp" alt="The Wonder Watch Vault" class="absolute inset-0 w-full h-full object-cover filter grayscale contrast-125" loading="lazy" />
+        
+        <!-- Dark Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-void/80 to-void/20"></div>
+        
+        <!-- Editorial Text Overlay -->
+        <div class="absolute bottom-[64px] left-[64px] max-w-md">
+            <h2 class="font-serif-italic text-[30px] text-parchment leading-tight mb-[16px]">
+                "Exclusivity is not a barrier. It is a standard."
+            </h2>
+            <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">
+                The Vault &middot; Membership Application
+            </span>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: REGISTRATION FORM -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-[32px] md:p-[64px] overflow-y-auto">
+        <div class="w-full max-w-lg py-[32px]">
+            
+            <div class="text-center mb-[48px]">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square" class="mx-auto mb-[24px]">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Request Access</h1>
+                <p class="font-sans text-[14px] text-muted">Submit your details to join our exclusive society.</p>
+            </div>
+
+            <form asp-controller="Account" asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" class="flex flex-col gap-[24px]">
+                @Html.AntiForgeryToken()
+
+                <!-- Global Validation Summary -->
+                <div asp-validation-summary="ModelOnly" class="bg-[rgba(127,29,29,0.2)] border border-danger/50 text-danger font-sans text-[12px] p-[16px] rounded-none @(ViewData.ModelState.IsValid ? "hidden" : "")"></div>
+
+                <!-- Full Name -->
+                <div>
+                    <label asp-for="FullName" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Full Name <span class="text-danger">*</span></label>
+                    <input asp-for="FullName" type="text" required autocomplete="name" autofocus
+                           class="w-full bg-surface border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                    <span asp-validation-for="FullName" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label asp-for="Email" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Email Address <span class="text-danger">*</span></label>
+                    <input asp-for="Email" type="email" required autocomplete="email"
+                           class="w-full bg-surface border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                    <span asp-validation-for="Email" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                    <!-- Nationality -->
+                    <div>
+                        <label asp-for="Nationality" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Nationality <span class="text-danger">*</span></label>
+                        <input asp-for="Nationality" type="text" required autocomplete="country-name"
+                               class="w-full bg-surface border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                        <span asp-validation-for="Nationality" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div>
+                        <label asp-for="DateOfBirth" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Date of Birth <span class="text-danger">*</span></label>
+                        <input asp-for="DateOfBirth" type="date" required [color-scheme:dark]
+                               class="w-full bg-surface border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none [color-scheme:dark]" />
+                        <span asp-validation-for="DateOfBirth" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                    <!-- Password -->
+                    <div>
+                        <label asp-for="Password" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Password <span class="text-danger">*</span></label>
+                        <input asp-for="Password" type="password" required autocomplete="new-password"
+                               class="w-full bg-surface border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                        <span asp-validation-for="Password" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label asp-for="ConfirmPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Confirm Password <span class="text-danger">*</span></label>
+                        <input asp-for="ConfirmPassword" type="password" required autocomplete="new-password"
+                               class="w-full bg-surface border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                        <span asp-validation-for="ConfirmPassword" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[20px] mt-[16px] hover:bg-parchment transition-colors duration-600 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                    Submit Application
+                </button>
+
+                <p class="font-sans text-[11px] text-muted text-center mt-[8px]">
+                    By applying, you agree to our <a href="/terms" class="text-gold hover:text-parchment transition-colors border-b border-gold/30 hover:border-parchment">Terms of Service</a> and <a href="/privacy" class="text-gold hover:text-parchment transition-colors border-b border-gold/30 hover:border-parchment">Privacy Policy</a>.
+                </p>
+
+            </form>
+
+            <!-- Login Link -->
+            <div class="mt-[48px] pt-[32px] border-t border-white-faint text-center">
+                <p class="font-sans text-[14px] text-muted mb-[16px]">Already a member of The Vault?</p>
+                <a href="/account/login" class="inline-block border border-gold text-gold font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[32px] py-[12px] hover:bg-[rgba(201,167,74,0.1)] transition-colors duration-600">
+                    Authenticate
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

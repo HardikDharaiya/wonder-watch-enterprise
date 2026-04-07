@@ -1,0 +1,147 @@
+@model WonderWatch.Web.ViewModels.AdminReviewListViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Review Management";
+
+    // Helper to determine exact badge colors based on Section 3 specs
+    string GetBadgeClasses(string status)
+    {
+        return status.ToUpper() switch
+        {
+            "APPROVED" => "bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-[#22C55E]",
+            "REJECTED" => "bg-[rgba(127,29,29,0.4)] border border-danger/50 text-danger",
+            "PENDING" => "bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]",
+            _ => "bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]"
+        };
+    }
+}
+
+<div class="p-[32px] md:p-[48px] max-w-[1600px] mx-auto">
+    
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-[24px] mb-[48px]">
+        <div>
+            <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Review Management</h1>
+            <p class="font-sans text-[14px] text-muted">Moderate client testimonials and horological feedback.</p>
+        </div>
+    </div>
+
+    <!-- REVIEWS TABLE -->
+    <div class="bg-surface border border-white-faint overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                    <tr>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Date</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Masterpiece</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Rating</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Client Feedback</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Status</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint text-right">Moderation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Reviews.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="p-[64px] text-center">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1" stroke-linecap="square" class="mx-auto mb-[24px]">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <h3 class="font-serif text-[24px] text-parchment mb-[8px]">No Reviews Found</h3>
+                                <p class="font-sans text-[14px] text-muted">There are currently no client testimonials in the system.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var review in Model.Reviews)
+                        {
+                            <tr class="border-b border-white-faint hover:bg-surface-alt transition-colors duration-600 last:border-0 group">
+                                
+                                <!-- Date -->
+                                <td class="p-[24px] align-top">
+                                    <span class="font-sans text-[14px] text-body whitespace-nowrap">@review.Date.ToString("dd MMM yyyy")</span>
+                                </td>
+                                
+                                <!-- Masterpiece -->
+                                <td class="p-[24px] align-top">
+                                    <span class="font-sans font-medium text-[14px] text-parchment line-clamp-2 max-w-[200px]">@review.WatchName</span>
+                                </td>
+                                
+                                <!-- Rating (Stars) -->
+                                <td class="p-[24px] align-top">
+                                    <div class="flex items-center gap-[4px]">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= review.Rating)
+                                            {
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="square" class="text-gold">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" class="text-muted/30">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                </svg>
+                                            }
+                                        }
+                                    </div>
+                                </td>
+                                
+                                <!-- Client Feedback -->
+                                <td class="p-[24px] align-top">
+                                    <p class="font-sans text-[14px] text-muted leading-relaxed max-w-md line-clamp-2" title="@review.Body">
+                                        "@review.Body"
+                                    </p>
+                                </td>
+                                
+                                <!-- Status Badge -->
+                                <td class="p-[24px] align-top">
+                                    <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase @GetBadgeClasses(review.Status)">
+                                        @review.Status
+                                    </span>
+                                </td>
+                                
+                                <!-- Moderation Actions -->
+                                <td class="p-[24px] align-top text-right">
+                                    @if (review.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <div class="flex items-center justify-end gap-[16px]">
+                                            <form action="/api/admin/reviews/moderate" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ReviewId" value="@review.Id" />
+                                                <input type="hidden" name="Status" value="Approved" />
+                                                <button type="submit" class="font-sans font-bold text-[10px] text-[#22C55E] tracking-[2px] uppercase hover:text-white transition-colors focus:outline-none">
+                                                    Approve
+                                                </button>
+                                            </form>
+                                            <span class="text-white-faint">|</span>
+                                            <form action="/api/admin/reviews/moderate" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ReviewId" value="@review.Id" />
+                                                <input type="hidden" name="Status" value="Rejected" />
+                                                <button type="submit" class="font-sans font-bold text-[10px] text-danger tracking-[2px] uppercase hover:text-white transition-colors focus:outline-none">
+                                                    Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase">
+                                            Moderated
+                                        </span>
+                                    }
+                                </td>
+                                
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

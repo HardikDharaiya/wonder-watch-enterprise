@@ -1,0 +1,69 @@
+@model WonderWatch.Web.ViewModels.VaultAddressesViewModel
+@{
+    Layout = "_VaultLayout";
+    ViewData["Title"] = "Saved Addresses";
+}
+
+<div class="mb-[48px] flex flex-col md:flex-row md:items-end justify-between gap-[24px]">
+    <div>
+        <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Saved Addresses</h1>
+        <p class="font-sans text-[14px] text-muted">Manage your dispatch destinations for seamless acquisitions.</p>
+    </div>
+    <button type="button" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600 focus:outline-none">
+        Add New Address
+    </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-[32px]">
+    
+    <!-- DEFAULT ADDRESS CARD -->
+    <div class="bg-surface border border-gold-faint p-[32px] relative flex flex-col h-full">
+        <div class="absolute top-0 right-0 bg-[rgba(201,167,74,0.2)] text-gold font-sans font-bold text-[9px] tracking-[1px] uppercase px-[12px] py-[6px]">
+            Default Shipping
+        </div>
+        
+        <div class="mb-[24px] pr-[100px]">
+            <h3 class="font-sans font-bold text-[16px] text-parchment mb-[4px]">Alexander V.</h3>
+            <p class="font-sans text-[14px] text-muted">Primary Residence</p>
+        </div>
+        
+        <div class="flex-grow mb-[32px]">
+            <p class="font-sans text-[14px] text-parchment leading-relaxed">
+                124 Luxury Enclave, Tower B<br />
+                Bandra West<br />
+                Mumbai, Maharashtra 400050<br />
+                India
+            </p>
+            <p class="font-sans text-[14px] text-muted mt-[16px]">
+                Phone: +91 98765 43210
+            </p>
+        </div>
+        
+        <div class="flex items-center gap-[16px] pt-[24px] border-t border-white-faint">
+            <button type="button" class="font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase hover:text-parchment transition-colors">
+                Edit
+            </button>
+            <span class="text-white-faint">|</span>
+            <button type="button" class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase hover:text-danger transition-colors">
+                Remove
+            </button>
+        </div>
+    </div>
+
+    <!-- ADD NEW ADDRESS GHOST CARD -->
+    <button type="button" class="bg-transparent border border-dashed border-white-faint hover:border-gold-faint p-[32px] flex flex-col items-center justify-center min-h-[300px] group transition-colors duration-600 focus:outline-none">
+        <div class="w-[48px] h-[48px] rounded-full bg-surface-alt border border-white-faint flex items-center justify-center mb-[16px] group-hover:border-gold group-hover:text-gold text-muted transition-colors duration-600">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </div>
+        <span class="font-sans font-bold text-[12px] text-parchment tracking-[1.2px] uppercase group-hover:text-gold transition-colors duration-600">
+            Add New Destination
+        </span>
+        <span class="font-sans text-[12px] text-muted mt-[8px]">
+            Register a new secure dispatch location.
+        </span>
+    </button>
+
+</div>

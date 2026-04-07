@@ -1,0 +1,74 @@
+@model WonderWatch.Web.ViewModels.VaultWishlistViewModel
+@{
+    Layout = "_VaultLayout";
+    ViewData["Title"] = "My Wishlist";
+}
+
+<div class="mb-[48px]">
+    <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Your Wishlist</h1>
+    <p class="font-sans text-[14px] text-muted">Curated timepieces you are considering for acquisition.</p>
+</div>
+
+@if (!Model.Watches.Any())
+{
+    <div class="bg-surface border border-white-faint p-[64px] text-center flex flex-col items-center justify-center min-h-[400px]">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1" stroke-linecap="square" class="mb-[24px]">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+        </svg>
+        <h3 class="font-serif text-[24px] text-parchment mb-[8px]">No Curations Yet</h3>
+        <p class="font-sans text-[14px] text-muted max-w-md mb-[32px]">
+            Your wishlist is currently empty. Explore our catalog to find horological masterpieces that resonate with you.
+        </p>
+        <a href="/catalog" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600">
+            Explore Catalog
+        </a>
+    </div>
+}
+else
+{
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[32px]">
+        @foreach (var watch in Model.Watches)
+        {
+            <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-colors duration-600 relative flex flex-col h-full">
+                
+                @if (watch.IsSoldOut)
+                {
+                    <div class="absolute top-4 left-4 z-20 bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px]">
+                        Sold Out
+                    </div>
+                }
+
+                <!-- Remove from Wishlist Button -->
+                <button type="button" data-watch-id="@watch.Id" class="js-toggle-wishlist absolute top-4 right-4 z-20 text-gold hover:text-danger transition-colors focus:outline-none" aria-label="Remove from wishlist">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+                    </svg>
+                </button>
+
+                <!-- Image Container -->
+                <a href="/catalog/@watch.Slug" class="w-full aspect-[4/5] bg-surface-alt relative overflow-hidden p-[32px] flex items-center justify-center block">
+                    <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-600 drop-shadow-2xl" loading="lazy" />
+                </a>
+
+                <!-- Metadata -->
+                <div class="p-[24px] border-t border-white-faint group-hover:border-gold-faint transition-colors duration-600 flex-grow flex flex-col justify-between">
+                    <div>
+                        <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase block mb-[8px]">@watch.Brand</span>
+                        <a href="/catalog/@watch.Slug" class="font-sans font-medium text-[20px] text-parchment tracking-normal mb-[16px] line-clamp-2 hover:text-gold transition-colors">@watch.Name</a>
+                    </div>
+                    <div class="flex items-center justify-between mt-[16px]">
+                        <span class="font-sans font-bold text-[18px] text-gold tracking-[-0.45px]">
+                            @watch.PriceFormatted
+                        </span>
+                        @if (!watch.IsSoldOut)
+                        {
+                            <button type="button" data-watch-id="@watch.Id" class="js-add-to-cart font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase border-b border-muted pb-1 hover:text-gold hover:border-gold transition-colors focus:outline-none">
+                                Add to Cart
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,131 @@
+@model WonderWatch.Web.ViewModels.VaultProfileViewModel
+@{
+    Layout = "_VaultLayout";
+    ViewData["Title"] = "Profile Settings";
+}
+
+<div class="mb-[48px]">
+    <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Profile Settings</h1>
+    <p class="font-sans text-[14px] text-muted">Manage your personal dossier and account preferences.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-[64px]">
+    
+    <!-- LEFT COLUMN: PERSONAL DETAILS -->
+    <div class="lg:col-span-8">
+        <form action="#" method="post" class="bg-surface border border-white-faint p-[32px] md:p-[48px] flex flex-col gap-[32px]">
+            @Html.AntiForgeryToken()
+
+            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[16px] border-b border-white-faint pb-[16px]">Personal Information</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                <!-- Full Name -->
+                <div class="md:col-span-2">
+                    <label for="FullName" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Full Legal Name</label>
+                    <input type="text" id="FullName" name="FullName" value="@Model.FullName" required
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                </div>
+
+                <!-- Display Name -->
+                <div>
+                    <label for="DisplayName" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Preferred Name</label>
+                    <input type="text" id="DisplayName" name="DisplayName" value="@Model.DisplayName" required
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                </div>
+
+                <!-- Nationality -->
+                <div>
+                    <label for="Nationality" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Nationality</label>
+                    <input type="text" id="Nationality" name="Nationality" value="@Model.Nationality" required
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                </div>
+
+                <!-- Date of Birth -->
+                <div>
+                    <label for="DateOfBirth" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Date of Birth</label>
+                    <input type="date" id="DateOfBirth" name="DateOfBirth" value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required[color-scheme:dark]
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none[color-scheme:dark]" />
+                </div>
+
+                <!-- Email (Readonly) -->
+                <div>
+                    <label for="Email" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Primary Email</label>
+                    <input type="email" id="Email" name="Email" value="@Model.Email" readonly
+                           class="w-full bg-surface-alt border border-white-faint text-muted font-sans text-[14px] px-[16px] py-[12px] rounded-none cursor-not-allowed" />
+                    <p class="font-sans text-[10px] text-muted mt-[8px]">To change your primary email, please <a href="/contact" class="text-gold hover:text-parchment transition-colors">contact concierge</a>.</p>
+                </div>
+            </div>
+
+            <div class="pt-[24px] border-t border-white-faint flex justify-end">
+                <button type="submit" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[48px] py-[16px] hover:bg-parchment transition-colors duration-600 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-surface">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+
+        <!-- SECURITY SECTION -->
+        <form action="#" method="post" class="bg-surface border border-white-faint p-[32px] md:p-[48px] mt-[32px] flex flex-col gap-[32px]">
+            @Html.AntiForgeryToken()
+
+            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[16px] border-b border-white-faint pb-[16px]">Security & Authentication</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                <div class="md:col-span-2">
+                    <label for="CurrentPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Current Password</label>
+                    <input type="password" id="CurrentPassword" name="CurrentPassword" required
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                </div>
+                <div>
+                    <label for="NewPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">New Password</label>
+                    <input type="password" id="NewPassword" name="NewPassword" required
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                </div>
+                <div>
+                    <label for="ConfirmNewPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Confirm New Password</label>
+                    <input type="password" id="ConfirmNewPassword" name="ConfirmNewPassword" required
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                </div>
+            </div>
+
+            <div class="pt-[24px] border-t border-white-faint flex justify-end">
+                <button type="submit" class="border border-gold text-gold font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[48px] py-[16px] hover:bg-[rgba(201,167,74,0.1)] transition-colors duration-600 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-surface">
+                    Update Password
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- RIGHT COLUMN: ACCOUNT STATUS -->
+    <div class="lg:col-span-4">
+        <div class="bg-surface-alt border border-white-faint p-[32px] sticky top-[163px]">
+            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[32px]">Account Status</h2>
+            
+            <div class="flex flex-col gap-[24px]">
+                <div>
+                    <span class="font-sans text-[12px] text-muted block mb-[4px]">Membership Tier</span>
+                    <span class="font-sans font-bold text-[18px] text-parchment uppercase tracking-[1px]">Silver Member</span>
+                </div>
+                <div class="w-full h-[1px] bg-white-faint"></div>
+                <div>
+                    <span class="font-sans text-[12px] text-muted block mb-[4px]">Member Since</span>
+                    <span class="font-sans font-medium text-[16px] text-parchment">@Model.MemberSince.ToString("MMMM yyyy")</span>
+                </div>
+                <div class="w-full h-[1px] bg-white-faint"></div>
+                <div>
+                    <span class="font-sans text-[12px] text-muted block mb-[4px]">Dedicated Concierge</span>
+                    <span class="font-sans font-medium text-[16px] text-parchment">Assigned upon Gold Tier</span>
+                </div>
+            </div>
+
+            <div class="mt-[48px] pt-[32px] border-t border-gold-faint">
+                <p class="font-sans text-[12px] text-muted leading-relaxed mb-[16px]">
+                    To request an account deletion or data export under privacy regulations, please submit a formal request.
+                </p>
+                <a href="/contact" class="font-sans font-bold text-[10px] text-danger tracking-[2px] uppercase hover:text-white transition-colors">
+                    Request Account Deletion
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>

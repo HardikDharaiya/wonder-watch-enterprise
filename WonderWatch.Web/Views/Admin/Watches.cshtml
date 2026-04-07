@@ -1,0 +1,129 @@
+@model WonderWatch.Web.ViewModels.AdminWatchListViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Watch Inventory";
+}
+
+<div class="p-[32px] md:p-[48px] max-w-[1600px] mx-auto">
+    
+    <!-- HEADER & ACTIONS -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-[24px] mb-[48px]">
+        <div>
+            <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Watch Inventory</h1>
+            <p class="font-sans text-[14px] text-muted">Manage catalog references, stock levels, and pricing.</p>
+        </div>
+        <a href="/admin/watches/create" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600 whitespace-nowrap text-center">
+            Add New Reference
+        </a>
+    </div>
+
+    <!-- INVENTORY TABLE -->
+    <div class="bg-surface border border-white-faint overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                    <tr>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint w-[80px]">Asset</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Reference</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Masterpiece</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Retail Price</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Stock</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Status</th>
+                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Watches.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="p-[64px] text-center">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1" stroke-linecap="square" class="mx-auto mb-[24px]">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <h3 class="font-serif text-[24px] text-parchment mb-[8px]">No References Found</h3>
+                                <p class="font-sans text-[14px] text-muted">The inventory is currently empty. Add a new reference to begin.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var watch in Model.Watches)
+                        {
+                            <tr class="border-b border-white-faint hover:bg-surface-alt transition-colors duration-600 last:border-0 group">
+                                
+                                <!-- Asset Image -->
+                                <td class="p-[24px]">
+                                    <div class="w-[48px] h-[60px] bg-void border border-white-faint p-[4px] flex items-center justify-center group-hover:border-gold-faint transition-colors duration-600">
+                                        <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain" loading="lazy" />
+                                    </div>
+                                </td>
+                                
+                                <!-- Reference -->
+                                <td class="p-[24px]">
+                                    <span class="font-mono text-[12px] text-gold">@watch.ReferenceNumber</span>
+                                </td>
+                                
+                                <!-- Masterpiece Name -->
+                                <td class="p-[24px]">
+                                    <span class="font-sans font-medium text-[14px] text-body line-clamp-1">@watch.Name</span>
+                                </td>
+                                
+                                <!-- Retail Price -->
+                                <td class="p-[24px]">
+                                    <span class="font-sans font-bold text-[14px] text-parchment tracking-[-0.45px]">@watch.RetailPriceFormatted</span>
+                                </td>
+                                
+                                <!-- Stock -->
+                                <td class="p-[24px]">
+                                    <div class="flex items-center gap-[8px]">
+                                        <span class="font-sans font-bold text-[14px] @(watch.StockQuantity <= 4 ? "text-danger" : "text-parchment")">
+                                            @watch.StockQuantity
+                                        </span>
+                                        @if (watch.StockQuantity <= 4)
+                                        {
+                                            <span class="bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[6px] py-[2px] rounded-none">
+                                                Low
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                                
+                                <!-- Status Badge -->
+                                <td class="p-[24px]">
+                                    @if (watch.IsPublished)
+                                    {
+                                        <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-[#22C55E]">
+                                            Published
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]">
+                                            Draft
+                                        </span>
+                                    }
+                                </td>
+                                
+                                <!-- Actions -->
+                                <td class="p-[24px] text-right">
+                                    <div class="flex items-center justify-end gap-[16px]">
+                                        <a href="/admin/watches/edit/@watch.Id" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">
+                                            Edit
+                                        </a>
+                                        <span class="text-white-faint">|</span>
+                                        <a href="/catalog/@watch.ReferenceNumber" target="_blank" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-parchment transition-colors">
+                                            View
+                                        </a>
+                                    </div>
+                                </td>
+                                
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
