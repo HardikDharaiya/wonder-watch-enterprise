@@ -1,0 +1,174 @@
+# COMMANDS.md — Wonder Watch Command Reference + Error Log
+Last updated: 2026-04-07 | Location: India (IST)
+
+## Essential Setup Commands (Run once on new machine)
+
+### Environment Check
+```powershell
+dotnet --version
+node --version
+npm --version
+```
+
+### Project Scaffolding (N-Tier Architecture)
+```powershell
+# 1. Create Solution & Projects
+dotnet new sln -n WonderWatch
+dotnet new classlib -n WonderWatch.Domain
+dotnet new classlib -n WonderWatch.Infrastructure
+dotnet new classlib -n WonderWatch.Application
+dotnet new mvc -n WonderWatch.Web
+dotnet new xunit -n WonderWatch.Tests
+
+# 2. Add to Solution
+dotnet sln WonderWatch.sln add WonderWatch.Domain/WonderWatch.Domain.csproj
+dotnet sln WonderWatch.sln add WonderWatch.Infrastructure/WonderWatch.Infrastructure.csproj
+dotnet sln WonderWatch.sln add WonderWatch.Application/WonderWatch.Application.csproj
+dotnet sln WonderWatch.sln add WonderWatch.Web/WonderWatch.Web.csproj
+dotnet sln WonderWatch.sln add WonderWatch.Tests/WonderWatch.Tests.csproj
+
+# 3. Establish Clean Architecture Dependencies
+dotnet add WonderWatch.Application/WonderWatch.Application.csproj reference WonderWatch.Domain/WonderWatch.Domain.csproj
+dotnet add WonderWatch.Infrastructure/WonderWatch.Infrastructure.csproj reference WonderWatch.Domain/WonderWatch.Domain.csproj
+dotnet add WonderWatch.Infrastructure/WonderWatch.Infrastructure.csproj reference WonderWatch.Application/WonderWatch.Application.csproj
+dotnet add WonderWatch.Web/WonderWatch.Web.csproj reference WonderWatch.Application/WonderWatch.Application.csproj
+dotnet add WonderWatch.Web/WonderWatch.Web.csproj reference WonderWatch.Infrastructure/WonderWatch.Infrastructure.csproj
+dotnet add WonderWatch.Tests/WonderWatch.Tests.csproj reference WonderWatch.Domain/WonderWatch.Domain.csproj
+dotnet add WonderWatch.Tests/WonderWatch.Tests.csproj reference WonderWatch.Application/WonderWatch.Application.csproj
+dotnet add WonderWatch.Tests/WonderWatch.Tests.csproj reference WonderWatch.Infrastructure/WonderWatch.Infrastructure.csproj
+dotnet add WonderWatch.Tests/WonderWatch.Tests.csproj reference WonderWatch.Web/WonderWatch.Web.csproj
+```
+
+### Database & Entity Framework Core
+```powershell
+# Install EF Core CLI Tools globally (if not already installed)
+dotnet tool install --global dotnet-ef
+
+# Create a new migration (Run from solution root)
+dotnet ef migrations add <MigrationName> --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure
+
+# Apply migrations to the database
+dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure
+
+# Drop the database (Use with extreme caution)
+dotnet ef database drop --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure
+```
+
+### Frontend Build (Tailwind CSS)
+```powershell
+# Navigate to the Web project
+cd WonderWatch.Web
+
+# Install Node dependencies (Tailwind, PostCSS, Autoprefixer)
+npm install
+
+# Compile Tailwind CSS (Run this every time you add new utility classes to .cshtml files)
+npm run build:css
+
+# Return to solution root
+cd ..
+```
+
+### Development & Diagnostics
+```powershell
+# Build the entire solution
+dotnet build WonderWatch.sln
+
+# Run the Web Application
+dotnet run --project WonderWatch.Web
+
+# Run all xUnit Tests
+dotnet test WonderWatch.Tests
+
+# Count all files in the solution (Useful for workspace diagnostics)
+powershell -NoProfile -Command "(Get-ChildItem -Recurse -File).Count"
+```
+
+### Secrets Management (Local Development)
+```powershell
+# Initialize User Secrets for the Web project
+dotnet user-secrets init --project WonderWatch.Web
+
+# Set Razorpay API Keys
+dotnet user-secrets set "Razorpay:KeyId" "rzp_test_YOUR_KEY_ID" --project WonderWatch.Web
+dotnet user-secrets set "Razorpay:KeySecret" "YOUR_KEY_SECRET" --project WonderWatch.Web
+
+# List all configured secrets
+dotnet user-secrets list --project WonderWatch.Web
+```
+
+---
+
+## ERROR LOG & TROUBLESHOOTING
+
+### Error 001 — The File Lock (MSB3021 / MSB3026)
+- **Trigger:** Running `dotnet build` or `dotnet run` while the application is already running in the background.
+- **Symptoms:** `Could not copy "WonderWatch.Infrastructure.dll" to "bin\Debug\net8.0\WonderWatch.Infrastructure.dll". The file is locked by: "WonderWatch.Web (PID)"`
+- **Fix:**
+  ```powershell
+  # Kill the rogue process holding the lock
+  Stop-Process -Name "WonderWatch.Web" -Force -ErrorAction SilentlyContinue
+  # Clean the build artifacts
+  dotnet clean WonderWatch.sln
+  # Re-run
+  dotnet run --project WonderWatch.Web
+  ```
+
+### Error 002 — Tailwind JIT Compilation Failure (The "Squashed Layout" Bug)
+- **Trigger:** Adding new arbitrary Tailwind classes (e.g., `pt-[196px]`, `text-[300px]`) to a `.cshtml` file without recompiling the CSS.
+- **Symptoms:** The browser ignores the new classes, causing elements to overlap, lose padding, or render at the wrong size.
+- **Fix:**
+  1. Open terminal and navigate to `WonderWatch.Web`.
+  2. Run `npm run build:css`.
+  3. Refresh the browser.
+- **Prevention:** For critical structural layout constraints (like hero section heights), use inline HTML styles (`style="padding-top: 180px;"`) or custom scoped CSS (`catalog.css`) to bypass the JIT compiler entirely.
+
+### Error 003 — Razor Syntax Trap (CS0103)
+- **Trigger:** Writing native CSS `@media` queries inside a `.cshtml` file's `<style>` block.
+- **Symptoms:** `CS0103: The name 'media' does not exist in the current context`. The Razor engine tries to interpret `@media` as C# code.
+- **Fix:** Escape the `@` symbol by doubling it: `@@media (max-width: 1024px)`.
+
+### Error 004 — ViewModel Contract Violation (CS1061)
+- **Trigger:** Adding new data requirements (like `@Model.TotalPages`) to a Razor View before updating the underlying C# ViewModel class.
+- **Symptoms:** `CS1061: 'CatalogIndexViewModel' does not contain a definition for 'TotalPages'`.
+- **Fix:** Always update the `ViewModel.cs` class and the `Controller.cs` action *before* referencing new properties in the `.cshtml` view.
+
+### Error 005 — EF Core InMemory Testing Flaw
+- **Trigger:** Running xUnit tests that rely on `.Include(x => x.Where(...))` against the `Microsoft.EntityFrameworkCore.InMemory` provider.
+- **Symptoms:** The test fails because the InMemory provider returns the *entire* collection, ignoring the `.Where()` filter inside the `.Include()`.
+- **Fix:** Acknowledge that the InMemory provider is not a true relational database. Adjust test assertions to validate the core service logic, or use SQLite In-Memory/Testcontainers for complex LINQ testing.
+
+### Error 006 — 3D Model 404 Not Found (MIME Type Block)
+- **Trigger:** Attempting to load a `.glb` file in the browser via `viewer.js`.
+- **Symptoms:** Browser console shows `404 Not Found` for the `.glb` file, even though the file physically exists in `wwwroot/models/`.
+- **Fix:** ASP.NET Core blocks unknown file extensions by default. Update `Program.cs` to explicitly map the `.glb` extension:
+  ```csharp
+  var provider = new FileExtensionContentTypeProvider();
+  provider.Mappings[".glb"] = "model/gltf-binary";
+  app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+  ```
+
+### Error 007 — Dead Filters (Z-Index & Pointer Events)
+- **Trigger:** Clicking custom-styled checkboxes or radio buttons in the Catalog sidebar does nothing.
+- **Symptoms:** The visual state (gold border/tick) does not update because the hidden `<input>` is blocked by a higher `z-index` element or `pointer-events-none`.
+- **Fix:** Ensure the `<label>` tag is the primary click target. Use inline JavaScript (`onchange="this.nextElementSibling.style.opacity = this.checked ? '1' : '0';"`) to guarantee the visual UI updates instantly, bypassing complex CSS sibling selectors that might fail to compile.
+
+### Error 008 — Shell Mismatch (Bash vs. PowerShell)
+- **Trigger:** Pasting PowerShell scripts (containing `Write-Host`, `$var = @()`) into an Ubuntu (WSL) Bash terminal.
+- **Symptoms:** `command not found` and `syntax error` messages.
+- **Fix:** Always match the script language to the terminal environment. Use `curl` and `mkdir -p` for Bash, and `Invoke-WebRequest` and `New-Item` for PowerShell.
+
+---
+
+## Command History (Auto-updated each session)
+### Session 1 Final History — 2026-04-07
+- `dotnet new sln` and project scaffolding ✅
+- `dotnet add package` for EF Core, Identity, Razorpay, Serilog, FluentValidation ✅
+- `dotnet ef migrations add InitialCreate` ✅
+- `dotnet build WonderWatch.Application` (Fixed N-Tier dependency inversion) ✅
+- `npm init -y` and `npm install -D tailwindcss` (Fixed WSL `.bin` generation bug) ✅
+- `npm run build:css` ✅
+- `dotnet build WonderWatch.Web` (Fixed `builder.App()` hallucination to `builder.Build()`) ✅
+- `dotnet test WonderWatch.Tests` (Fixed InMemory `.Include` limitation) ✅
+- Executed PowerShell Asset Hydration Script (Fixed Unsplash 404 dead link) ✅
+- `dotnet run --project WonderWatch.Web` ✅ (Application rendering verified)

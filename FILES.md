@@ -1,0 +1,154 @@
+# FILES.md — Wonder Watch Directory Atlas
+Last updated: 2026-04-07
+
+## Project Root
+D:\Projects\WONDER_WATCH_MVC\
+*(Note: As of Session 2, there are 4,377 total files, primarily consisting of auto-generated binaries, NuGet packages, node_modules, and assets. Focus strictly on the tracked architectural structures below).*
+
+## Top-Level Structure
+```text
+WONDER_WATCH_MVC/
+├── MEMORY.md              ← Project brain (READ FIRST every session)
+├── FILES.md               ← This file — directory atlas
+├── WonderWatch.sln        ← Master .NET Solution File
+├── setup.sh               ← Initial scaffolding script (F1)
+├── hydrate.sh             ← Asset hydration script (Unsplash/GLB)
+├── WonderWatch.Domain/    ← Pure C# POCOs (Zero external dependencies)
+├── WonderWatch.Infrastructure/ ← EF Core, Migrations, Seed Data
+├── WonderWatch.Application/    ← Business Logic, Services, DTOs, Interfaces
+├── WonderWatch.Web/       ← ASP.NET Core MVC, Controllers, Views, wwwroot
+└── WonderWatch.Tests/     ← xUnit Tests (State Machine, HMAC, LINQ)
+```
+
+## WonderWatch.Domain/ — Core Entities & Enums
+```text
+WonderWatch.Domain/
+├── WonderWatch.Domain.csproj
+├── Entities/
+│   └── DomainModels.cs    ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage
+├── Enums/
+│   └── (Inside DomainModels.cs) ← MovementType, OrderStatus, ReviewStatus, MembershipTier
+└── Identity/
+    └── ApplicationUser.cs ← Inherits IdentityUser<Guid>, adds custom properties
+```
+
+## WonderWatch.Infrastructure/ — Data Access Layer
+```text
+WonderWatch.Infrastructure/
+├── WonderWatch.Infrastructure.csproj
+├── AppDbContext.cs        ← Full Fluent API configuration (No data annotations in Domain)
+├── DesignTimeDbContextFactory.cs ← Used by EF Core CLI for migrations
+├── SeedData.cs            ← Hydrates DB with 6 Figma watches + Admin user
+└── Migrations/
+    ├── 20260322062352_InitialCreate.cs
+    ├── 20260407093131_AddStrapMaterial.cs
+    └── AppDbContextModelSnapshot.cs
+```
+
+## WonderWatch.Application/ — Business Logic Layer
+```text
+WonderWatch.Application/
+├── WonderWatch.Application.csproj
+├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, etc.) and DTOs
+└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, etc.)
+```
+
+## WonderWatch.Web/ — Presentation Layer (MVC)
+```text
+WonderWatch.Web/
+├── WonderWatch.Web.csproj
+├── Program.cs             ← DI Container, Middleware Pipeline, Serilog, Identity
+├── tailwind.config.js     ← Strict design tokens (Zero border-radius, specific hex codes)
+├── package.json           ← NPM scripts (build:css)
+├── appsettings.json
+├── appsettings.Development.json
+├── appsettings.Production.json ← Azure Key Vault schema
+├── Controllers/
+│   ├── AccountController.cs
+│   ├── AdminController.cs
+│   ├── CartController.cs
+│   ├── CatalogController.cs
+│   ├── CheckoutController.cs
+│   ├── HomeController.cs
+│   ├── VaultController.cs
+│   └── WishlistApiController.cs
+├── Middleware/
+│   └── GlobalExceptionMiddleware.cs ← Intercepts errors, returns JSON for AJAX or HTML for MVC
+├── Styles/
+│   └── app.css            ← Source Tailwind directives
+├── Views/
+│   ├── _ViewImports.cshtml
+│   ├── _ViewStart.cshtml
+│   ├── Account/
+│   │   ├── Login.cshtml
+│   │   └── Register.cshtml
+│   ├── Admin/
+│   │   ├── CreateWatch.cshtml
+│   │   ├── Index.cshtml
+│   │   ├── Orders.cshtml
+│   │   ├── Reviews.cshtml
+│   │   ├── Settings.cshtml
+│   │   └── Watches.cshtml
+│   ├── Catalog/
+│   │   ├── _CatalogFilters.cshtml ← Partial view for dynamic sidebar/drawer
+│   │   ├── Detail.cshtml
+│   │   └── Index.cshtml
+│   ├── Checkout/
+│   │   ├── Confirmation.cshtml
+│   │   └── Index.cshtml
+│   ├── Home/
+│   │   ├── About.cshtml
+│   │   ├── Collections.cshtml
+│   │   └── Index.cshtml
+│   ├── Shared/
+│   │   ├── _AdminLayout.cshtml
+│   │   ├── _CartDrawer.cshtml
+│   │   ├── _Layout.cshtml
+│   │   ├── _ValidationScriptsPartial.cshtml
+│   │   ├── _VaultLayout.cshtml
+│   │   └── Error.cshtml
+│   └── Vault/
+│       ├── Addresses.cshtml
+│       ├── Entry.cshtml
+│       ├── Index.cshtml
+│       ├── Notifications.cshtml
+│       ├── Orders.cshtml
+│       ├── Profile.cshtml
+│       └── Wishlist.cshtml
+└── wwwroot/
+    ├── css/
+    │   ├── catalog.css    ← Scoped CSS for complex sibling selectors
+    │   └── global.css     ← Compiled Tailwind output
+    ├── js/
+    │   ├── animation.js   ← IntersectionObserver, Marquee, Smooth Scroll
+    │   ├── cart.js        ← AJAX Cart Drawer logic
+    │   ├── checkout.js    ← Razorpay SDK integration
+    │   ├── viewer.js      ← Three.js 3D Canvas logic
+    │   └── wishlist.js    ← AJAX Wishlist toggle
+    ├── models/            ← .glb 3D files
+    └── images/            ← Local WebP assets (brand, collections, about, watches)
+```
+
+## WonderWatch.Tests/ — Testing Layer
+```text
+WonderWatch.Tests/
+├── WonderWatch.Tests.csproj
+├── CatalogServiceTests.cs ← Tests LINQ filter chains (Brands, Sizes, Price)
+├── OrderServiceTests.cs   ← Tests State Machine (Pending -> Paid -> Shipped)
+└── PaymentServiceTests.cs ← Tests HMAC-SHA256 cryptographic verification
+```
+
+## .github/ — CI/CD Pipeline
+```text
+.github/
+└── workflows/
+    └── ci-cd.yml          ← Builds CSS, runs xUnit tests, publishes to Azure App Service
+```
+
+## Critical Rules
+1. **NEVER** write C# business logic inside a Controller. It belongs in `ApplicationServices.cs`.
+2. **NEVER** pass raw Domain entities to a Razor View. Always map to a ViewModel in the Controller.
+3. **NEVER** use Tailwind arbitrary classes (e.g., `pt-[196px]`) for critical structural layout without immediately running `npm run build:css`. Use inline styles (`style="padding-top: 196px;"`) if bypassing the compiler.
+4. **NEVER** hardcode Razorpay API keys. They must be injected via `IConfiguration` (User Secrets in Dev, Azure Key Vault in Prod).
+5. **ALWAYS** ensure `viewer.js` checks `dataset.mobile === 'true'` on line 1 before initializing WebGL.
+6. **ALWAYS** format prices using `CultureInfo("hi-IN")` to ensure the INR Lakh format (`₹72,40,000`).
