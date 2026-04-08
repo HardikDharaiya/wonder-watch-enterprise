@@ -27,6 +27,13 @@ namespace WonderWatch.Domain.Enums
         Rejected
     }
 
+    public enum NotificationType
+    {
+        Order,
+        Offer,
+        System
+    }
+
     public enum MembershipTier
     {
         Silver,

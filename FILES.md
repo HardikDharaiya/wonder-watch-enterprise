@@ -1,5 +1,5 @@
 # FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-04-07
+Last updated: 2026-04-09
 
 ## Project Root
 D:\Projects\WONDER_WATCH_MVC\
@@ -25,7 +25,9 @@ WONDER_WATCH_MVC/
 WonderWatch.Domain/
 ├── WonderWatch.Domain.csproj
 ├── Entities/
-│   └── DomainModels.cs    ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage
+│   ├── DomainModels.cs    ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage
+│   ├── UserAddress.cs     ← Vault saved address details
+│   └── UserNotification.cs ← Vault system/order notifications
 ├── Enums/
 │   └── (Inside DomainModels.cs) ← MovementType, OrderStatus, ReviewStatus, MembershipTier
 └── Identity/
@@ -42,6 +44,8 @@ WonderWatch.Infrastructure/
 └── Migrations/
     ├── 20260322062352_InitialCreate.cs
     ├── 20260407093131_AddStrapMaterial.cs
+    ├── 20260408165906_AddUserAvatarUrl.cs
+    ├── 20260409200000_AddUserAddressesAndNotifications.cs
     └── AppDbContextModelSnapshot.cs
 ```
 
@@ -123,6 +127,7 @@ WonderWatch.Web/
     │   ├── animation.js   ← IntersectionObserver, Marquee, Smooth Scroll
     │   ├── cart.js        ← AJAX Cart Drawer logic
     │   ├── checkout.js    ← Razorpay SDK integration
+    │   ├── vault.js       ← Profile validation, address modals, notification tabs
     │   ├── viewer.js      ← Three.js 3D Canvas logic
     │   └── wishlist.js    ← AJAX Wishlist toggle
     ├── models/            ← .glb 3D files

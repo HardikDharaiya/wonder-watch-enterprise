@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-07 | Session: 1
-Status: IN PROGRESS - Core Architecture Complete, UI Refinement Active
+Last updated: 2026-04-09 | Session: 6
+Status: IN PROGRESS - Vault UX Overhaul Completed (Profile, Addresses, Notifications, Admin SMTP configured).
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -32,35 +32,35 @@ Status: IN PROGRESS - Core Architecture Complete, UI Refinement Active
 - **Font Display:** Playfair Display (Serif)
 - **Font Editorial:** Liberation Serif (Italic)
 - **Font UI/Body:** Manrope (Sans-serif)
-- **Font Data:** Liberation Mono (Used for Order #WW-NNNN and Prices)
-- **Border Radius:** STRICTLY `0px` (Sharp edges everywhere). Exceptions: Avatars (`rounded-full`) and Status Badges (`rounded-[12px]`).
+- **Font Data:** Liberation Mono (Used for Order numbers and Prices)
+- **Border Radius:** STRICTLY `0px` (Sharp edges everywhere). Exceptions: Avatars (`rounded-full`), Status Badges (`rounded-[12px]`), Progress Tracker circles (`rounded-full`).
 - **Currency Format:** INR Lakh format strictly enforced server-side (e.g., `₹72,40,000`).
 
 ## What Has Been Built
 - [x] **Foundation:** N-Tier solution scaffolded, Domain entities, Enums, Identity User.
-- [x] **Infrastructure:** AppDbContext (Fluent API), Initial EF Core Migration, SeedData (6 watches + Admin).
+- [x] **Infrastructure:** AppDbContext (Fluent API), EF Core Migrations (InitialCreate, AddStrapMaterial, AddUserAvatarUrl), SeedData (6 watches + Admin).
 - [x] **Application:** Service Interfaces & Implementations (Catalog, Order, Payment, Wishlist, Asset, Admin, Email).
 - [x] **Web Core:** Program.cs (Middleware pipeline, DI, Serilog), GlobalExceptionMiddleware, tailwind.config.js.
-- [x] **Layouts:** `_Layout.cshtml` (Responsive transparent navbar + 4-column footer), `_VaultLayout.cshtml` (Responsive sidebar), `_AdminLayout.cshtml`.
+- [x] **Layouts:** `_Layout.cshtml` (Responsive transparent navbar + 4-column footer), `_VaultLayout.cshtml` (Responsive sidebar + Upgrade Plan CTA), `_AdminLayout.cshtml`.
 - [x] **Module 1 (Home):** Index (Full-bleed 3D background), Collections (Houses of Horology grid).
 - [x] **Module 2 (Catalog):** Index (Dynamic filters, CSS Grid, Custom Checkboxes/Sliders).
 - [x] **Module 3 (Checkout):** CartController, `_CartDrawer` (AJAX), CheckoutController, Razorpay Integration, Confirmation page.
-- [x] **Module 4 (Vault):** AccountController (Login/Register split-screen), Vault Dashboard, Orders, Wishlist, Profile, Addresses, Notifications.
-- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings.
+- [x] **Module 4 (Vault):** AccountController (Login/Register split-screen), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
+- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config).
 - [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
 - [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET), `appsettings.Production.json` (Azure Key Vault schema).
 
 ## Active Issues / Pending Tasks
-- **Database Schema Update:** Need to add `StrapMaterial` to `DomainModels.cs` and run EF Core migrations to make the Strap filter fully dynamic.
 - **Performance Optimization - Catalog Pagination:** The Web layer currently calls `.ToListAsync()` before `.Skip().Take()`, causing massive RAM load for large catalogs. Must push pagination to the `IQueryable` inside `CatalogService.cs`.
 - **Design Review - Catalog Detail (PDP):** Need to overhaul the product detail page UI.
-- **Design Review - Vault Pages:** Final UI polish required for the client portal.
 
 ## Key File Locations
 - **Domain Models:** `WonderWatch.Domain/Entities/DomainModels.cs`
 - **Database Context:** `WonderWatch.Infrastructure/AppDbContext.cs`
+- **Database Schema Docs:** `DATABASE_SCHEMA.md` (root)
 - **Application Services:** `WonderWatch.Application/ApplicationServices.cs`
+- **Application Contracts:** `WonderWatch.Application/ApplicationContracts.cs`
 - **Web Controllers:** `WonderWatch.Web/Controllers/`
 - **Razor Views:** `WonderWatch.Web/Views/`
 - **Tailwind Config:** `WonderWatch.Web/tailwind.config.js`
@@ -87,3 +87,52 @@ Status: IN PROGRESS - Core Architecture Complete, UI Refinement Active
 5. **Razor Syntax Trap:** Using `@media` in a `.cshtml` `<style>` block caused `CS0103`. *Fix:* Escaped the symbol using `@@media`.
 6. **ViewModel Contract Violation:** Added pagination UI to `Catalog/Index.cshtml` before updating the `CatalogIndexViewModel`, causing `CS1061`. *Fix:* Enforced strict "Controller/ViewModel First, View Second" update sequence.
 7. **File Lock (MSB3021):** `dotnet build` failed in PowerShell because the app was still running in the background. *Fix:* Used `Stop-Process` to kill the rogue .NET task and release the `.dll` locks.
+
+### Session 3 Summary — 2026-04-08
+- Conducted UI precision pass on Vault ecosystem.
+- Rectified global header transparency collision in `_VaultLayout.cshtml` by injecting explicit `mt-[96px]` buffer mapping.
+- Elevated Auth screens by stripping hardcoded `pt-[131px]` offsets to permit full-bleed cover imagery.
+- Replaced baked-text placeholder imagery (`login-bg.webp`, `register-bg.webp`) with raw high-fidelity product photography (`hero-macro.webp`, `void-series.webp`).
+
+### Session 4 Summary — 2026-04-08
+- **Domain Schema:** Added `AvatarUrl` (nullable string) to `ApplicationUser.cs`.
+- **EF Core Migration:** Created and applied `20260408165906_AddUserAvatarUrl` via `dotnet ef` tooling.
+- **VaultController.cs:** Updated `Index()` and `Profile()` actions to map `AvatarUrl` with `ui-avatars.com` fallback (SVG, branded gold-on-dark palette).
+- **_VaultLayout.cshtml (OVERHAULED):** Replaced static sidebar with premium Identity Block — avatar (56×56, gold border), display name, membership tier badge, "Since MMM yyyy" context. Navigation links refined to left-border active state. Copyright footer added.
+- **Vault/Index.cshtml (OVERHAULED):** Completely redesigned dashboard — hero greeting with inline avatar, unified 3-column KPI metrics row (shared border, no separate cards), premium recent order display with product image, editorial wishlist grid, bottom quick-action bar.
+- **Build:** `dotnet build` 0 Errors. `npm run build:css` compiled in 353ms.
+
+### Session 5 Summary — 2026-04-09
+- **OrderSummaryDto:** Added `UpdatedAt` field for progress tracker date display.
+- **VaultOrdersViewModel:** Added `ActiveFilter` property for tab strip state.
+- **VaultWishlistViewModel:** Added `Count` property for dynamic subtitle.
+- **VaultInvoiceViewModel + InvoiceItemDto:** New view models for printable invoice page.
+- **VaultController.cs:** Added `Invoice(Guid id)` action (`GET /vault/orders/{id}/invoice`), updated `Orders()` to accept `string? filter` parameter, updated `Wishlist()` to pass `Count`.
+- **Orders.cshtml (FULL REDESIGN):**
+  - Italic serif `ORDER HISTORY` title matching Figma.
+  - Client-side status filter tabs (ALL / PENDING / SHIPPED / DELIVERED) with gold underline active indicator.
+  - 4-step visual progress tracker per order card (Order Placed → Payment Confirmed → Shipped → Delivered) with gold checkmarks and date sub-labels.
+  - Cancelled orders show a red cancellation banner with date instead of tracker.
+  - Invoice button now links to `/vault/orders/{id}/invoice` (opens in new tab).
+  - Concierge CTA block at bottom with CONTACT CONCIERGE bordered button.
+- **Wishlist.cshtml (FULL REDESIGN):**
+  - Italic serif `MY WISHLIST` title with dynamic count subtitle.
+  - Square aspect-ratio image cards with dark background.
+  - `REMOVE ×` danger-colored text button replacing gold heart icon.
+  - Full-width bordered `ADD TO CART` button replacing underline text link.
+  - `UNAVAILABLE` disabled state for sold-out watches.
+  - Inline JS remove handler with card fade-out animation + live count update.
+- **Invoice.cshtml (NEW):** Standalone print-optimized HTML invoice (no layout). Gold accent branding, dual-column billing/shipping info, line items table, totals with "Complimentary" shipping, branded footer. Print button auto-hides.
+- **_VaultLayout.cshtml:** Added `Upgrade Plan` bordered gold button above Sign Out in sidebar footer.
+- **DATABASE_SCHEMA.md (NEW):** Complete schema documentation with all tables, relationships, indexes, and migration history.
+- **Build:** `dotnet build` 0 Errors (18 warnings — pre-existing NuGet). Tailwind CSS compiled in 170ms.
+
+### Session 6 Summary — 2026-04-09
+- **Domain Schema:** Added `UserAddress.cs`, `UserNotification.cs`, and `NotificationType` enum.
+- **EF Core Migration:** `AddUserAddressesAndNotifications` applied.
+- **VaultController.cs:** Completed Profile Settings (personal, password, preferences), Addresses CRUD, and Notifications feed.
+- **AdminController.cs:** Added MailKit SMTP configuration and testing interface.
+- **Views:** Redesigned Profile, Addresses (slide-in modal), Notifications (filter tabs), Settings (SMTP panel).
+- **_VaultLayout.cshtml:** Added unread dot indicator for Notifications link.
+- **Build:** `dotnet build` 0 Errors.
+

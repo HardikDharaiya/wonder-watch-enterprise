@@ -93,6 +93,82 @@
             </div>
         </div>
 
+        <!-- SMTP / MAILKIT EMAIL CONFIGURATION -->
+        @if (TempData["SmtpSuccess"] != null)
+        {
+            <div id="toast-smtp" class="fixed top-[112px] right-[24px] z-[100] bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.4)] text-[#22c55e] font-sans text-[13px] px-[24px] py-[14px]">
+                @TempData["SmtpSuccess"]
+            </div>
+        }
+        @if (TempData["SmtpError"] != null)
+        {
+            <div id="toast-smtp-err" class="fixed top-[112px] right-[24px] z-[100] bg-[rgba(248,113,113,0.15)] border border-[rgba(248,113,113,0.4)] text-[#f87171] font-sans text-[13px] px-[24px] py-[14px]">
+                @TempData["SmtpError"]
+            </div>
+        }
+        <div class="bg-surface border border-white-faint p-[32px]">
+            <div class="flex items-center justify-between mb-[24px] border-b border-white-faint pb-[16px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase">Email Configuration (MailKit / SMTP)</h2>
+                <div class="flex items-center gap-[8px]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span class="font-sans text-[10px] text-muted tracking-[1px] uppercase">Transactional Email Provider</span>
+                </div>
+            </div>
+            <p class="font-sans text-[12px] text-muted mb-[24px] leading-relaxed">
+                Configure SMTP credentials for outbound transactional emails (order confirmations, shipping updates). For Gmail, use an <a href="https://myaccount.google.com/apppasswords" target="_blank" class="text-gold hover:text-parchment transition-colors underline">App Password</a> with 2FA enabled.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                <div>
+                    <label for="SmtpHost" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">SMTP Host</label>
+                    <input type="text" id="SmtpHost" name="SmtpHost" value="@(ViewBag.SmtpHost ?? "smtp.gmail.com")" placeholder="smtp.gmail.com"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30" />
+                </div>
+                <div>
+                    <label for="SmtpPort" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">SMTP Port</label>
+                    <input type="number" id="SmtpPort" name="SmtpPort" value="@(ViewBag.SmtpPort ?? "587")" placeholder="587"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30" />
+                </div>
+                <div>
+                    <label for="SmtpUsername" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Username / Email</label>
+                    <input type="text" id="SmtpUsername" name="SmtpUsername" value="@(ViewBag.SmtpUsername ?? "")" placeholder="your-email@gmail.com"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30" />
+                </div>
+                <div>
+                    <label for="SmtpPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">App Password</label>
+                    <div class="relative">
+                        <input type="password" id="SmtpPassword" name="SmtpPassword" value="@(ViewBag.SmtpPassword ?? "")" placeholder="xxxx xxxx xxxx xxxx"
+                               class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30 pr-[48px]" />
+                        <button type="button" onclick="toggleSmtpPwd()" class="absolute right-[12px] top-[50%] translate-y-[-50%] text-muted hover:text-gold transition-colors">
+                            <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="SmtpFromEmail" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">From Email</label>
+                    <input type="email" id="SmtpFromEmail" name="SmtpFromEmail" value="@(ViewBag.SmtpFromEmail ?? "")" placeholder="noreply@wonderwatch.in"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30" />
+                </div>
+                <div>
+                    <label for="SmtpFromName" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">From Display Name</label>
+                    <input type="text" id="SmtpFromName" name="SmtpFromName" value="@(ViewBag.SmtpFromName ?? "Wonder Watch")" placeholder="Wonder Watch"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30" />
+                </div>
+            </div>
+
+            <!-- Test Email Row -->
+            <div class="mt-[24px] pt-[24px] border-t border-white-faint flex flex-col md:flex-row md:items-end gap-[16px]">
+                <div class="flex-grow">
+                    <label for="TestEmailTo" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Send Test Email To</label>
+                    <input type="email" id="TestEmailTo" name="TestEmailTo" placeholder="test@example.com"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none placeholder:text-muted/30" />
+                </div>
+                <button type="submit" formaction="/admin/settings/test-email" class="flex-shrink-0 border border-gold text-gold font-sans font-bold text-[11px] tracking-[1.5px] uppercase px-[32px] py-[14px] hover:bg-[rgba(201,167,74,0.1)] transition-colors duration-300 focus:outline-none">
+                    Send Test Email
+                </button>
+            </div>
+        </div>
+
         <!-- SECURITY & MAINTENANCE -->
         <div class="bg-surface border border-white-faint p-[32px]">
             <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Security & Maintenance</h2>
@@ -138,4 +214,16 @@
         </div>
 
     </form>
+
+    <script>
+        function toggleSmtpPwd() {
+            const inp = document.getElementById('SmtpPassword');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[id^="toast-"]').forEach(el => {
+                setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }, 4000);
+            });
+        });
+    </script>
 </div>

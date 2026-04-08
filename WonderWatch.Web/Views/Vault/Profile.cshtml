@@ -4,6 +4,26 @@
     ViewData["Title"] = "Profile Settings";
 }
 
+<!-- SUCCESS / ERROR TOASTS -->
+@if (TempData["ProfileSuccess"] != null)
+{
+    <div id="toast-profile" class="fixed top-[112px] right-[24px] z-[100] bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.4)] text-[#22c55e] font-sans text-[13px] px-[24px] py-[14px] animate-fadeIn">
+        @TempData["ProfileSuccess"]
+    </div>
+}
+@if (TempData["PasswordSuccess"] != null)
+{
+    <div id="toast-password" class="fixed top-[112px] right-[24px] z-[100] bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.4)] text-[#22c55e] font-sans text-[13px] px-[24px] py-[14px] animate-fadeIn">
+        @TempData["PasswordSuccess"]
+    </div>
+}
+@if (TempData["PasswordError"] != null)
+{
+    <div id="toast-error" class="fixed top-[112px] right-[24px] z-[100] bg-[rgba(248,113,113,0.15)] border border-[rgba(248,113,113,0.4)] text-danger font-sans text-[13px] px-[24px] py-[14px] animate-fadeIn">
+        @TempData["PasswordError"]
+    </div>
+}
+
 <div class="mb-[48px]">
     <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Profile Settings</h1>
     <p class="font-sans text-[14px] text-muted">Manage your personal dossier and account preferences.</p>
@@ -13,7 +33,7 @@
     
     <!-- LEFT COLUMN: PERSONAL DETAILS -->
     <div class="lg:col-span-8">
-        <form action="#" method="post" class="bg-surface border border-white-faint p-[32px] md:p-[48px] flex flex-col gap-[32px]">
+        <form action="/vault/profile/update" method="post" class="bg-surface border border-white-faint p-[32px] md:p-[48px] flex flex-col gap-[32px]">
             @Html.AntiForgeryToken()
 
             <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[16px] border-b border-white-faint pb-[16px]">Personal Information</h2>
@@ -36,15 +56,23 @@
                 <!-- Nationality -->
                 <div>
                     <label for="Nationality" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Nationality</label>
-                    <input type="text" id="Nationality" name="Nationality" value="@Model.Nationality" required
-                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                    <select id="Nationality" name="Nationality"
+                            class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none appearance-none">
+                        @{
+                            var nationalities = new[] { "Indian", "American", "British", "Canadian", "Australian", "German", "French", "Japanese", "Swiss", "Italian", "Spanish", "Dutch", "Swedish", "Emirati", "Singaporean", "Other" };
+                        }
+                        @foreach (var nat in nationalities)
+                        {
+                            <option value="@nat" selected="@(Model.Nationality == nat)">@nat</option>
+                        }
+                    </select>
                 </div>
 
                 <!-- Date of Birth -->
                 <div>
                     <label for="DateOfBirth" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Date of Birth</label>
-                    <input type="date" id="DateOfBirth" name="DateOfBirth" value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required[color-scheme:dark]
-                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none[color-scheme:dark]" />
+                    <input type="date" id="DateOfBirth" name="DateOfBirth" value="@Model.DateOfBirth.ToString("yyyy-MM-dd")"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" style="color-scheme: dark;" />
                 </div>
 
                 <!-- Email (Readonly) -->
@@ -64,7 +92,7 @@
         </form>
 
         <!-- SECURITY SECTION -->
-        <form action="#" method="post" class="bg-surface border border-white-faint p-[32px] md:p-[48px] mt-[32px] flex flex-col gap-[32px]">
+        <form action="/vault/profile/password" method="post" class="bg-surface border border-white-faint p-[32px] md:p-[48px] mt-[32px] flex flex-col gap-[32px]">
             @Html.AntiForgeryToken()
 
             <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[16px] border-b border-white-faint pb-[16px]">Security & Authentication</h2>
@@ -79,6 +107,13 @@
                     <label for="NewPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">New Password</label>
                     <input type="password" id="NewPassword" name="NewPassword" required
                            class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                    <!-- Password Strength Meter -->
+                    <div class="mt-[8px]">
+                        <div class="w-full h-[3px] bg-surface-alt overflow-hidden">
+                            <div id="password-strength-bar" class="h-full bg-muted transition-all duration-300" style="width: 0%;"></div>
+                        </div>
+                        <span id="password-strength-label" class="font-sans text-[10px] text-muted mt-[4px] block"></span>
+                    </div>
                 </div>
                 <div>
                     <label for="ConfirmNewPassword" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Confirm New Password</label>
@@ -129,3 +164,41 @@
     </div>
 
 </div>
+
+@section Scripts {
+<script>
+    // Password strength meter
+    document.addEventListener('DOMContentLoaded', () => {
+        const pwd = document.getElementById('NewPassword');
+        const bar = document.getElementById('password-strength-bar');
+        const label = document.getElementById('password-strength-label');
+
+        if (pwd && bar && label) {
+            pwd.addEventListener('input', () => {
+                const v = pwd.value;
+                let score = 0;
+                if (v.length >= 8) score++;
+                if (v.length >= 12) score++;
+                if (/[A-Z]/.test(v)) score++;
+                if (/[0-9]/.test(v)) score++;
+                if (/[^A-Za-z0-9]/.test(v)) score++;
+
+                const pct = (score / 5) * 100;
+                bar.style.width = pct + '%';
+
+                if (score <= 1) { bar.style.backgroundColor = '#f87171'; label.textContent = 'Weak'; label.style.color = '#f87171'; }
+                else if (score <= 2) { bar.style.backgroundColor = '#fb923c'; label.textContent = 'Fair'; label.style.color = '#fb923c'; }
+                else if (score <= 3) { bar.style.backgroundColor = '#facc15'; label.textContent = 'Good'; label.style.color = '#facc15'; }
+                else { bar.style.backgroundColor = '#22c55e'; label.textContent = 'Strong'; label.style.color = '#22c55e'; }
+
+                if (!v) { bar.style.width = '0%'; label.textContent = ''; }
+            });
+        }
+
+        // Auto-dismiss toasts
+        document.querySelectorAll('[id^="toast-"]').forEach(el => {
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }, 4000);
+        });
+    });
+</script>
+}

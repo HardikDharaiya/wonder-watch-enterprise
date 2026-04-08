@@ -4,20 +4,37 @@
     ViewData["Title"] = "My Wishlist";
 }
 
-<div class="mb-[48px]">
-    <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Your Wishlist</h1>
-    <p class="font-sans text-[14px] text-muted">Curated timepieces you are considering for acquisition.</p>
+<!-- ============================================================= -->
+<!-- PAGE HEADER + DYNAMIC COUNT                                    -->
+<!-- ============================================================= -->
+<div class="mb-[40px]">
+    <h1 class="font-serif italic text-[42px] text-parchment tracking-[-1px] leading-none mb-[12px]">
+        MY WISHLIST
+    </h1>
+    <p class="font-sans text-[13px] text-muted tracking-[0.2px]">
+        @if (Model.Count > 0)
+        {
+            <text>@Model.Count timepiece@(Model.Count != 1 ? "s" : "") currently in your vault.</text>
+        }
+        else
+        {
+            <text>Your curated collection awaits.</text>
+        }
+    </p>
 </div>
 
 @if (!Model.Watches.Any())
 {
+    <!-- ============================================================= -->
+    <!-- EMPTY STATE                                                    -->
+    <!-- ============================================================= -->
     <div class="bg-surface border border-white-faint p-[64px] text-center flex flex-col items-center justify-center min-h-[400px]">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1" stroke-linecap="square" class="mb-[24px]">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
-        <h3 class="font-serif text-[24px] text-parchment mb-[8px]">No Curations Yet</h3>
+        <h3 class="font-serif text-[24px] text-parchment mb-[8px]">No Favourites Yet</h3>
         <p class="font-sans text-[14px] text-muted max-w-md mb-[32px]">
-            Your wishlist is currently empty. Explore our catalog to find horological masterpieces that resonate with you.
+            When you find a timepiece that speaks to you, save it here. Your curated collection will be waiting.
         </p>
         <a href="/catalog" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600">
             Explore Catalog
@@ -26,49 +43,128 @@
 }
 else
 {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[32px]">
+    <!-- ============================================================= -->
+    <!-- WISHLIST GRID                                                  -->
+    <!-- ============================================================= -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[24px]" id="wishlistGrid">
         @foreach (var watch in Model.Watches)
         {
-            <div class="group bg-surface border border-white-faint hover:border-gold-faint transition-colors duration-600 relative flex flex-col h-full">
+            <div class="wishlist-card bg-surface border border-white-faint group hover:border-gold-faint transition-all duration-600 flex flex-col relative"
+                 data-watch-id="@watch.Id">
                 
+                <!-- REMOVE × Button -->
+                <button type="button"
+                        class="js-toggle-wishlist absolute top-[12px] right-[12px] z-20 font-sans font-bold text-[9px] tracking-[1.5px] uppercase text-danger hover:text-parchment transition-colors duration-300 focus:outline-none bg-void/60 px-[8px] py-[4px]"
+                        data-watch-id="@watch.Id"
+                        aria-label="Remove @watch.Name from wishlist">
+                    REMOVE ×
+                </button>
+
+                <!-- Sold Out Badge -->
                 @if (watch.IsSoldOut)
                 {
-                    <div class="absolute top-4 left-4 z-20 bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px]">
-                        Sold Out
+                    <div class="absolute top-[12px] left-[12px] z-20 bg-danger/90 px-[10px] py-[4px]">
+                        <span class="font-sans font-bold text-[9px] tracking-[1.5px] uppercase text-void">Sold Out</span>
                     </div>
                 }
 
-                <!-- Remove from Wishlist Button -->
-                <button type="button" data-watch-id="@watch.Id" class="js-toggle-wishlist absolute top-4 right-4 z-20 text-gold hover:text-danger transition-colors focus:outline-none" aria-label="Remove from wishlist">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="square">
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
-                    </svg>
-                </button>
-
-                <!-- Image Container -->
-                <a href="/catalog/@watch.Slug" class="w-full aspect-[4/5] bg-surface-alt relative overflow-hidden p-[32px] flex items-center justify-center block">
-                    <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-600 drop-shadow-2xl" loading="lazy" />
+                <!-- Watch Image -->
+                <a href="/catalog/@watch.Slug" class="block">
+                    <div class="aspect-square bg-[#111] overflow-hidden flex items-center justify-center p-[24px]">
+                        <img src="@watch.ImageUrl" alt="@watch.Name"
+                             class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-600"
+                             loading="lazy" />
+                    </div>
                 </a>
 
-                <!-- Metadata -->
-                <div class="p-[24px] border-t border-white-faint group-hover:border-gold-faint transition-colors duration-600 flex-grow flex flex-col justify-between">
-                    <div>
-                        <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase block mb-[8px]">@watch.Brand</span>
-                        <a href="/catalog/@watch.Slug" class="font-sans font-medium text-[20px] text-parchment tracking-normal mb-[16px] line-clamp-2 hover:text-gold transition-colors">@watch.Name</a>
-                    </div>
-                    <div class="flex items-center justify-between mt-[16px]">
-                        <span class="font-sans font-bold text-[18px] text-gold tracking-[-0.45px]">
-                            @watch.PriceFormatted
-                        </span>
-                        @if (!watch.IsSoldOut)
-                        {
-                            <button type="button" data-watch-id="@watch.Id" class="js-add-to-cart font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase border-b border-muted pb-1 hover:text-gold hover:border-gold transition-colors focus:outline-none">
-                                Add to Cart
-                            </button>
-                        }
-                    </div>
+                <!-- Card Info -->
+                <div class="p-[20px] flex flex-col flex-grow">
+                    <!-- Brand -->
+                    <span class="font-sans font-bold text-[9px] tracking-[2.5px] uppercase text-gold mb-[6px]">
+                        @watch.Brand
+                    </span>
+                    
+                    <!-- Name -->
+                    <a href="/catalog/@watch.Slug" class="hover:text-gold transition-colors duration-300">
+                        <h3 class="font-serif text-[18px] text-parchment leading-snug mb-[12px] line-clamp-2">
+                            @watch.Name
+                        </h3>
+                    </a>
+                    
+                    <!-- Price -->
+                    <span class="font-sans font-bold text-[18px] text-gold tracking-[-0.3px] mb-[20px]">
+                        @watch.PriceFormatted
+                    </span>
+
+                    <!-- Spacer to push button down -->
+                    <div class="flex-grow"></div>
+
+                    <!-- ADD TO CART Button (full-width bordered) -->
+                    @if (!watch.IsSoldOut)
+                    {
+                        <button type="button"
+                                data-watch-id="@watch.Id"
+                                class="js-add-to-cart w-full font-sans font-bold text-[10px] tracking-[2px] uppercase border border-white-faint text-parchment py-[14px] hover:border-gold hover:text-gold transition-all duration-300 focus:outline-none text-center">
+                            Add to Cart
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="w-full font-sans font-bold text-[10px] tracking-[2px] uppercase border border-white-faint text-muted/40 py-[14px] text-center cursor-not-allowed select-none">
+                            Unavailable
+                        </div>
+                    }
                 </div>
             </div>
         }
     </div>
 }
+
+<!-- ============================================================= -->
+<!-- WISHLIST REMOVE HANDLER (enhanced from wishlist.js)             -->
+<!-- ============================================================= -->
+<script>
+    (function () {
+        document.querySelectorAll('.wishlist-card .js-toggle-wishlist').forEach(btn => {
+            btn.addEventListener('click', async function (e) {
+                e.preventDefault();
+                const watchId = btn.dataset.watchId;
+                const card = btn.closest('.wishlist-card');
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                try {
+                    const resp = await fetch('/api/wishlist/toggle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token || ''
+                        },
+                        body: JSON.stringify({ watchId })
+                    });
+
+                    if (resp.ok) {
+                        // Animate card removal
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.95) translateY(8px)';
+                        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        setTimeout(() => {
+                            card.remove();
+                            // Update count in subtitle
+                            const remaining = document.querySelectorAll('.wishlist-card').length;
+                            const subtitle = document.querySelector('div.mb-\\[40px\\] p');
+                            if (subtitle) {
+                                if (remaining === 0) {
+                                    location.reload(); // Show empty state
+                                } else {
+                                    subtitle.textContent = remaining + (remaining === 1 ? ' timepiece' : ' timepieces') + ' currently in your vault.';
+                                }
+                            }
+                        }, 320);
+                    }
+                } catch {
+                    // Silently fail — page refresh will reconcile
+                }
+            });
+        });
+    })();
+</script>

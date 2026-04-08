@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-07 | Location: India (IST)
+Last updated: 2026-04-09 (Session 6) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -153,10 +153,18 @@ dotnet user-secrets list --project WonderWatch.Web
 - **Symptoms:** The visual state (gold border/tick) does not update because the hidden `<input>` is blocked by a higher `z-index` element or `pointer-events-none`.
 - **Fix:** Ensure the `<label>` tag is the primary click target. Use inline JavaScript (`onchange="this.nextElementSibling.style.opacity = this.checked ? '1' : '0';"`) to guarantee the visual UI updates instantly, bypassing complex CSS sibling selectors that might fail to compile.
 
+
 ### Error 008 — Shell Mismatch (Bash vs. PowerShell)
 - **Trigger:** Pasting PowerShell scripts (containing `Write-Host`, `$var = @()`) into an Ubuntu (WSL) Bash terminal.
 - **Symptoms:** `command not found` and `syntax error` messages.
 - **Fix:** Always match the script language to the terminal environment. Use `curl` and `mkdir -p` for Bash, and `Invoke-WebRequest` and `New-Item` for PowerShell.
+
+### Error 009 — CSS Destruction from Wrong Tailwind Input File
+- **Trigger:** Running `npx tailwindcss` manually with `./wwwroot/css/site.css` as input instead of `./Styles/app.css`.
+- **Symptoms:** ALL Tailwind utility classes disappear. Pages render unstyled — white background, blue links, no layout.
+- **Root Cause:** `site.css` is plain CSS (Bootstrap-era defaults + catalog components) with zero `@tailwind` directives. Compiling it overwrites `global.css` with only catalog CSS, destroying the utility layer.
+- **Fix:** Always use `npm run build:css` (NEVER run `npx tailwindcss` directly with manual paths).
+- **Prevention:** The `build:css` npm script in `package.json` is the **single source of truth** for input/output paths: `npx tailwindcss -i ./Styles/app.css -o ./wwwroot/css/global.css`.
 
 ---
 
@@ -172,3 +180,31 @@ dotnet user-secrets list --project WonderWatch.Web
 - `dotnet test WonderWatch.Tests` (Fixed InMemory `.Include` limitation) ✅
 - Executed PowerShell Asset Hydration Script (Fixed Unsplash 404 dead link) ✅
 - `dotnet run --project WonderWatch.Web` ✅ (Application rendering verified)
+
+### Session 3 Final History — 2026-04-08
+- Multi-replace executed on `_VaultLayout.cshtml` to map global navbar `mt-[96px]` buffer. ✅
+- Authentication Screens updated to remove `pt-[131px]` offset and injected raw collection imagery instead of placeholder graphic. ✅
+- Task artifact creation and systematic tracking enforced on `FILES.md`, `COMMANDS.md`, `MEMORY.md`. ✅
+
+### Session 4 Final History — 2026-04-08
+- `dotnet ef migrations add AddUserAvatarUrl --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure` ✅
+- `dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure` ✅ (Migration applied)
+- `dotnet build WonderWatch.Web` ✅ (0 Errors, 18 NuGet warnings)
+- `npm run build:css` ✅ (Tailwind recompiled in 353ms)
+- Files modified: `ApplicationUser.cs`, `VaultController.cs`, `_VaultLayout.cshtml`, `Index.cshtml` (Vault Dashboard)
+
+### Session 5 Final History — 2026-04-09
+- **CSS BUG FIX:** Rebuilt `global.css` via `npm run build:css` ✅ (9KB → 58KB, 418ms)
+- Root cause: Session 5 build step accidentally used `site.css` as input instead of `Styles/app.css`
+- `dotnet build WonderWatch.Web` ✅ (0 Errors, 18 NuGet warnings)
+- Files modified: `ApplicationContracts.cs`, `VaultController.cs`, `Orders.cshtml`, `Wishlist.cshtml`, `_VaultLayout.cshtml`
+- Files created: `Invoice.cshtml`, `DATABASE_SCHEMA.md`
+- **Launch method:** Visual Studio 2026 ▶ button (IIS Express/Kestrel, `https://localhost:7105`)
+
+### Session 6 Final History — 2026-04-09
+- `dotnet ef migrations add AddUserAddressesAndNotifications --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure` ✅
+- `dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Infrastructure` ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors)
+- `npm run build:css` ✅ (Tailwind recompiled)
+- Files modified: `ApplicationUser.cs`, `VaultController.cs`, `AdminController.cs`, `Profile.cshtml`, `Addresses.cshtml`, `Notifications.cshtml`, `Settings.cshtml`, `_VaultLayout.cshtml`, `appsettings.json`
+- Files created: `UserAddress.cs`, `UserNotification.cs`, `vault.js`
