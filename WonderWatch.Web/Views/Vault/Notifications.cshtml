@@ -1,94 +1,148 @@
 @model WonderWatch.Web.ViewModels.VaultNotificationsViewModel
 @{
     Layout = "_VaultLayout";
-    ViewData["Title"] = "Notification Preferences";
+    ViewData["Title"] = "Notifications";
 }
 
-<div class="mb-[48px]">
-    <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Notifications</h1>
-    <p class="font-sans text-[14px] text-muted">Manage how the Wonder Watch atelier communicates with you.</p>
+<div class="mb-[48px] flex flex-col md:flex-row md:items-end justify-between gap-[24px]">
+    <div>
+        <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">
+            Notifications
+            @if (Model.UnreadCount > 0)
+            {
+                <span class="inline-flex items-center justify-center bg-gold text-void font-sans font-bold text-[11px] w-[28px] h-[28px] ml-[12px] align-middle">@Model.UnreadCount</span>
+            }
+        </h1>
+        <p class="font-sans text-[14px] text-muted">Your activity feed from the Wonder Watch atelier.</p>
+    </div>
+
+    @if (Model.Notifications.Any(n => !n.IsRead))
+    {
+        <form action="/vault/notifications/mark-all-read" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="border border-gold text-gold font-sans font-bold text-[11px] tracking-[1.5px] uppercase px-[24px] py-[12px] hover:bg-[rgba(201,167,74,0.1)] transition-colors duration-300 focus:outline-none">
+                Mark All Read
+            </button>
+        </form>
+    }
 </div>
 
-<div class="max-w-4xl">
-    <form action="#" method="post" class="flex flex-col gap-[32px]">
-        @Html.AntiForgeryToken()
+<!-- FILTER TABS -->
+<div class="flex items-center gap-[4px] mb-[32px] border-b border-white-faint">
+    @{
+        var filters = new[] { "ALL", "ORDER", "OFFER", "SYSTEM" };
+    }
+    @foreach (var f in filters)
+    {
+        var isActive = Model.ActiveFilter == f;
+        var activeClass = isActive
+            ? "text-gold border-b-2 border-gold"
+            : "text-muted border-b-2 border-transparent hover:text-parchment";
+        <a href="/vault/notifications?filter=@f.ToLower()"
+           class="font-sans font-bold text-[11px] tracking-[2px] uppercase px-[20px] py-[14px] transition-colors @activeClass">
+            @f
+            @{
+                var count = f == "ALL"
+                    ? Model.Notifications.Count
+                    : Model.Notifications.Count(n => n.Type.Equals(f, StringComparison.OrdinalIgnoreCase));
+            }
+            @if (count > 0)
+            {
+                <span class="ml-[6px] text-[10px] text-muted/50">(@count)</span>
+            }
+        </a>
+    }
+</div>
 
-        <!-- ORDER UPDATES -->
-        <div class="bg-surface border border-white-faint p-[32px] md:p-[48px]">
-            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Acquisition Updates</h2>
-            
-            <div class="flex flex-col gap-[24px]">
-                <div class="flex items-center justify-between gap-[24px]">
-                    <div>
-                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Order Status (Email)</span>
-                        <span class="font-sans text-[12px] text-muted">Receive updates when your timepiece is processing, shipped, and delivered.</span>
-                    </div>
-                    <!-- Sharp Toggle -->
-                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                        <input type="checkbox" name="OrderEmail" value="true" class="sr-only peer" checked>
-                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
-                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
-                    </label>
+<!-- NOTIFICATION FEED -->
+<div class="max-w-4xl flex flex-col gap-[2px]">
+    @{
+        var filtered = Model.ActiveFilter == "ALL"
+            ? Model.Notifications
+            : Model.Notifications.Where(n => n.Type.Equals(Model.ActiveFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    @if (!filtered.Any())
+    {
+        <div class="bg-surface border border-white-faint p-[64px] flex flex-col items-center justify-center text-center">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1" stroke-linecap="square" class="mb-[24px] opacity-30">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span class="font-sans text-[16px] text-muted mb-[8px]">No notifications yet</span>
+            <span class="font-sans text-[12px] text-muted/50">We'll notify you when something noteworthy happens.</span>
+        </div>
+    }
+    else
+    {
+        @foreach (var notif in filtered)
+        {
+            var bgClass = notif.IsRead ? "bg-surface" : "bg-[rgba(201,167,74,0.04)]";
+            var borderClass = notif.IsRead ? "border-white-faint" : "border-gold/20";
+            var iconColor = notif.Type switch
+            {
+                "Order" => "#C9A74A",
+                "Offer" => "#22c55e",
+                "System" => "#60a5fa",
+                _ => "#999"
+            };
+
+            <div class="@bgClass border @borderClass p-[24px] md:p-[32px] flex gap-[20px] items-start transition-colors group">
+                <!-- Icon -->
+                <div class="flex-shrink-0 w-[40px] h-[40px] border border-white-faint flex items-center justify-center bg-void">
+                    @if (notif.Type == "Order")
+                    {
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="@iconColor" stroke-width="1.5" stroke-linecap="square">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        </svg>
+                    }
+                    else if (notif.Type == "Offer")
+                    {
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="@iconColor" stroke-width="1.5" stroke-linecap="square">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="@iconColor" stroke-width="1.5" stroke-linecap="square">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                    }
                 </div>
 
-                <div class="w-full h-[1px] bg-white-faint"></div>
-
-                <div class="flex items-center justify-between gap-[24px]">
-                    <div>
-                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Delivery Alerts (SMS)</span>
-                        <span class="font-sans text-[12px] text-muted">Real-time text messages on the day of delivery.</span>
+                <!-- Content -->
+                <div class="flex-grow min-w-0">
+                    <div class="flex items-start justify-between gap-[16px]">
+                        <div>
+                            <h3 class="font-sans font-bold text-[14px] text-parchment leading-tight mb-[6px]">
+                                @if (!notif.IsRead)
+                                {
+                                    <span class="inline-block w-[6px] h-[6px] bg-gold mr-[8px] flex-shrink-0 relative top-[-1px]"></span>
+                                }
+                                @notif.Title
+                            </h3>
+                            <p class="font-sans text-[13px] text-muted leading-relaxed">@notif.Body</p>
+                        </div>
+                        <div class="flex-shrink-0 flex flex-col items-end gap-[8px]">
+                            <span class="font-sans text-[10px] text-muted/40 whitespace-nowrap">@notif.CreatedAt.ToString("dd MMM, HH:mm")</span>
+                            @if (!notif.IsRead)
+                            {
+                                <form action="/vault/notifications/mark-read/@notif.Id" method="post" class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="font-sans text-[10px] text-gold tracking-[1px] uppercase hover:text-parchment transition-colors">
+                                        Mark Read
+                                    </button>
+                                </form>
+                            }
+                        </div>
                     </div>
-                    <!-- Sharp Toggle -->
-                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                        <input type="checkbox" name="OrderSms" value="true" class="sr-only peer" checked>
-                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
-                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
-                    </label>
+                    <div class="mt-[8px]">
+                        <span class="inline-block bg-surface-alt border border-white-faint px-[8px] py-[2px] font-sans font-bold text-[9px] text-muted tracking-[1.5px] uppercase">@notif.Type</span>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- EXCLUSIVE ACCESS -->
-        <div class="bg-surface border border-white-faint p-[32px] md:p-[48px]">
-            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">The Vault Exclusives</h2>
-            
-            <div class="flex flex-col gap-[24px]">
-                <div class="flex items-center justify-between gap-[24px]">
-                    <div>
-                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">New Reference Announcements</span>
-                        <span class="font-sans text-[12px] text-muted">Be the first to know when a new horological masterpiece enters the catalog.</span>
-                    </div>
-                    <!-- Sharp Toggle -->
-                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                        <input type="checkbox" name="MarketingEmail" value="true" class="sr-only peer" checked>
-                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
-                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
-                    </label>
-                </div>
-
-                <div class="w-full h-[1px] bg-white-faint"></div>
-
-                <div class="flex items-center justify-between gap-[24px]">
-                    <div>
-                        <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Concierge Communications</span>
-                        <span class="font-sans text-[12px] text-muted">Direct messages from our Chief Curator regarding your wishlist or bespoke requests.</span>
-                    </div>
-                    <!-- Sharp Toggle -->
-                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                        <input type="checkbox" name="ConciergeEmail" value="true" class="sr-only peer" checked>
-                        <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
-                        <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- ACTIONS -->
-        <div class="flex justify-end mt-[16px]">
-            <button type="submit" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[48px] py-[20px] hover:bg-parchment transition-colors duration-600 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
-                Save Preferences
-            </button>
-        </div>
-
-    </form>
+        }
+    }
 </div>

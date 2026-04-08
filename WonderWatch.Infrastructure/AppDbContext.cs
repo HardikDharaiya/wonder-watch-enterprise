@@ -19,6 +19,8 @@ namespace WonderWatch.Infrastructure
         public DbSet<Review> Reviews => Set<Review>();
         public DbSet<Wishlist> Wishlists => Set<Wishlist>();
         public DbSet<WatchImage> WatchImages => Set<WatchImage>();
+        public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+        public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -42,6 +44,16 @@ namespace WonderWatch.Infrastructure
                 b.HasMany(u => u.Reviews)
                  .WithOne()
                  .HasForeignKey(r => r.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasMany(u => u.Addresses)
+                 .WithOne()
+                 .HasForeignKey(a => a.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasMany(u => u.Notifications)
+                 .WithOne()
+                 .HasForeignKey(n => n.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -148,6 +160,36 @@ namespace WonderWatch.Infrastructure
                 b.HasKey(r => r.Id);
                 b.Property(r => r.Body).IsRequired().HasMaxLength(2000);
                 b.Property(r => r.Rating).IsRequired();
+            });
+
+            // ---------------------------------------------------------
+            // USER ADDRESS CONFIGURATION
+            // ---------------------------------------------------------
+            builder.Entity<UserAddress>(b =>
+            {
+                b.HasKey(a => a.Id);
+                b.Property(a => a.Label).IsRequired().HasMaxLength(50);
+                b.Property(a => a.FullName).IsRequired().HasMaxLength(200);
+                b.Property(a => a.Line1).IsRequired().HasMaxLength(200);
+                b.Property(a => a.Line2).HasMaxLength(200);
+                b.Property(a => a.City).IsRequired().HasMaxLength(100);
+                b.Property(a => a.State).IsRequired().HasMaxLength(100);
+                b.Property(a => a.PinCode).IsRequired().HasMaxLength(20);
+                b.Property(a => a.Country).IsRequired().HasMaxLength(100);
+                b.Property(a => a.Phone).IsRequired().HasMaxLength(20);
+                b.HasIndex(a => a.UserId);
+            });
+
+            // ---------------------------------------------------------
+            // USER NOTIFICATION CONFIGURATION
+            // ---------------------------------------------------------
+            builder.Entity<UserNotification>(b =>
+            {
+                b.HasKey(n => n.Id);
+                b.Property(n => n.Title).IsRequired().HasMaxLength(200);
+                b.Property(n => n.Body).IsRequired().HasMaxLength(1000);
+                b.HasIndex(n => n.UserId);
+                b.HasIndex(n => new { n.UserId, n.IsRead });
             });
         }
     }

@@ -61,13 +61,60 @@ namespace WonderWatch.Application.DTOs
     public class OrderSummaryDto
     {
         public Guid Id { get; set; }
-        public string OrderNumber { get; set; } = string.Empty; // e.g., "#WW-8921"
+        public string OrderNumber { get; set; } = string.Empty; // e.g., "#1A2B3C4"
         public DateTime Date { get; set; }
+        public DateTime UpdatedAt { get; set; }
         public string TotalFormatted { get; set; } = string.Empty;
         public OrderStatus Status { get; set; }
         public int ItemCount { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
         public string WatchName { get; set; } = string.Empty;
+    }
+
+    // ---------------------------------------------------------
+    // ADDRESS DTOS
+    // ---------------------------------------------------------
+    public class UserAddressDto
+    {
+        public Guid Id { get; set; }
+        public string Label { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string Line1 { get; set; } = string.Empty;
+        public string Line2 { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public string PinCode { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public bool IsDefault { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class CreateAddressDto
+    {
+        public string Label { get; set; } = "Home";
+        public string FullName { get; set; } = string.Empty;
+        public string Line1 { get; set; } = string.Empty;
+        public string Line2 { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public string PinCode { get; set; } = string.Empty;
+        public string Country { get; set; } = "India";
+        public string Phone { get; set; } = string.Empty;
+        public bool IsDefault { get; set; }
+    }
+
+    // ---------------------------------------------------------
+    // NOTIFICATION DTOS
+    // ---------------------------------------------------------
+    public class NotificationDto
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public bool IsRead { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }
 
@@ -128,5 +175,24 @@ namespace WonderWatch.Application.Interfaces
     {
         Task SendOrderConfirmationAsync(Order order);
         Task SendShippingUpdateAsync(Order order);
+        Task SendTestEmailAsync(string toEmail);
+    }
+
+    public interface IAddressService
+    {
+        Task<List<UserAddressDto>> GetByUserAsync(Guid userId);
+        Task<UserAddressDto> AddAsync(Guid userId, CreateAddressDto dto);
+        Task UpdateAsync(Guid addressId, Guid userId, CreateAddressDto dto);
+        Task DeleteAsync(Guid addressId, Guid userId);
+        Task SetDefaultAsync(Guid addressId, Guid userId);
+    }
+
+    public interface INotificationService
+    {
+        Task<List<NotificationDto>> GetByUserAsync(Guid userId);
+        Task MarkAllReadAsync(Guid userId);
+        Task MarkReadAsync(Guid notificationId, Guid userId);
+        Task<int> GetUnreadCountAsync(Guid userId);
+        Task CreateAsync(Guid userId, string title, string body, NotificationType type);
     }
 }

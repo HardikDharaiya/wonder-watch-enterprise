@@ -84,6 +84,8 @@ try
     builder.Services.AddScoped<IAssetService, AssetService>();
     builder.Services.AddScoped<IAdminService, AdminService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IAddressService, AddressService>();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
 
     // 7. MVC Controllers & Views
     builder.Services.AddControllersWithViews();

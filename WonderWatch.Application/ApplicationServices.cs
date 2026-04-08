@@ -475,24 +475,291 @@ namespace WonderWatch.Application.Services
     public class EmailService : IEmailService
     {
         private readonly ILogger<EmailService> _logger;
+        private readonly IConfiguration _config;
 
-        public EmailService(ILogger<EmailService> logger)
+        public EmailService(ILogger<EmailService> logger, IConfiguration config)
         {
             _logger = logger;
+            _config = config;
         }
 
-        public Task SendOrderConfirmationAsync(Order order)
+        private async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
         {
-            // In a production environment, this would integrate with SendGrid/AWS SES.
-            // For this blueprint, we log the action to satisfy the interface without throwing NotImplementedException.
-            _logger.LogInformation("Order Confirmation Email queued for Order {OrderId}", order.Id);
-            return Task.CompletedTask;
+            var smtpHost = _config["SmtpSettings:Host"];
+            var smtpPort = int.TryParse(_config["SmtpSettings:Port"], out var p) ? p : 587;
+            var smtpUser = _config["SmtpSettings:Username"];
+            var smtpPass = _config["SmtpSettings:Password"];
+            var fromEmail = _config["SmtpSettings:FromEmail"] ?? smtpUser;
+            var fromName = _config["SmtpSettings:FromName"] ?? "Wonder Watch";
+
+            if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser))
+            {
+                _logger.LogWarning("SMTP not configured. Email to {To} with subject '{Subject}' will be skipped.", toEmail, subject);
+                return;
+            }
+
+            var message = new MimeKit.MimeMessage();
+            message.From.Add(new MimeKit.MailboxAddress(fromName, fromEmail));
+            message.To.Add(MimeKit.MailboxAddress.Parse(toEmail));
+            message.Subject = subject;
+            message.Body = new MimeKit.BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
+
+            using var client = new MailKit.Net.Smtp.SmtpClient();
+            await client.ConnectAsync(smtpHost, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(smtpUser, smtpPass);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+
+            _logger.LogInformation("Email sent to {To} with subject '{Subject}'", toEmail, subject);
         }
 
-        public Task SendShippingUpdateAsync(Order order)
+        public async Task SendOrderConfirmationAsync(Order order)
+        {
+            _logger.LogInformation("Order Confirmation Email queued for Order {OrderId}", order.Id);
+            // In production, resolve user email from UserId. For now, log.
+            await Task.CompletedTask;
+        }
+
+        public async Task SendShippingUpdateAsync(Order order)
         {
             _logger.LogInformation("Shipping Update Email queued for Order {OrderId} with Status {Status}", order.Id, order.Status);
-            return Task.CompletedTask;
+            await Task.CompletedTask;
+        }
+
+        public async Task SendTestEmailAsync(string toEmail)
+        {
+            var html = @"
+                <div style='font-family:sans-serif;max-width:560px;margin:0 auto;padding:40px;background:#0A0A0A;color:#F0E6D3;'>
+                    <h1 style='color:#C9A74A;font-size:24px;margin-bottom:16px;'>Wonder Watch</h1>
+                    <p style='font-size:14px;line-height:1.7;'>This is a test email from your Wonder Watch Enterprise platform.</p>
+                    <p style='font-size:14px;line-height:1.7;color:#999;'>SMTP configuration is working correctly.</p>
+                    <hr style='border:none;border-top:1px solid #222;margin:32px 0;' />
+                    <p style='font-size:11px;color:#555;'>Sent at " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC") + @"</p>
+                </div>";
+
+            await SendEmailAsync(toEmail, "Wonder Watch — SMTP Test", html);
+        }
+    }
+
+    // =============================================================
+    // ADDRESS SERVICE — CRUD operations for Vault → Addresses
+    // =============================================================
+    public class AddressService : IAddressService
+    {
+        private readonly AppDbContext _context;
+
+        public AddressService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<UserAddressDto>> GetByUserAsync(Guid userId)
+        {
+            return await _context.UserAddresses
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.IsDefault)
+                .ThenByDescending(a => a.CreatedAt)
+                .Select(a => new UserAddressDto
+                {
+                    Id = a.Id,
+                    Label = a.Label,
+                    FullName = a.FullName,
+                    Line1 = a.Line1,
+                    Line2 = a.Line2,
+                    City = a.City,
+                    State = a.State,
+                    PinCode = a.PinCode,
+                    Country = a.Country,
+                    Phone = a.Phone,
+                    IsDefault = a.IsDefault,
+                    CreatedAt = a.CreatedAt
+                })
+                .ToListAsync();
+        }
+
+        public async Task<UserAddressDto> AddAsync(Guid userId, CreateAddressDto dto)
+        {
+            // If setting as default, unset existing defaults
+            if (dto.IsDefault)
+            {
+                var existing = await _context.UserAddresses
+                    .Where(a => a.UserId == userId && a.IsDefault)
+                    .ToListAsync();
+                foreach (var e in existing) e.IsDefault = false;
+            }
+
+            // If this is the first address, make it default
+            var hasAny = await _context.UserAddresses.AnyAsync(a => a.UserId == userId);
+
+            var entity = new UserAddress
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Label = dto.Label,
+                FullName = dto.FullName,
+                Line1 = dto.Line1,
+                Line2 = dto.Line2,
+                City = dto.City,
+                State = dto.State,
+                PinCode = dto.PinCode,
+                Country = dto.Country,
+                Phone = dto.Phone,
+                IsDefault = dto.IsDefault || !hasAny,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.UserAddresses.Add(entity);
+            await _context.SaveChangesAsync();
+
+            return new UserAddressDto
+            {
+                Id = entity.Id,
+                Label = entity.Label,
+                FullName = entity.FullName,
+                Line1 = entity.Line1,
+                Line2 = entity.Line2,
+                City = entity.City,
+                State = entity.State,
+                PinCode = entity.PinCode,
+                Country = entity.Country,
+                Phone = entity.Phone,
+                IsDefault = entity.IsDefault,
+                CreatedAt = entity.CreatedAt
+            };
+        }
+
+        public async Task UpdateAsync(Guid addressId, Guid userId, CreateAddressDto dto)
+        {
+            var entity = await _context.UserAddresses
+                .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId)
+                ?? throw new InvalidOperationException("Address not found.");
+
+            if (dto.IsDefault)
+            {
+                var others = await _context.UserAddresses
+                    .Where(a => a.UserId == userId && a.Id != addressId && a.IsDefault)
+                    .ToListAsync();
+                foreach (var o in others) o.IsDefault = false;
+            }
+
+            entity.Label = dto.Label;
+            entity.FullName = dto.FullName;
+            entity.Line1 = dto.Line1;
+            entity.Line2 = dto.Line2;
+            entity.City = dto.City;
+            entity.State = dto.State;
+            entity.PinCode = dto.PinCode;
+            entity.Country = dto.Country;
+            entity.Phone = dto.Phone;
+            entity.IsDefault = dto.IsDefault;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Guid addressId, Guid userId)
+        {
+            var entity = await _context.UserAddresses
+                .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId)
+                ?? throw new InvalidOperationException("Address not found.");
+
+            bool wasDefault = entity.IsDefault;
+            _context.UserAddresses.Remove(entity);
+            await _context.SaveChangesAsync();
+
+            // If we deleted the default, promote the first remaining
+            if (wasDefault)
+            {
+                var next = await _context.UserAddresses
+                    .Where(a => a.UserId == userId)
+                    .OrderByDescending(a => a.CreatedAt)
+                    .FirstOrDefaultAsync();
+                if (next != null)
+                {
+                    next.IsDefault = true;
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+
+        public async Task SetDefaultAsync(Guid addressId, Guid userId)
+        {
+            var all = await _context.UserAddresses
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
+
+            foreach (var a in all)
+                a.IsDefault = a.Id == addressId;
+
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    // =============================================================
+    // NOTIFICATION SERVICE — Feed management for Vault → Notifications
+    // =============================================================
+    public class NotificationService : INotificationService
+    {
+        private readonly AppDbContext _context;
+
+        public NotificationService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<NotificationDto>> GetByUserAsync(Guid userId)
+        {
+            return await _context.UserNotifications
+                .Where(n => n.UserId == userId)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NotificationDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Body = n.Body,
+                    Type = n.Type.ToString(),
+                    IsRead = n.IsRead,
+                    CreatedAt = n.CreatedAt
+                })
+                .ToListAsync();
+        }
+
+        public async Task MarkAllReadAsync(Guid userId)
+        {
+            await _context.UserNotifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+        }
+
+        public async Task MarkReadAsync(Guid notificationId, Guid userId)
+        {
+            var entity = await _context.UserNotifications
+                .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
+            if (entity != null)
+            {
+                entity.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<int> GetUnreadCountAsync(Guid userId)
+        {
+            return await _context.UserNotifications
+                .CountAsync(n => n.UserId == userId && !n.IsRead);
+        }
+
+        public async Task CreateAsync(Guid userId, string title, string body, NotificationType type)
+        {
+            _context.UserNotifications.Add(new UserNotification
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Title = title,
+                Body = body,
+                Type = type,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
         }
     }
 }

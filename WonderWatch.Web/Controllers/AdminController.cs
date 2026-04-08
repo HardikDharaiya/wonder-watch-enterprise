@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -24,17 +25,23 @@ namespace WonderWatch.Web.Controllers
         private readonly IAssetService _assetService;
         private readonly AppDbContext _context;
         private readonly ILogger<AdminController> _logger;
+        private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
 
         public AdminController(
             IAdminService adminService,
             IAssetService assetService,
             AppDbContext context,
-            ILogger<AdminController> logger)
+            ILogger<AdminController> logger,
+            IConfiguration config,
+            IEmailService emailService)
         {
             _adminService = adminService;
             _assetService = assetService;
             _context = context;
             _logger = logger;
+            _config = config;
+            _emailService = emailService;
         }
 
         [HttpGet("")]
@@ -219,7 +226,75 @@ namespace WonderWatch.Web.Controllers
         [HttpGet("settings")]
         public IActionResult Settings()
         {
+            ViewBag.SmtpHost = _config["SmtpSettings:Host"];
+            ViewBag.SmtpPort = _config["SmtpSettings:Port"];
+            ViewBag.SmtpUsername = _config["SmtpSettings:Username"];
+            ViewBag.SmtpPassword = _config["SmtpSettings:Password"];
+            ViewBag.SmtpFromEmail = _config["SmtpSettings:FromEmail"];
+            ViewBag.SmtpFromName = _config["SmtpSettings:FromName"];
             return View();
+        }
+
+        [HttpPost("settings/save")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSettings(string SmtpHost, string SmtpPort, string SmtpUsername, string SmtpPassword, string SmtpFromEmail, string SmtpFromName)
+        {
+            // Write to appsettings.json (runtime config update)
+            try
+            {
+                var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+                var json = await System.IO.File.ReadAllTextAsync(appSettingsPath);
+                var doc = System.Text.Json.JsonDocument.Parse(json);
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new();
+
+                var smtpSection = new Dictionary<string, string>
+                {
+                    ["Host"] = SmtpHost ?? "",
+                    ["Port"] = SmtpPort ?? "587",
+                    ["Username"] = SmtpUsername ?? "",
+                    ["Password"] = SmtpPassword ?? "",
+                    ["FromEmail"] = SmtpFromEmail ?? "",
+                    ["FromName"] = SmtpFromName ?? "Wonder Watch"
+                };
+
+                dict["SmtpSettings"] = smtpSection;
+
+                var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                await System.IO.File.WriteAllTextAsync(appSettingsPath, System.Text.Json.JsonSerializer.Serialize(dict, options));
+
+                TempData["SmtpSuccess"] = "SMTP settings saved. Restart the application for changes to take effect.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save SMTP settings.");
+                TempData["SmtpError"] = "Failed to save settings: " + ex.Message;
+            }
+
+            return RedirectToAction("Settings");
+        }
+
+        [HttpPost("settings/test-email")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TestEmail(string TestEmailTo)
+        {
+            if (string.IsNullOrWhiteSpace(TestEmailTo))
+            {
+                TempData["SmtpError"] = "Please enter a recipient email address.";
+                return RedirectToAction("Settings");
+            }
+
+            try
+            {
+                await _emailService.SendTestEmailAsync(TestEmailTo);
+                TempData["SmtpSuccess"] = $"Test email sent to {TestEmailTo}. Check your inbox.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Test email failed.");
+                TempData["SmtpError"] = "Failed to send test email: " + ex.Message;
+            }
+
+            return RedirectToAction("Settings");
         }
     }
 }

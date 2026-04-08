@@ -3,119 +3,176 @@
     Layout = "_VaultLayout";
     ViewData["Title"] = "Vault Dashboard";
 
-    // Helper to determine exact badge colors based on Section 3 specs
+    // Badge classes for order status
     string GetBadgeClasses(string status)
     {
         return status.ToUpper() switch
         {
-            "PAID" or "PROCESSING" => "bg-[rgba(201,167,74,0.2)] border border-[rgba(201,167,74,0.3)] text-gold",
-            "SHIPPED" => "bg-[rgba(201,167,74,0.2)] border border-[rgba(201,167,74,0.3)] text-gold",
-            "DELIVERED" => "bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-[#22C55E]",
-            "PENDING" => "bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]",
-            "CANCELLED" => "bg-[rgba(127,29,29,0.4)] border border-danger/50 text-danger",
-            _ => "bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]"
+            "PAID" or "PROCESSING" => "bg-[rgba(201,167,74,0.15)] border border-gold/20 text-gold",
+            "SHIPPED" => "bg-[rgba(201,167,74,0.15)] border border-gold/20 text-gold",
+            "DELIVERED" => "bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.15)] text-[#22C55E]",
+            "PENDING" => "bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] text-muted",
+            "CANCELLED" => "bg-[rgba(127,29,29,0.3)] border border-danger/30 text-danger",
+            _ => "bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] text-muted"
         };
     }
 }
 
-<!-- GREETING SECTION -->
-<div class="mb-[48px]">
-    <h1 class="leading-[1.1] tracking-[-1.2px]">
-        <span class="font-serif-italic text-[48px] text-parchment/60 uppercase">GOOD @Model.TimeOfDay,</span><br />
-        <span class="font-serif font-bold text-[48px] text-parchment uppercase">@Model.FirstName</span>
-    </h1>
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- HERO GREETING — Editorial Typography with Identity Integration    -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="mb-[56px]">
+    <!-- Greeting with avatar inline -->
+    <div class="flex items-start gap-[24px] mb-[20px]">
+        <div class="hidden md:block flex-shrink-0 mt-[8px]">
+            <img src="@Model.AvatarUrl" alt="@Model.FirstName" class="w-[72px] h-[72px] object-cover border-2 border-gold/30" loading="lazy" />
+        </div>
+        <div>
+            <h1 class="leading-[1.05] tracking-[-1.5px]">
+                <span class="font-serif-italic text-[40px] md:text-[52px] text-parchment/50 block">Good @Model.TimeOfDay,</span>
+                <span class="font-serif font-bold text-[40px] md:text-[52px] text-parchment block">@Model.FirstName</span>
+            </h1>
+        </div>
+    </div>
+
+    <!-- Subtle context line -->
+    <div class="flex items-center gap-[16px] pl-0 md:pl-[96px]">
+        <span class="w-[32px] h-[1px] bg-gold/30"></span>
+        <span class="font-sans text-[11px] text-muted/60 tracking-[1px]">Your private collection hub — curated just for you</span>
+    </div>
 </div>
 
-<!-- KPI TILES -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-[64px]">
-    
-    <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px]">
-        <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase">Orders</span>
-        <span class="font-sans font-light text-[30px] text-gold tracking-[-1.5px]">@Model.OrderCount</span>
-    </div>
-    
-    <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px]">
-        <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase">Wishlisted</span>
-        <span class="font-sans font-light text-[30px] text-gold tracking-[-1.5px]">@Model.WishlistCount</span>
-    </div>
-    
-    <div class="bg-surface border border-white-faint p-[32px] flex flex-col justify-between h-[160px]">
-        <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase">Membership</span>
-        <span class="font-sans font-bold text-[18px] text-gold uppercase tracking-[-0.45px]">@Model.MembershipTier</span>
-    </div>
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- KPI METRICS — Editorial Column Layout (No Generic Cards)          -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="mb-[64px]">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-white-faint">
+        
+        <!-- Orders KPI -->
+        <div class="p-[28px] md:p-[32px] flex flex-col justify-between h-[140px] border-b md:border-b-0 md:border-r border-white-faint relative group hover:bg-[rgba(201,167,74,0.02)] transition-colors duration-500">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] text-muted/60 tracking-[2.5px] uppercase">Total Orders</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square" class="opacity-40">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                </svg>
+            </div>
+            <div class="flex items-baseline gap-[8px]">
+                <span class="font-serif font-bold text-[36px] text-parchment tracking-[-2px] leading-none">@Model.OrderCount</span>
+                <span class="font-sans text-[11px] text-muted/40">placed</span>
+            </div>
+        </div>
+        
+        <!-- Wishlist KPI -->
+        <div class="p-[28px] md:p-[32px] flex flex-col justify-between h-[140px] border-b md:border-b-0 md:border-r border-white-faint relative group hover:bg-[rgba(201,167,74,0.02)] transition-colors duration-500">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] text-muted/60 tracking-[2.5px] uppercase">Curated</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square" class="opacity-40">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+                </svg>
+            </div>
+            <div class="flex items-baseline gap-[8px]">
+                <span class="font-serif font-bold text-[36px] text-parchment tracking-[-2px] leading-none">@Model.WishlistCount</span>
+                <span class="font-sans text-[11px] text-muted/40">wishlisted</span>
+            </div>
+        </div>
+        
+        <!-- Membership KPI -->
+        <div class="p-[28px] md:p-[32px] flex flex-col justify-between h-[140px] relative group hover:bg-[rgba(201,167,74,0.02)] transition-colors duration-500">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] text-muted/60 tracking-[2.5px] uppercase">Membership</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square" class="opacity-40">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+            </div>
+            <div class="flex flex-col">
+                <span class="font-serif font-bold text-[24px] text-gold uppercase tracking-[1px] leading-none">@Model.MembershipTier</span>
+                <span class="font-sans text-[10px] text-muted/40 mt-[6px]">since @Model.MemberSince.ToString("MMM yyyy")</span>
+            </div>
+        </div>
 
+    </div>
 </div>
 
-<!-- RECENT ORDER SECTION -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- RECENT ORDER — Premium Inline Display                              -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
 @if (Model.RecentOrder != null)
 {
     <div class="mb-[64px]">
-        <span class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] block">Recent Order</span>
+        <!-- Section Header -->
+        <div class="flex items-center gap-[12px] mb-[20px]">
+            <span class="w-[24px] h-[1px] bg-gold/40"></span>
+            <span class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase">Latest Acquisition</span>
+        </div>
         
-        <div class="bg-surface border border-white-faint p-[24px] flex flex-col md:flex-row items-start md:items-center gap-[24px]">
+        <div class="bg-surface/50 border border-white-faint hover:border-gold/10 transition-colors duration-500 flex flex-col md:flex-row">
             
-            <!-- Image (Strictly rounded-none per R-10) -->
-            <div class="w-[80px] h-[80px] bg-surface-alt border border-white-faint p-[8px] flex-shrink-0">
-                <img src="@Model.RecentOrder.ImageUrl" alt="@Model.RecentOrder.WatchName" class="w-full h-full object-contain drop-shadow-lg" />
+            <!-- Product Image -->
+            <div class="w-full md:w-[160px] h-[140px] md:h-auto bg-[#111] border-b md:border-b-0 md:border-r border-white-faint p-[16px] flex items-center justify-center flex-shrink-0">
+                <img src="@Model.RecentOrder.ImageUrl" alt="@Model.RecentOrder.WatchName" class="max-w-full max-h-full object-contain drop-shadow-xl" />
             </div>
             
-            <!-- Details -->
-            <div class="flex flex-col flex-grow">
-                <h3 class="font-sans font-medium text-[20px] text-parchment mb-[4px] line-clamp-1">@Model.RecentOrder.WatchName</h3>
-                <div class="flex items-center gap-[12px]">
-                    <span class="font-mono text-[12px] text-muted">@Model.RecentOrder.OrderNumber</span>
-                    <span class="text-white-faint">&bull;</span>
-                    <span class="font-sans text-[12px] text-muted">@Model.RecentOrder.Date.ToString("dd MMM yyyy")</span>
+            <!-- Order Details -->
+            <div class="flex-grow p-[24px] md:p-[28px] flex flex-col justify-between">
+                <div>
+                    <h3 class="font-sans font-medium text-[18px] text-parchment mb-[8px] line-clamp-1">@Model.RecentOrder.WatchName</h3>
+                    <div class="flex items-center gap-[10px] flex-wrap">
+                        <span class="font-mono text-[11px] text-muted/60">@Model.RecentOrder.OrderNumber</span>
+                        <span class="w-[3px] h-[3px] bg-muted/30 rounded-full"></span>
+                        <span class="font-sans text-[11px] text-muted/60">@Model.RecentOrder.Date.ToString("dd MMM yyyy")</span>
+                        <span class="inline-block px-[10px] py-[2px] font-sans font-bold text-[9px] tracking-[0.8px] uppercase @GetBadgeClasses(Model.RecentOrder.Status.ToString())">
+                            @Model.RecentOrder.Status
+                        </span>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Price & Status -->
-            <div class="flex flex-col items-start md:items-end gap-[8px]">
-                <span class="font-sans font-bold text-[18px] text-gold tracking-[-0.45px]">@Model.RecentOrder.TotalFormatted</span>
-                <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase @GetBadgeClasses(Model.RecentOrder.Status.ToString())">
-                    @Model.RecentOrder.Status
-                </span>
-            </div>
-            
-            <!-- Actions -->
-            <div class="w-full md:w-auto md:ml-[24px] md:pl-[24px] md:border-l border-white-faint flex flex-col gap-[12px]">
-                <a href="/vault/orders" class="w-full font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase border border-white-faint px-[24px] py-[12px] hover:text-gold hover:border-gold-faint transition-colors duration-600 text-center whitespace-nowrap">
-                    Download Invoice (PDF)
-                </a>
+                <div class="flex items-end justify-between mt-[16px] pt-[16px] border-t border-white-faint/50">
+                    <span class="font-serif font-bold text-[22px] text-gold tracking-[-0.5px]">@Model.RecentOrder.TotalFormatted</span>
+                    <div class="flex items-center gap-[12px]">
+                        <a href="/vault/orders" class="font-sans font-bold text-[10px] text-muted/50 tracking-[1.5px] uppercase hover:text-gold transition-colors duration-300">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
             </div>
 
         </div>
     </div>
 }
 
-<!-- YOUR WISHLIST SECTION -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- WISHLIST PREVIEW — Editorial Grid with Hover Reveals               -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
 @if (Model.WishlistPreview.Any())
 {
-    <div>
-        <div class="flex items-center justify-between mb-[24px]">
-            <span class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase">Your Wishlist</span>
-            <a href="/vault/wishlist" class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase hover:text-gold transition-colors">View All &rarr;</a>
+    <div class="mb-[48px]">
+        <!-- Section Header -->
+        <div class="flex items-center justify-between mb-[20px]">
+            <div class="flex items-center gap-[12px]">
+                <span class="w-[24px] h-[1px] bg-gold/40"></span>
+                <span class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase">Your Curation</span>
+            </div>
+            <a href="/vault/wishlist" class="font-sans font-medium text-[10px] text-muted/40 tracking-[1.5px] uppercase hover:text-gold transition-colors duration-300">View All →</a>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-[24px]">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[16px]">
             @foreach (var watch in Model.WishlistPreview)
             {
-                <a href="/catalog/@watch.Slug" class="group block bg-surface border border-white-faint hover:border-gold-faint transition-colors duration-600 flex flex-col h-full relative">
+                <a href="/catalog/@watch.Slug" class="group block border border-white-faint hover:border-gold/20 transition-all duration-500 relative overflow-hidden">
                     
                     @if (watch.IsSoldOut)
                     {
-                        <div class="absolute top-4 right-4 z-20 bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px]">
+                        <div class="absolute top-[12px] right-[12px] z-20 bg-[rgba(127,29,29,0.5)] text-danger font-sans font-bold text-[8px] tracking-[1px] uppercase px-[8px] py-[3px]">
                             Sold Out
                         </div>
                     }
 
-                    <div class="w-full aspect-[4/5] bg-surface-alt relative overflow-hidden p-[24px] flex items-center justify-center">
-                        <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-600 drop-shadow-2xl" loading="lazy" />
+                    <div class="w-full aspect-square bg-[#111] relative overflow-hidden p-[20px] flex items-center justify-center">
+                        <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-700 drop-shadow-xl" loading="lazy" />
                     </div>
                     
-                    <div class="p-[24px] border-t border-white-faint group-hover:border-gold-faint transition-colors duration-600 flex-grow flex flex-col">
-                        <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase block mb-[8px]">@watch.Brand</span>
-                        <h3 class="font-sans font-medium text-[20px] text-parchment tracking-normal line-clamp-2">@watch.Name</h3>
+                    <div class="p-[16px] border-t border-white-faint group-hover:border-gold/10 transition-colors duration-500">
+                        <span class="font-sans font-bold text-[9px] text-gold/70 tracking-[2px] uppercase block mb-[4px]">@watch.Brand</span>
+                        <h3 class="font-sans font-medium text-[14px] text-parchment/80 group-hover:text-parchment transition-colors duration-300 leading-snug line-clamp-1">@watch.Name</h3>
                     </div>
                 </a>
             }
@@ -124,16 +181,42 @@
 }
 else
 {
-    <div>
-        <span class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] block">Your Wishlist</span>
-        <div class="bg-surface border border-white-faint p-[48px] text-center flex flex-col items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1.5" stroke-linecap="square" class="mb-[16px]">
+    <div class="mb-[48px]">
+        <!-- Section Header -->
+        <div class="flex items-center gap-[12px] mb-[20px]">
+            <span class="w-[24px] h-[1px] bg-gold/40"></span>
+            <span class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase">Your Curation</span>
+        </div>
+        
+        <div class="border border-white-faint p-[48px] md:p-[64px] text-center flex flex-col items-center justify-center bg-[rgba(255,255,255,0.01)]">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(201,167,74,0.3)" stroke-width="1.5" stroke-linecap="square" class="mb-[16px]">
                 <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
             </svg>
-            <p class="font-sans text-[14px] text-muted mb-[24px]">You have not curated any timepieces yet.</p>
-            <a href="/catalog" class="font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase border-b border-gold pb-1 hover:text-parchment hover:border-parchment transition-colors duration-600">
+            <p class="font-sans text-[13px] text-muted/50 mb-[20px]">You have not curated any timepieces yet.</p>
+            <a href="/catalog" class="inline-flex items-center gap-[8px] font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase border border-gold/20 px-[24px] py-[10px] hover:bg-[rgba(201,167,74,0.05)] hover:border-gold/40 transition-all duration-300">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 Explore Catalog
             </a>
         </div>
     </div>
 }
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- QUICK ACTIONS — Bottom Action Bar                                  -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="border-t border-white-faint pt-[24px] flex flex-wrap items-center gap-[16px]">
+    <a href="/vault/profile" class="inline-flex items-center gap-[8px] font-sans text-[10px] text-muted/40 tracking-[1px] uppercase hover:text-gold transition-colors duration-300">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Edit Profile
+    </a>
+    <span class="w-[1px] h-[12px] bg-white-faint"></span>
+    <a href="/vault/addresses" class="inline-flex items-center gap-[8px] font-sans text-[10px] text-muted/40 tracking-[1px] uppercase hover:text-gold transition-colors duration-300">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Manage Addresses
+    </a>
+    <span class="w-[1px] h-[12px] bg-white-faint"></span>
+    <a href="/vault/notifications" class="inline-flex items-center gap-[8px] font-sans text-[10px] text-muted/40 tracking-[1px] uppercase hover:text-gold transition-colors duration-300">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications
+    </a>
+</div>

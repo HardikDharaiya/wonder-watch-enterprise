@@ -1,0 +1,312 @@
+@model WonderWatch.Web.ViewModels.VaultInvoiceViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice @Model.OrderNumber — Wonder Watch</title>
+    <style>
+        /* ============================================================= */
+        /* PRINT-OPTIMIZED INVOICE STYLESHEET                            */
+        /* ============================================================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Manrope', 'Segoe UI', Arial, sans-serif;
+            background: #fff;
+            color: #1a1a1a;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 48px;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 32px;
+            border-bottom: 2px solid #C9A74A;
+            margin-bottom: 32px;
+        }
+
+        .brand-name {
+            font-family: 'Playfair Display', 'Georgia', serif;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #0A0A0A;
+        }
+
+        .brand-subtitle {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #8A816C;
+            margin-top: 4px;
+        }
+
+        .invoice-title {
+            font-family: 'Playfair Display', 'Georgia', serif;
+            font-size: 24px;
+            font-style: italic;
+            text-align: right;
+            color: #C9A74A;
+        }
+
+        .invoice-number {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .info-block h4 {
+            font-size: 9px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #8A816C;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .info-block p {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 32px;
+        }
+
+        .items-table thead th {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #8A816C;
+            font-weight: 700;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .items-table thead th:last-child,
+        .items-table thead th:nth-child(3),
+        .items-table thead th:nth-child(4) {
+            text-align: right;
+        }
+
+        .items-table tbody td {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .items-table tbody td:last-child,
+        .items-table tbody td:nth-child(3),
+        .items-table tbody td:nth-child(4) {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .item-meta {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* Totals */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 48px;
+        }
+
+        .totals-block {
+            width: 280px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .total-row.grand-total {
+            border-top: 2px solid #C9A74A;
+            padding-top: 12px;
+            margin-top: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0A0A0A;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            text-align: center;
+            padding-top: 32px;
+            border-top: 1px solid #eee;
+        }
+
+        .invoice-footer p {
+            font-size: 11px;
+            color: #999;
+            line-height: 1.8;
+        }
+
+        .print-btn {
+            display: inline-block;
+            padding: 12px 32px;
+            margin-bottom: 32px;
+            background: #C9A74A;
+            color: #0A0A0A;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+        }
+
+        .print-btn:hover { background: #b89a3e; }
+
+        @@media print {
+            body { padding: 24px; }
+            .print-btn { display: none !important; }
+            .invoice-header { border-bottom-color: #C9A74A; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<div class="invoice-container">
+
+    <!-- Print Button (hidden in print) -->
+    <div style="text-align: center; margin-bottom: 40px;">
+        <button class="print-btn" onclick="window.print()">Print Invoice</button>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- HEADER                                                         -->
+    <!-- ============================================================= -->
+    <div class="invoice-header">
+        <div>
+            <div class="brand-name">Wonder Watch</div>
+            <div class="brand-subtitle">Luxury Timepieces · Est. 2024</div>
+        </div>
+        <div>
+            <div class="invoice-title">Invoice</div>
+            <div class="invoice-number">Order @Model.OrderNumber · @Model.OrderDate.ToString("dd MMM yyyy")</div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- BILLING & SHIPPING INFO                                        -->
+    <!-- ============================================================= -->
+    <div class="info-grid">
+        <div class="info-block">
+            <h4>Billed To</h4>
+            <p>
+                <strong>@Model.CustomerName</strong><br />
+                @Model.CustomerEmail
+            </p>
+        </div>
+        <div class="info-block">
+            <h4>Ship To</h4>
+            <p>
+                @Model.ShippingAddress<br />
+                Phone: @Model.ShippingPhone
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- LINE ITEMS TABLE                                               -->
+    <!-- ============================================================= -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        <div class="item-name">@item.WatchName</div>
+                        <div class="item-meta">@item.Brand · Ref. @item.ReferenceNumber</div>
+                    </td>
+                    <td style="text-align: center;">@item.Quantity</td>
+                    <td>@item.UnitPrice</td>
+                    <td>@item.LineTotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- ============================================================= -->
+    <!-- TOTALS                                                         -->
+    <!-- ============================================================= -->
+    <div class="totals-section">
+        <div class="totals-block">
+            <div class="total-row">
+                <span>Subtotal</span>
+                <span>@Model.TotalFormatted</span>
+            </div>
+            <div class="total-row">
+                <span>Shipping</span>
+                <span>Complimentary</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Total</span>
+                <span>@Model.TotalFormatted</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- FOOTER                                                         -->
+    <!-- ============================================================= -->
+    <div class="invoice-footer">
+        <p>
+            Thank you for choosing Wonder Watch.<br />
+            For enquiries, contact <strong>concierge@@wonderwatch.in</strong><br />
+            Wonder Watch · Premium Luxury Timepieces · GSTIN: 27AXXXX1234X1ZX
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

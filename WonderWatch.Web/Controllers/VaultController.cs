@@ -20,15 +20,21 @@ namespace WonderWatch.Web.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IOrderService _orderService;
         private readonly IWishlistService _wishlistService;
+        private readonly IAddressService _addressService;
+        private readonly INotificationService _notificationService;
 
         public VaultController(
             UserManager<ApplicationUser> userManager,
             IOrderService orderService,
-            IWishlistService wishlistService)
+            IWishlistService wishlistService,
+            IAddressService addressService,
+            INotificationService notificationService)
         {
             _userManager = userManager;
             _orderService = orderService;
             _wishlistService = wishlistService;
+            _addressService = addressService;
+            _notificationService = notificationService;
         }
 
         [HttpGet("entry")]
@@ -70,8 +76,9 @@ namespace WonderWatch.Web.Controllers
                 recentOrderDto = new OrderSummaryDto
                 {
                     Id = recentOrder.Id,
-                    OrderNumber = $"#WW-{recentOrder.Id.ToString().Substring(0, 8).ToUpper()}",
+                    OrderNumber = $"#{recentOrder.Id.ToString().Substring(0, 7).ToUpper()}",
                     Date = recentOrder.CreatedAt,
+                    UpdatedAt = recentOrder.UpdatedAt,
                     TotalFormatted = recentOrder.TotalAmount.ToString("C0", indiaCulture),
                     Status = recentOrder.Status,
                     ItemCount = recentOrder.Items.Sum(i => i.Quantity),
@@ -94,6 +101,7 @@ namespace WonderWatch.Web.Controllers
             var viewModel = new VaultDashboardViewModel
             {
                 FirstName = user.DisplayName,
+                AvatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl) ? "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString(user.DisplayName) + "&background=1a1a1a&color=C9A74A&bold=true&format=svg" : user.AvatarUrl,
                 TimeOfDay = timeOfDay,
                 MembershipTier = user.MembershipTier.ToString(),
                 MemberSince = user.MemberSince,
@@ -106,7 +114,7 @@ namespace WonderWatch.Web.Controllers
             return View(viewModel);
         }
         [HttpGet("orders")]
-        public async Task<IActionResult> Orders()
+        public async Task<IActionResult> Orders(string? filter)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
@@ -116,11 +124,13 @@ namespace WonderWatch.Web.Controllers
 
             var viewModel = new VaultOrdersViewModel
             {
+                ActiveFilter = filter?.ToUpper() ?? "ALL",
                 Orders = orders.Select(o => new OrderSummaryDto
                 {
                     Id = o.Id,
-                    OrderNumber = $"#WW-{o.Id.ToString().Substring(0, 8).ToUpper()}",
+                    OrderNumber = $"#{o.Id.ToString().Substring(0, 7).ToUpper()}",
                     Date = o.CreatedAt,
+                    UpdatedAt = o.UpdatedAt,
                     TotalFormatted = o.TotalAmount.ToString("C0", indiaCulture),
                     Status = o.Status,
                     ItemCount = o.Items.Sum(i => i.Quantity),
@@ -143,6 +153,7 @@ namespace WonderWatch.Web.Controllers
 
             var viewModel = new VaultWishlistViewModel
             {
+                Count = wishlist.Count,
                 Watches = wishlist.Select(w => new WatchCardDto
                 {
                     Id = w.Id,
@@ -158,6 +169,9 @@ namespace WonderWatch.Web.Controllers
             return View(viewModel);
         }
 
+        // =============================================================
+        // PROFILE — GET + POST
+        // =============================================================
         [HttpGet("profile")]
         public async Task<IActionResult> Profile()
         {
@@ -168,25 +182,201 @@ namespace WonderWatch.Web.Controllers
             {
                 FullName = user.FullName,
                 DisplayName = user.DisplayName,
+                AvatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl) ? "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString(user.DisplayName) + "&background=1a1a1a&color=C9A74A&bold=true&format=svg" : user.AvatarUrl,
                 Email = user.Email ?? string.Empty,
                 Nationality = user.Nationality,
                 DateOfBirth = user.DateOfBirth,
-                MemberSince = user.MemberSince // FIXED: Added MemberSince mapping
+                MemberSince = user.MemberSince
             };
 
             return View(viewModel);
         }
 
-        [HttpGet("addresses")]
-        public IActionResult Addresses()
+        [HttpPost("profile/update")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string FullName, string DisplayName, string Nationality, DateTime DateOfBirth)
         {
-            return View(new VaultAddressesViewModel());
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            user.FullName = FullName;
+            user.DisplayName = DisplayName;
+            user.Nationality = Nationality;
+            user.DateOfBirth = DateOfBirth;
+
+            await _userManager.UpdateAsync(user);
+            TempData["ProfileSuccess"] = "Profile updated successfully.";
+            return RedirectToAction("Profile");
         }
 
-        [HttpGet("notifications")]
-        public IActionResult Notifications()
+        [HttpPost("profile/password")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string CurrentPassword, string NewPassword, string ConfirmNewPassword)
         {
-            return View(new VaultNotificationsViewModel());
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (NewPassword != ConfirmNewPassword)
+            {
+                TempData["PasswordError"] = "New passwords do not match.";
+                return RedirectToAction("Profile");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, CurrentPassword, NewPassword);
+            if (result.Succeeded)
+            {
+                TempData["PasswordSuccess"] = "Password updated successfully.";
+            }
+            else
+            {
+                TempData["PasswordError"] = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Profile");
+        }
+
+        // =============================================================
+        // ADDRESSES — GET + CRUD
+        // =============================================================
+        [HttpGet("addresses")]
+        public async Task<IActionResult> Addresses()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var addresses = await _addressService.GetByUserAsync(user.Id);
+            return View(new VaultAddressesViewModel { Addresses = addresses });
+        }
+
+        [HttpPost("addresses/add")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddAddress(CreateAddressDto dto)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _addressService.AddAsync(user.Id, dto);
+            TempData["AddressSuccess"] = "Address added successfully.";
+            return RedirectToAction("Addresses");
+        }
+
+        [HttpPost("addresses/update/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAddress(Guid id, CreateAddressDto dto)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _addressService.UpdateAsync(id, user.Id, dto);
+            TempData["AddressSuccess"] = "Address updated successfully.";
+            return RedirectToAction("Addresses");
+        }
+
+        [HttpPost("addresses/delete/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAddress(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _addressService.DeleteAsync(id, user.Id);
+            TempData["AddressSuccess"] = "Address removed.";
+            return RedirectToAction("Addresses");
+        }
+
+        [HttpPost("addresses/default/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetDefaultAddress(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _addressService.SetDefaultAsync(id, user.Id);
+            TempData["AddressSuccess"] = "Default address updated.";
+            return RedirectToAction("Addresses");
+        }
+
+        // =============================================================
+        // NOTIFICATIONS — GET + Mark Read
+        // =============================================================
+        [HttpGet("notifications")]
+        public async Task<IActionResult> Notifications(string? filter)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var notifications = await _notificationService.GetByUserAsync(user.Id);
+            var unreadCount = await _notificationService.GetUnreadCountAsync(user.Id);
+
+            return View(new VaultNotificationsViewModel
+            {
+                Notifications = notifications,
+                UnreadCount = unreadCount,
+                ActiveFilter = filter?.ToUpper() ?? "ALL"
+            });
+        }
+
+        [HttpPost("notifications/mark-all-read")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAllRead()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _notificationService.MarkAllReadAsync(user.Id);
+            return RedirectToAction("Notifications");
+        }
+
+        [HttpPost("notifications/mark-read/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkRead(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _notificationService.MarkReadAsync(id, user.Id);
+            return RedirectToAction("Notifications");
+        }
+
+        // =============================================================
+        // INVOICE (unchanged)
+        // =============================================================
+        [HttpGet("orders/{id}/invoice")]
+        public async Task<IActionResult> Invoice(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var orders = await _orderService.GetUserOrdersAsync(user.Id);
+            var order = orders.FirstOrDefault(o => o.Id == id);
+
+            if (order == null) return NotFound();
+
+            var indiaCulture = new CultureInfo("hi-IN");
+
+            var viewModel = new VaultInvoiceViewModel
+            {
+                OrderId = order.Id,
+                OrderNumber = $"#{order.Id.ToString().Substring(0, 7).ToUpper()}",
+                OrderDate = order.CreatedAt,
+                Status = order.Status.ToString(),
+                CustomerName = user.FullName,
+                CustomerEmail = user.Email ?? "",
+                ShippingAddress = $"{order.ShippingAddress.Line1}, {order.ShippingAddress.Line2}, {order.ShippingAddress.City}, {order.ShippingAddress.State} - {order.ShippingAddress.PinCode}",
+                ShippingPhone = order.ShippingAddress.Phone,
+                Items = order.Items.Select(i => new InvoiceItemDto
+                {
+                    WatchName = i.Watch.Name,
+                    Brand = i.Watch.Brand,
+                    ReferenceNumber = i.Watch.ReferenceNumber,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice.ToString("C0", indiaCulture),
+                    LineTotal = (i.UnitPrice * i.Quantity).ToString("C0", indiaCulture)
+                }).ToList(),
+                TotalFormatted = order.TotalAmount.ToString("C0", indiaCulture)
+            };
+
+            return View(viewModel);
         }
     }
 }
@@ -200,6 +390,7 @@ namespace WonderWatch.Web.ViewModels
     public class VaultDashboardViewModel
     {
         public string FirstName { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
         public string TimeOfDay { get; set; } = string.Empty;
         public string MembershipTier { get; set; } = string.Empty;
         public DateTime MemberSince { get; set; }
@@ -211,11 +402,13 @@ namespace WonderWatch.Web.ViewModels
 
     public class VaultOrdersViewModel
     {
+        public string ActiveFilter { get; set; } = "ALL";
         public List<OrderSummaryDto> Orders { get; set; } = new();
     }
 
     public class VaultWishlistViewModel
     {
+        public int Count { get; set; }
         public List<WatchCardDto> Watches { get; set; } = new();
     }
 
@@ -223,19 +416,46 @@ namespace WonderWatch.Web.ViewModels
     {
         public string FullName { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Nationality { get; set; } = string.Empty;
         public DateTime DateOfBirth { get; set; }
-        public DateTime MemberSince { get; set; } // FIXED: Added MemberSince property
+        public DateTime MemberSince { get; set; }
     }
 
     public class VaultAddressesViewModel
     {
-        // Placeholder for address management
+        public List<UserAddressDto> Addresses { get; set; } = new();
     }
 
     public class VaultNotificationsViewModel
     {
-        // Placeholder for notification preferences
+        public List<NotificationDto> Notifications { get; set; } = new();
+        public int UnreadCount { get; set; }
+        public string ActiveFilter { get; set; } = "ALL";
+    }
+
+    public class VaultInvoiceViewModel
+    {
+        public Guid OrderId { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
+        public DateTime OrderDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string CustomerEmail { get; set; } = string.Empty;
+        public string ShippingAddress { get; set; } = string.Empty;
+        public string ShippingPhone { get; set; } = string.Empty;
+        public List<InvoiceItemDto> Items { get; set; } = new();
+        public string TotalFormatted { get; set; } = string.Empty;
+    }
+
+    public class InvoiceItemDto
+    {
+        public string WatchName { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string ReferenceNumber { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public string UnitPrice { get; set; } = string.Empty;
+        public string LineTotal { get; set; } = string.Empty;
     }
 }
