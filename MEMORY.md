@@ -167,3 +167,6 @@ Status: IN PROGRESS - Catalog Filters Fix & Admin Config completed. Filters now 
 - **Button Redesign**: Overhauled Wishlist and Cart interaction buttons by removing problematic custom arbitrary Tailwind extensions and returning them to pristine semantic variants (`hover:bg-gold`, `hover:text-void`). 
 - **Security Checkup**: Inserted invisible `<form>` bearing `@Html.AntiForgeryToken()` to successfully allow `wishlist.js` validation for POST endpoints. 
 - **Textual Logic**: Pulled false fallbacks ("Proprietary Alloy") out of specs mapping purely `Not Specified` for missing dimensions preserving dataset purity.
+
+### Session 11 Summary — 2026-04-09
+- **PDP Layout Bug Fix**: Identified absolute positioning collision on the "Back to Catalog" anchor which overlapped dynamically centered text constraints on smaller viewport dimensions. Restored node to the native flex column rendering sequence as an inline-flex element.
