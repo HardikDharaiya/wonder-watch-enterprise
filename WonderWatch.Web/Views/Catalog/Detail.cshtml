@@ -22,18 +22,20 @@
         </div>
 
         <!-- RIGHT COLUMN: PRODUCT DETAILS -->
-        <div class="p-[32px] md:p-[64px] lg:p-[96px] flex flex-col justify-center lg:min-h-[calc(100vh-131px)] animate-fade-in relative">
+        <div class="p-[32px] md:p-[64px] lg:p-[96px] flex flex-col justify-center lg:min-h-[calc(100vh-131px)] animate-fade-in">
             
-            <!-- Back Navigation -->
-            <a href="/catalog" class="absolute top-[32px] left-[32px] md:top-[64px] md:left-[64px] lg:top-[96px] lg:left-[96px] group flex items-center gap-[8px] font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors z-30">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" class="transform group-hover:-translate-x-1 transition-transform">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-                Back to Catalog
-            </a>
+            <div class="mb-[32px] md:mb-[48px]">
+                <!-- Back Navigation -->
+                <a href="/catalog" class="group inline-flex items-center gap-[8px] font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" class="transform group-hover:-translate-x-1 transition-transform">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    Back to Catalog
+                </a>
+            </div>
 
             <!-- Breadcrumb -->
-            <nav class="flex items-center gap-[8px] mb-[32px] mt-[48px]">
+            <nav class="flex items-center gap-[8px] mb-[32px]">
                 <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">@Model.Brand</span>
                 <span class="text-muted text-[10px]">&slash;</span>
                 <span class="font-sans font-bold text-[10px] text-parchment tracking-[2px] uppercase">@Model.ReferenceNumber</span>

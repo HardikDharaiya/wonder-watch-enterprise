@@ -236,3 +236,7 @@ dotnet user-secrets list --project WonderWatch.Web
 - **Interaction CSS Overhaul:** Swapped messy and unsupported `scale-x-100` JIT tailwind classes off wishlist and acquire timepiece buttons over to basic CSS structural color states. ✅
 - `Stop-Process -Id 14824 -Force` to release locked binaries. ✅
 - `dotnet build WonderWatch.Web` ✅ (0 Errors).
+
+### Session 11 Final History — 2026-04-09
+- **UI Bug fix Execution:** Switched `Detail.cshtml` CSS from `absolute` node injection on Back Navigation anchor to `inline-flex` ensuring it never squashes fluid typography inside vertical alignment calculations. ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors).
