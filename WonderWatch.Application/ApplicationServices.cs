@@ -110,11 +110,11 @@ namespace WonderWatch.Application.Services
 
         public async Task<List<string>> GetAvailableBrandsAsync()
         {
-            return await _context.Watches
-                .Where(w => w.IsPublished)
-                .Select(w => w.Brand.ToUpper())
-                .Distinct()
-                .OrderBy(b => b)
+            // Pull from admin-managed Brand table instead of Watch.Brand strings
+            return await _context.Brands
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.SortOrder)
+                .Select(b => b.Name)
                 .ToListAsync();
         }
 
@@ -137,6 +137,20 @@ namespace WonderWatch.Application.Services
                 .Distinct()
                 .OrderBy(s => s)
                 .ToListAsync();
+        }
+
+        public async Task<FilterConfigDto> GetFilterConfigAsync()
+        {
+            var config = await _context.FilterConfigs.FirstOrDefaultAsync();
+            if (config == null)
+            {
+                // Fallback: derive from actual watch data
+                var watches = _context.Watches.Where(w => w.IsPublished);
+                var min = await watches.AnyAsync() ? await watches.MinAsync(w => w.RetailPrice) : 0m;
+                var max = await watches.AnyAsync() ? await watches.MaxAsync(w => w.RetailPrice) : 10000000m;
+                return new FilterConfigDto { MinPrice = min, MaxPrice = max };
+            }
+            return new FilterConfigDto { MinPrice = config.MinPrice, MaxPrice = config.MaxPrice };
         }
     }
 

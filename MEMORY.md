@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-09 | Session: 6
-Status: IN PROGRESS - Vault UX Overhaul Completed (Profile, Addresses, Notifications, Admin SMTP configured).
+Last updated: 2026-04-09 | Session: 8
+Status: IN PROGRESS - Catalog Filters Fix & Admin Config completed. Filters now DB-driven with admin management.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -38,15 +38,15 @@ Status: IN PROGRESS - Vault UX Overhaul Completed (Profile, Addresses, Notificat
 
 ## What Has Been Built
 - [x] **Foundation:** N-Tier solution scaffolded, Domain entities, Enums, Identity User.
-- [x] **Infrastructure:** AppDbContext (Fluent API), EF Core Migrations (InitialCreate, AddStrapMaterial, AddUserAvatarUrl), SeedData (6 watches + Admin).
+- [x] **Infrastructure:** AppDbContext (Fluent API), EF Core Migrations (InitialCreate, AddStrapMaterial, AddUserAvatarUrl, AddUserAddressesAndNotifications, AddFiltersConfig), SeedData (6 watches + Admin + Brands + FilterConfig).
 - [x] **Application:** Service Interfaces & Implementations (Catalog, Order, Payment, Wishlist, Asset, Admin, Email).
 - [x] **Web Core:** Program.cs (Middleware pipeline, DI, Serilog), GlobalExceptionMiddleware, tailwind.config.js.
 - [x] **Layouts:** `_Layout.cshtml` (Responsive transparent navbar + 4-column footer), `_VaultLayout.cshtml` (Responsive sidebar + Upgrade Plan CTA), `_AdminLayout.cshtml`.
 - [x] **Module 1 (Home):** Index (Full-bleed 3D background), Collections (Houses of Horology grid).
-- [x] **Module 2 (Catalog):** Index (Dynamic filters, CSS Grid, Custom Checkboxes/Sliders).
+- [x] **Module 2 (Catalog):** Index (DB-driven dynamic filters, Search bar, CSS Grid 3→2→2 responsive, Custom Checkboxes/Sliders, INR lakh/crore price slider).
 - [x] **Module 3 (Checkout):** CartController, `_CartDrawer` (AJAX), CheckoutController, Razorpay Integration, Confirmation page.
 - [x] **Module 4 (Vault):** AccountController (Login/Register split-screen), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
-- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config).
+- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config), **Filters Management** (Brand CRUD + Price Range config).
 - [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
 - [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET), `appsettings.Production.json` (Azure Key Vault schema).
@@ -54,6 +54,7 @@ Status: IN PROGRESS - Vault UX Overhaul Completed (Profile, Addresses, Notificat
 ## Active Issues / Pending Tasks
 - **Performance Optimization - Catalog Pagination:** The Web layer currently calls `.ToListAsync()` before `.Skip().Take()`, causing massive RAM load for large catalogs. Must push pagination to the `IQueryable` inside `CatalogService.cs`.
 - **Design Review - Catalog Detail (PDP):** Need to overhaul the product detail page UI.
+- **Admin Filters Nav Link:** Add "Filters" link to `_AdminLayout.cshtml` sidebar navigation.
 
 ## Key File Locations
 - **Domain Models:** `WonderWatch.Domain/Entities/DomainModels.cs`
@@ -136,3 +137,33 @@ Status: IN PROGRESS - Vault UX Overhaul Completed (Profile, Addresses, Notificat
 - **_VaultLayout.cshtml:** Added unread dot indicator for Notifications link.
 - **Build:** `dotnet build` 0 Errors.
 
+### Session 7 Summary — 2026-04-09
+- **Domain Schema:** Added `Brand` entity (admin-managed filterable brand dictionary) and `FilterConfig` entity (single-row price slider bounds).
+- **EF Core Migration:** Created and applied `20260409160128_AddFiltersConfig` — adds `Brands` table (unique Name index) and `FilterConfigs` table.
+- **SeedData.cs:** Added `SeedBrandsAndFilterConfigAsync()` — auto-discovers distinct brands from Watch data, derives price bounds rounded to nearest lakh.
+- **ApplicationContracts.cs:** Added `FilterConfigDto` DTO and `GetFilterConfigAsync()` to `ICatalogService` interface.
+- **ApplicationServices.cs:** Updated `GetAvailableBrandsAsync()` to query admin-managed `Brand` table. Implemented `GetFilterConfigAsync()` with DB fallback.
+- **CatalogController.cs:** Added `PriceMin`/`PriceMax` to `CatalogIndexViewModel` from `FilterConfig`. Wired `searchQuery` preservation across sort form.
+- **_CatalogFilters.cshtml (FULL REWRITE):** Added Search bar, dynamic price slider (DB-driven bounds, 1-lakh step, INR locale JS formatter), brand checkboxes from Brand table, strap material radios, case diameter grid, "Clear all filters" link.
+- **catalog.css:** Changed mobile grid from `1fr` to `repeat(2, 1fr)` for 2-column mobile layout.
+- **AdminController.cs:** Added 4 filter management endpoints — `Filters` (GET list), `AddBrand` (POST), `DeleteBrand` (POST), `UpdateFilterConfig` (POST). Added `AdminFiltersViewModel`.
+- **Admin/Filters.cshtml (NEW):** Admin page with brand CRUD (add/remove with confirmation dialog) and price range configuration (min/max INR inputs).
+- **Build:** `dotnet build` 0 Errors. Migration applied. Seed data verified (Brands + FilterConfig populated).
+- **Browser Test:** Catalog filters render correctly — search bar visible, price slider shows ₹38,00,000 to ₹1,06,00,000+, brand filter returns results.
+
+### Session 8 Summary — 2026-04-09
+- **Database Seed Data:** Updated `SeedData.cs` to assign distinct luxury brands (Rolex, Omega, Patek Philippe, Audemars Piguet, Richard Mille, A. Lange & Söhne) and valid `StrapMaterial`s to the 6 sample watches.
+- **EF Core Migration:** Generated and applied `20260409170956_UpdateWatchesSeedData` to run raw SQL updates on the existing `Watches` table and delete existing admin `Brands` so the catalog filter resets cleanly dynamically.
+- **Controllers:** Hardened `CatalogController.cs` parsing to use `.Trim().ToUpperInvariant()` for fault-tolerant query parameter processing.
+- **UI UX Enhancement:** Implemented dynamic CSS-driven, floating JavaScript tooltips inside `_CatalogFilters.cshtml` to provide live sliding price feedback over the range anchors.
+
+### Session 9 Summary — 2026-04-09
+- **Product Detail Page Optimization:** Mapped missing Domain attributes (`StrapMaterial`, `ComparePrice`, `StockQuantity`) into the presentation layer via `WatchDetailViewModel`.
+- **CRO & Frontend Polish:** Removed static HTML fallbacks inside `Detail.cshtml`. Re-engineered the UI with subtle tailwind animations (`animate-fade-in`), strict specification alignment, urgency stock tags, and visual anchor points for savings (strikethrough text) aligning with the Dark Luxury design system.
+
+### Session 10 Summary — 2026-04-09
+- **PDP Refinement & Cleanup**: Replaced buggy luxury 3D viewer elements natively with pristine high-fidelity 2D images.
+- **Back Navigation**: In-layout structural element pointing back to catalog cleanly introduced avoiding absolute chaos.
+- **Button Redesign**: Overhauled Wishlist and Cart interaction buttons by removing problematic custom arbitrary Tailwind extensions and returning them to pristine semantic variants (`hover:bg-gold`, `hover:text-void`). 
+- **Security Checkup**: Inserted invisible `<form>` bearing `@Html.AntiForgeryToken()` to successfully allow `wishlist.js` validation for POST endpoints. 
+- **Textual Logic**: Pulled false fallbacks ("Proprietary Alloy") out of specs mapping purely `Not Specified` for missing dimensions preserving dataset purity.

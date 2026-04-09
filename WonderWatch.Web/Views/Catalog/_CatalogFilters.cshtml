@@ -1,17 +1,22 @@
-﻿@model WonderWatch.Web.ViewModels.CatalogIndexViewModel
+@model WonderWatch.Web.ViewModels.CatalogIndexViewModel
 @{
     var selectedBrands = Context.Request.Query["brands"].ToArray();
     var selectedSize = Context.Request.Query["size"].ToString();
     var selectedSort = Context.Request.Query["sort"].ToString();
     var selectedStrap = Context.Request.Query["strap"].ToString();
+    var searchQuery = Context.Request.Query["searchQuery"].ToString();
     
     if (string.IsNullOrEmpty(selectedSort)) selectedSort = "newest";
 
-    // Parse current price range or set defaults
+    // Dynamic price bounds from FilterConfig (DB-driven)
+    long priceFloor = (long)Model.PriceMin;
+    long priceCeil  = (long)Model.PriceMax;
+
+    // Parse current price range or use DB defaults
     var minPriceQuery = Context.Request.Query["minPrice"].ToString();
     var maxPriceQuery = Context.Request.Query["maxPrice"].ToString();
-    int currentMin = string.IsNullOrEmpty(minPriceQuery) ? 5000 : int.Parse(minPriceQuery);
-    int currentMax = string.IsNullOrEmpty(maxPriceQuery) ? 150000 : int.Parse(maxPriceQuery);
+    long currentMin = string.IsNullOrEmpty(minPriceQuery) ? priceFloor : long.Parse(minPriceQuery);
+    long currentMax = string.IsNullOrEmpty(maxPriceQuery) ? priceCeil  : long.Parse(maxPriceQuery);
 }
 
 <style>
@@ -55,6 +60,62 @@
                 cursor: pointer;
                 border-radius: 0;
             }
+
+    /* Tooltips for Sliders */
+    .slider-tooltip {
+        position: absolute;
+        top: -26px;
+        background: #C9A74A;
+        color: #0A0A0A;
+        padding: 4px 6px;
+        font-family: inherit;
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        border-radius: 2px;
+        pointer-events: none;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 60;
+    }
+    .dual-range:hover .slider-tooltip {
+        opacity: 1;
+    }
+    .slider-tooltip::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 4px 4px 0;
+        border-style: solid;
+        border-color: #C9A74A transparent transparent transparent;
+    }
+
+    /* Search bar styling */
+    .cat-search-input {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #EAE6DB;
+        font-family: inherit;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        padding: 10px 12px 10px 36px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+    .cat-search-input::placeholder {
+        color: #8A816C;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+    .cat-search-input:focus {
+        border-color: #C9A74A;
+    }
 </style>
 
 <form method="get" action="/catalog" class="cat-filter-form flex flex-col" style="gap:28px;">
@@ -62,14 +123,33 @@
     @* Preserve sort across filter changes *@
     <input type="hidden" name="sort" value="@selectedSort" class="hidden-sort-input" />
 
-    @* ── BRANDS (Dynamic) ─────────────────────────────────────────────────── *@
+    @* ── SEARCH ────────────────────────────────────────────────────────────── *@
+    <div>
+        <span class="block font-sans font-bold text-muted uppercase mb-3"
+              style="font-size:9px; letter-spacing:2.5px;">Search</span>
+        <div class="relative">
+            <svg class="absolute" style="left:10px; top:50%; transform:translateY(-50%); pointer-events:none;"
+                 width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="2" stroke-linecap="square">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text"
+                   name="searchQuery"
+                   value="@searchQuery"
+                   placeholder="Search watches..."
+                   class="cat-search-input"
+                   autocomplete="off" />
+        </div>
+    </div>
+
+    @* ── BRANDS (Dynamic from DB) ─────────────────────────────────────────── *@
     <div>
         <span class="block font-sans font-bold text-muted uppercase mb-4"
               style="font-size:9px; letter-spacing:2.5px;">Brands</span>
         <div class="flex flex-col" style="gap:12px;">
             @foreach (var brand in Model.AvailableBrands)
             {
-                bool isChecked = selectedBrands.Contains(brand);
+                bool isChecked = selectedBrands.Contains(brand, StringComparer.OrdinalIgnoreCase);
                 <label class="flex items-center cursor-pointer group" style="gap:12px;">
                     <span class="relative flex-shrink-0 border transition-colors duration-200"
                           style="width:16px; height:16px; border-color: @(isChecked ? "#C9A74A" : "rgba(255,255,255,0.18)");">
@@ -96,20 +176,24 @@
         </div>
     </div>
 
-    @* ── PRICE RANGE (Functional Dual Slider) ─── *@
+    @* ── PRICE RANGE (Dynamic DB Bounds) ─── *@
     <div>
         <span class="block font-sans font-bold text-muted uppercase mb-3"
               style="font-size:9px; letter-spacing:2.5px;">Price Range</span>
         
         <div class="dual-range">
             <div id="range-fill" class="absolute h-full bg-gold" style="left: 0%; width: 100%;"></div>
-            <input type="range" name="minPrice" id="minPrice" min="5000" max="150000" step="1000" value="@currentMin">
-            <input type="range" name="maxPrice" id="maxPrice" min="5000" max="150000" step="1000" value="@currentMax">
+            <div id="min-tooltip" class="slider-tooltip"></div>
+            <div id="max-tooltip" class="slider-tooltip"></div>
+            <input type="range" name="minPrice" id="minPrice"
+                   min="@priceFloor" max="@priceCeil" step="100000" value="@currentMin">
+            <input type="range" name="maxPrice" id="maxPrice"
+                   min="@priceFloor" max="@priceCeil" step="100000" value="@currentMax">
         </div>
         
         <div class="flex justify-between font-mono text-[10px] text-muted mt-2">
             <span id="minPriceVal">₹@currentMin.ToString("N0")</span>
-            <span id="maxPriceVal">₹@currentMax.ToString("N0")@(currentMax == 150000 ? "+" : "")</span>
+            <span id="maxPriceVal">₹@currentMax.ToString("N0")@(currentMax >= priceCeil ? "+" : "")</span>
         </div>
     </div>
 
@@ -120,7 +204,7 @@
         <div class="flex" style="gap:8px;">
             @foreach (var material in new[] { "Gold", "Steel", "Leather", "Rubber" })
             {
-                bool isStrapActive = selectedStrap == material.ToLower();
+                bool isStrapActive = string.Equals(selectedStrap, material, StringComparison.OrdinalIgnoreCase);
                 <label class="relative cursor-pointer">
                     <input type="radio" name="strap" value="@material.ToLower()" class="sr-only" @(isStrapActive ? "checked" : "")
                            onchange="document.querySelectorAll('.cat-strap-box').forEach(b => { b.style.borderColor='rgba(255,255,255,0.18)'; b.style.transform='scale(1)'; }); this.nextElementSibling.style.borderColor='#C9A74A'; this.nextElementSibling.style.transform='scale(1.1)';" />
@@ -163,7 +247,7 @@
     </button>
 
     @* Clear link *@
-    @if (selectedBrands.Any() || !string.IsNullOrEmpty(selectedSize) || !string.IsNullOrEmpty(selectedStrap) || currentMin > 5000 || currentMax < 150000)
+    @if (selectedBrands.Any() || !string.IsNullOrEmpty(selectedSize) || !string.IsNullOrEmpty(selectedStrap) || !string.IsNullOrEmpty(searchQuery) || currentMin > priceFloor || currentMax < priceCeil)
     {
         <a href="/catalog" class="text-center font-sans text-muted hover:text-gold transition-colors"
                style="font-size:10px; letter-spacing:1px; text-decoration:none; margin-top:-8px;">
@@ -181,8 +265,15 @@
         const rangeFill = document.getElementById('range-fill');
         const minVal = document.getElementById('minPriceVal');
         const maxVal = document.getElementById('maxPriceVal');
+        const minTooltip = document.getElementById('min-tooltip');
+        const maxTooltip = document.getElementById('max-tooltip');
 
         if(!minSlider || !maxSlider) return;
+
+        // Format number in Indian locale (lakhs/crores)
+        function formatINR(num) {
+            return '₹' + Number(num).toLocaleString('en-IN');
+        }
 
         function updateSlider() {
             let min = parseInt(minSlider.value);
@@ -195,14 +286,22 @@
                 max = tmp;
             }
             
-            const minPercent = ((min - minSlider.min) / (minSlider.max - minSlider.min)) * 100;
-            const maxPercent = ((max - maxSlider.min) / (maxSlider.max - maxSlider.min)) * 100;
+            const sliderMin = parseInt(minSlider.min);
+            const sliderMax = parseInt(maxSlider.max);
+            const minPercent = ((min - sliderMin) / (sliderMax - sliderMin)) * 100;
+            const maxPercent = ((max - sliderMin) / (sliderMax - sliderMin)) * 100;
             
             rangeFill.style.left = minPercent + '%';
             rangeFill.style.width = (maxPercent - minPercent) + '%';
             
-            minVal.textContent = '₹' + min.toLocaleString('en-IN');
-            maxVal.textContent = '₹' + max.toLocaleString('en-IN') + (max == maxSlider.max ? '+' : '');
+            minTooltip.style.left = minPercent + '%';
+            maxTooltip.style.left = maxPercent + '%';
+            
+            minTooltip.textContent = formatINR(min);
+            maxTooltip.textContent = formatINR(max) + (max >= sliderMax ? '+' : '');
+            
+            minVal.textContent = formatINR(min);
+            maxVal.textContent = formatINR(max) + (max >= sliderMax ? '+' : '');
         }
 
         minSlider.addEventListener('input', updateSlider);

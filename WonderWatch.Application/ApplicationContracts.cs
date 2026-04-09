@@ -116,6 +116,12 @@ namespace WonderWatch.Application.DTOs
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
     }
+
+    public class FilterConfigDto
+    {
+        public decimal MinPrice { get; set; }
+        public decimal MaxPrice { get; set; }
+    }
 }
 
 namespace WonderWatch.Application.Interfaces
@@ -134,6 +140,8 @@ namespace WonderWatch.Application.Interfaces
 
         // FIXED: Added interface method for dynamic strap materials
         Task<List<string>> GetAvailableStrapMaterialsAsync();
+
+        Task<FilterConfigDto> GetFilterConfigAsync();
     }
 
     public interface IOrderService

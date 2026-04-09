@@ -2,7 +2,7 @@
 
 **Source:** Derived from `AppDbContext.cs`, `DomainModels.cs`, `ApplicationUser.cs`, and `.bacpac` export `WonderWatch_Dev`.
 **Database:** SQL Server LocalDB (`(localdb)\MSSQLLocalDB`) → `WonderWatch_Dev`
-**Last Updated:** 2026-04-09 | Session 6
+**Last Updated:** 2026-04-09 | Session 8
 
 ---
 
@@ -25,6 +25,8 @@
 | `Reviews` | Product reviews (moderated) | `Guid` PK |
 | `UserAddresses` | Saved user shipping addresses | `Guid` PK |
 | `UserNotifications` | In-app user notifications | `Guid` PK |
+| `Brands` | Admin-managed filterable brand dictionary | `Guid` PK |
+| `FilterConfigs` | Single-row price slider configuration | `Guid` PK |
 | `__EFMigrationsHistory` | EF Core migration log | `varchar` PK |
 
 ---
@@ -211,6 +213,7 @@ Pending → Cancelled | Paid → Cancelled
 | `AddStrapMaterial` | Session 2 | Added `StrapMaterial` column to `Watches` |
 | `AddUserAvatarUrl` | Session 4 | Added `AvatarUrl` column to `AspNetUsers` |
 | `AddUserAddressesAndNotifications` | Session 6 | Added UserAddress and UserNotification tables |
+| `UpdateWatchesSeedData` | Session 8 | Data update for watch strings and wiping current Brands |
 
 ---
 
@@ -219,6 +222,35 @@ Pending → Cancelled | Paid → Cancelled
 - **Admin Role:** `Admin` (Guid-keyed)
 - **Admin User:** `admin@wonderwatch.in` / `WonderWatch@Admin123!` — Role: Admin, Tier: Platinum
 - **Sample Watches:** ~6 luxury timepieces (Rolex, Patek Philippe, AP, etc.) with images and GLB assets
+- **Brands:** Auto-discovered from existing Watch.Brand values (seeded on first run)
+- **FilterConfig:** Single row — MinPrice/MaxPrice derived from actual watch prices, rounded to nearest lakh
+
+---
+
+## Table: `Brands`
+
+Admin-managed brand dictionary for catalog filter sidebar.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `Id` | `Guid` | NOT NULL | PK |
+| `Name` | `nvarchar(100)` | NOT NULL | Unique index |
+| `SortOrder` | `int` | NOT NULL | Display order in filter UI |
+| `IsActive` | `bit` | NOT NULL | Default: true. Admin can deactivate without deleting |
+
+**Indexes:** `IX_Brands_Name` (Unique)
+
+---
+
+## Table: `FilterConfigs`
+
+Single-row configuration for catalog price slider bounds.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `Id` | `Guid` | NOT NULL | PK |
+| `MinPrice` | `decimal(18,2)` | NOT NULL | Lower bound for price slider |
+| `MaxPrice` | `decimal(18,2)` | NOT NULL | Upper bound for price slider |
 
 ---
 
@@ -236,4 +268,20 @@ Watches (1) ──── (*) OrderItems
 Watches (1) ──── (*) WatchImages
 Watches (1) ──── (*) Reviews
 Watches (1) ──── (*) Wishlists
+
+Brands (standalone)  ← Admin-managed filter dictionary
+FilterConfigs (standalone, single-row) ← Price slider bounds
 ```
+
+---
+
+## Migration History
+
+| Migration | Date | Description |
+|---|---|---|
+| `InitialCreate` | 2026-03-22 | Core schema (Users, Watches, Orders, etc.) |
+| `AddStrapMaterial` | 2026-04-07 | Added StrapMaterial column to Watches |
+| `AddUserAvatarUrl` | 2026-04-08 | Added AvatarUrl to AspNetUsers |
+| `AddUserAddressesAndNotifications` | 2026-04-09 | Added UserAddresses and UserNotifications tables |
+| `AddFiltersConfig` | 2026-04-09 | Added Brands and FilterConfigs tables |
+| `UpdateWatchesSeedData` | 2026-04-09 | Raw SQL fix for existing models missing straps and brands |

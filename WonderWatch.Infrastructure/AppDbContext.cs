@@ -21,6 +21,8 @@ namespace WonderWatch.Infrastructure
         public DbSet<WatchImage> WatchImages => Set<WatchImage>();
         public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
         public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
+        public DbSet<Brand> Brands => Set<Brand>();
+        public DbSet<FilterConfig> FilterConfigs => Set<FilterConfig>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -190,6 +192,26 @@ namespace WonderWatch.Infrastructure
                 b.Property(n => n.Body).IsRequired().HasMaxLength(1000);
                 b.HasIndex(n => n.UserId);
                 b.HasIndex(n => new { n.UserId, n.IsRead });
+            });
+
+            // ---------------------------------------------------------
+            // BRAND CONFIGURATION (Admin filter dictionary)
+            // ---------------------------------------------------------
+            builder.Entity<Brand>(b =>
+            {
+                b.HasKey(br => br.Id);
+                b.Property(br => br.Name).IsRequired().HasMaxLength(100);
+                b.HasIndex(br => br.Name).IsUnique();
+            });
+
+            // ---------------------------------------------------------
+            // FILTER CONFIG CONFIGURATION
+            // ---------------------------------------------------------
+            builder.Entity<FilterConfig>(b =>
+            {
+                b.HasKey(fc => fc.Id);
+                b.Property(fc => fc.MinPrice).HasPrecision(18, 2);
+                b.Property(fc => fc.MaxPrice).HasPrecision(18, 2);
             });
         }
     }

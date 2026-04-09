@@ -1,0 +1,115 @@
+@model WonderWatch.Web.ViewModels.AdminFiltersViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Filter Configuration";
+}
+
+<div class="max-w-[960px] mx-auto py-12 px-6">
+
+    <h1 class="font-serif text-[36px] text-parchment tracking-[-1px] mb-2">Filter Configuration</h1>
+    <p class="font-sans text-[13px] text-muted mb-10">Manage the brands and price range shown in the catalog filter sidebar.</p>
+
+    @* ── Toast Messages ─────────────────────────────────────────── *@
+    @if (TempData["FilterSuccess"] != null)
+    {
+        <div class="mb-6 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] font-sans text-[12px] px-4 py-3">
+            @TempData["FilterSuccess"]
+        </div>
+    }
+    @if (TempData["FilterError"] != null)
+    {
+        <div class="mb-6 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-[#EF4444] font-sans text-[12px] px-4 py-3">
+            @TempData["FilterError"]
+        </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+        @* ── BRANDS MANAGEMENT ──────────────────────────────────────── *@
+        <div class="bg-surface border border-white-faint p-8">
+            <h2 class="font-sans font-bold text-gold uppercase text-[11px] tracking-[2px] mb-6">Filterable Brands</h2>
+
+            @* Add Brand Form *@
+            <form method="post" action="/admin/filters/add-brand" class="flex gap-3 mb-8">
+                @Html.AntiForgeryToken()
+                <input type="text" name="brandName" required
+                       placeholder="Enter brand name..."
+                       class="flex-grow bg-[rgba(255,255,255,0.04)] border border-white-faint text-parchment font-sans text-[13px] px-4 py-3 outline-none focus:border-gold transition-colors"
+                       autocomplete="off" />
+                <button type="submit"
+                        class="font-sans font-bold text-void uppercase bg-gold px-6 py-3 text-[10px] tracking-[2px] hover:bg-parchment transition-colors border-none cursor-pointer flex-shrink-0">
+                    Add
+                </button>
+            </form>
+
+            @* Brand List *@
+            @if (Model.Brands.Any())
+            {
+                <div class="flex flex-col gap-2">
+                    @foreach (var brand in Model.Brands)
+                    {
+                        <div class="flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-white-faint px-4 py-3 group">
+                            <div class="flex items-center gap-3">
+                                <span class="w-2 h-2 bg-gold flex-shrink-0"></span>
+                                <span class="font-sans text-parchment text-[13px]">@brand.Name</span>
+                                @if (!brand.IsActive)
+                                {
+                                    <span class="font-sans text-[9px] text-muted uppercase tracking-[1px] border border-white-faint px-2 py-0.5">Inactive</span>
+                                }
+                            </div>
+                            <form method="post" action="/admin/filters/delete-brand/@brand.Id" class="inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="font-sans text-[10px] text-muted hover:text-[#EF4444] transition-colors uppercase tracking-[1px] bg-transparent border-none cursor-pointer opacity-0 group-hover:opacity-100"
+                                        onclick="return confirm('Remove brand \'@brand.Name\'?');">
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="font-sans text-muted text-[12px] text-center py-8">No brands configured yet. Add one above.</p>
+            }
+        </div>
+
+        @* ── PRICE RANGE CONFIG ─────────────────────────────────────── *@
+        <div class="bg-surface border border-white-faint p-8">
+            <h2 class="font-sans font-bold text-gold uppercase text-[11px] tracking-[2px] mb-6">Price Slider Bounds</h2>
+            <p class="font-sans text-muted text-[12px] mb-6">
+                Configure the min/max values for the price range slider on the catalog page. Values in ₹ (INR).
+            </p>
+
+            <form method="post" action="/admin/filters/update-config">
+                @Html.AntiForgeryToken()
+
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label class="block font-sans font-bold text-muted uppercase text-[9px] tracking-[2px] mb-2">Min Price (₹)</label>
+                        <input type="number" name="minPrice" value="@((long)Model.MinPrice)" step="100000" min="0"
+                               class="w-full bg-[rgba(255,255,255,0.04)] border border-white-faint text-parchment font-mono text-[14px] px-4 py-3 outline-none focus:border-gold transition-colors" />
+                    </div>
+                    <div>
+                        <label class="block font-sans font-bold text-muted uppercase text-[9px] tracking-[2px] mb-2">Max Price (₹)</label>
+                        <input type="number" name="maxPrice" value="@((long)Model.MaxPrice)" step="100000" min="0"
+                               class="w-full bg-[rgba(255,255,255,0.04)] border border-white-faint text-parchment font-mono text-[14px] px-4 py-3 outline-none focus:border-gold transition-colors" />
+                    </div>
+                </div>
+
+                <div class="bg-[rgba(201,167,74,0.05)] border border-[rgba(201,167,74,0.2)] px-4 py-3 mb-6">
+                    <span class="font-sans text-[11px] text-gold">
+                        Current range: ₹@((long)Model.MinPrice).ToString("N0") — ₹@((long)Model.MaxPrice).ToString("N0")
+                    </span>
+                </div>
+
+                <button type="submit"
+                        class="w-full font-sans font-bold text-void uppercase bg-gold px-6 py-4 text-[11px] tracking-[2px] hover:bg-parchment transition-colors border-none cursor-pointer">
+                    Save Price Range
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
