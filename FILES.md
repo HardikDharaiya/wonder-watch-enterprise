@@ -1,5 +1,5 @@
 # FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-04-09
+Last updated: 2026-04-09 (Session 8)
 
 ## Project Root
 D:\Projects\WONDER_WATCH_MVC\
@@ -25,7 +25,7 @@ WONDER_WATCH_MVC/
 WonderWatch.Domain/
 ├── WonderWatch.Domain.csproj
 ├── Entities/
-│   ├── DomainModels.cs    ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage
+│   ├── DomainModels.cs    ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage, Brand, FilterConfig
 │   ├── UserAddress.cs     ← Vault saved address details
 │   └── UserNotification.cs ← Vault system/order notifications
 ├── Enums/
@@ -40,12 +40,14 @@ WonderWatch.Infrastructure/
 ├── WonderWatch.Infrastructure.csproj
 ├── AppDbContext.cs        ← Full Fluent API configuration (No data annotations in Domain)
 ├── DesignTimeDbContextFactory.cs ← Used by EF Core CLI for migrations
-├── SeedData.cs            ← Hydrates DB with 6 Figma watches + Admin user
+├── SeedData.cs            ← Hydrates DB with 6 watches + Admin user + Brands + FilterConfig
 └── Migrations/
     ├── 20260322062352_InitialCreate.cs
     ├── 20260407093131_AddStrapMaterial.cs
     ├── 20260408165906_AddUserAvatarUrl.cs
     ├── 20260409200000_AddUserAddressesAndNotifications.cs
+    ├── 20260409160128_AddFiltersConfig.cs
+    ├── 20260409170956_UpdateWatchesSeedData.cs
     └── AppDbContextModelSnapshot.cs
 ```
 
@@ -88,13 +90,14 @@ WonderWatch.Web/
 │   │   └── Register.cshtml
 │   ├── Admin/
 │   │   ├── CreateWatch.cshtml
+│   │   ├── Filters.cshtml     ← Brand CRUD + Price range config
 │   │   ├── Index.cshtml
 │   │   ├── Orders.cshtml
 │   │   ├── Reviews.cshtml
 │   │   ├── Settings.cshtml
 │   │   └── Watches.cshtml
 │   ├── Catalog/
-│   │   ├── _CatalogFilters.cshtml ← Partial view for dynamic sidebar/drawer
+│   │   ├── _CatalogFilters.cshtml ← Partial: Search bar, brand checkboxes, price slider, strap/size filters
 │   │   ├── Detail.cshtml
 │   │   └── Index.cshtml
 │   ├── Checkout/

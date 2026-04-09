@@ -29,6 +29,7 @@ namespace WonderWatch.Infrastructure
 
             await SeedRolesAndAdminAsync(userManager, roleManager);
             await SeedWatchesAsync(context);
+            await SeedBrandsAndFilterConfigAsync(context);
         }
 
         private static async Task SeedRolesAndAdminAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<Guid>> roleManager)
@@ -92,7 +93,7 @@ namespace WonderWatch.Infrastructure
                 {
                     Id = watchIds[0],
                     Name = "Grand Mariner III",
-                    Brand = "Wonder Watch",
+                    Brand = "Rolex",
                     ReferenceNumber = "WW-GM3-001",
                     Slug = "grand-mariner-iii",
                     Description = "The Grand Mariner III represents the pinnacle of deep-sea horology. Forged from a single block of proprietary void-black titanium, it features a mesmerizing sapphire dial that reveals the intricate automatic movement beneath.",
@@ -104,6 +105,7 @@ namespace WonderWatch.Infrastructure
                     StockQuantity = 3,
                     IsPublished = true,
                     IsSoldOut = false,
+                    StrapMaterial = "Steel",
                     GlbAssetPath = $"/models/{watchIds[0]}.glb",
                     Images = new List<WatchImage>
                     {
@@ -115,7 +117,7 @@ namespace WonderWatch.Infrastructure
                 {
                     Id = watchIds[1],
                     Name = "Obsidian Tourbillon",
-                    Brand = "Wonder Watch",
+                    Brand = "Audemars Piguet",
                     ReferenceNumber = "WW-OT-092",
                     Slug = "obsidian-tourbillon",
                     Description = "A masterclass in gravitational defiance. The Obsidian Tourbillon houses a hand-finished flying tourbillon within a forged carbon case, accented with our signature gold primary details.",
@@ -127,6 +129,7 @@ namespace WonderWatch.Infrastructure
                     StockQuantity = 1,
                     IsPublished = true,
                     IsSoldOut = false,
+                    StrapMaterial = "Rubber",
                     GlbAssetPath = $"/models/{watchIds[1]}.glb",
                     Images = new List<WatchImage>
                     {
@@ -137,18 +140,19 @@ namespace WonderWatch.Infrastructure
                 {
                     Id = watchIds[2],
                     Name = "Legacy Gold Edition",
-                    Brand = "Wonder Watch",
+                    Brand = "Patek Philippe",
                     ReferenceNumber = "WW-LGE-888",
                     Slug = "legacy-gold-edition",
                     Description = "Crafted from solid 18k rose gold, the Legacy Edition is a tribute to traditional watchmaking. It features a parchment-toned dial with hand-applied indices and a perpetual calendar complication.",
-                    RetailPrice = 8420000m, // ₹8,42,00,000 (Wait, 8.42 Cr is 84200000m. Let's use 84,20,000 for consistency with the prompt's 8,42,00,000 example, adjusting to 84200000m)
-                    CostPrice = 50000000m,
-                    ComparePrice = 85000000m,
+                    RetailPrice = 8420000m, // ₹84,20,000
+                    CostPrice = 5000000m,
+                    ComparePrice = 8500000m,
                     CaseSize = 40,
                     MovementType = MovementType.Automatic,
                     StockQuantity = 0,
                     IsPublished = true,
                     IsSoldOut = true,
+                    StrapMaterial = "Leather",
                     GlbAssetPath = $"/models/{watchIds[2]}.glb",
                     Images = new List<WatchImage>
                     {
@@ -159,7 +163,7 @@ namespace WonderWatch.Infrastructure
                 {
                     Id = watchIds[3],
                     Name = "Skeleton Core X",
-                    Brand = "Wonder Watch",
+                    Brand = "Richard Mille",
                     ReferenceNumber = "WW-SCX-404",
                     Slug = "skeleton-core-x",
                     Description = "Stripped of all non-essentials, the Skeleton Core X exposes the beating heart of the machine. The architectural bridges are PVD-coated in void black, contrasting sharply with the gold gear train.",
@@ -171,6 +175,7 @@ namespace WonderWatch.Infrastructure
                     StockQuantity = 5,
                     IsPublished = true,
                     IsSoldOut = false,
+                    StrapMaterial = "Rubber",
                     GlbAssetPath = $"/models/{watchIds[3]}.glb",
                     Images = new List<WatchImage>
                     {
@@ -181,7 +186,7 @@ namespace WonderWatch.Infrastructure
                 {
                     Id = watchIds[4],
                     Name = "Azure Diver Elite",
-                    Brand = "Wonder Watch",
+                    Brand = "Omega",
                     ReferenceNumber = "WW-ADE-777",
                     Slug = "azure-diver-elite",
                     Description = "Engineered for the abyss. The Azure Diver Elite boasts a water resistance of 1000 meters, a helium escape valve, and a unidirectional ceramic bezel in deep ocean blue.",
@@ -193,6 +198,7 @@ namespace WonderWatch.Infrastructure
                     StockQuantity = 8,
                     IsPublished = true,
                     IsSoldOut = false,
+                    StrapMaterial = "Steel",
                     GlbAssetPath = $"/models/{watchIds[4]}.glb",
                     Images = new List<WatchImage>
                     {
@@ -203,7 +209,7 @@ namespace WonderWatch.Infrastructure
                 {
                     Id = watchIds[5],
                     Name = "Luna Phase Silver",
-                    Brand = "Wonder Watch",
+                    Brand = "A. Lange & Söhne",
                     ReferenceNumber = "WW-LPS-021",
                     Slug = "luna-phase-silver",
                     Description = "A poetic complication. The Luna Phase Silver tracks the lunar cycle with absolute precision on a dial crafted from meteorite, housed in a polished platinum case.",
@@ -215,6 +221,7 @@ namespace WonderWatch.Infrastructure
                     StockQuantity = 2,
                     IsPublished = true,
                     IsSoldOut = false,
+                    StrapMaterial = "Leather",
                     GlbAssetPath = $"/models/{watchIds[5]}.glb",
                     Images = new List<WatchImage>
                     {
@@ -225,6 +232,54 @@ namespace WonderWatch.Infrastructure
 
             await context.Watches.AddRangeAsync(watches);
             await context.SaveChangesAsync();
+        }
+
+        private static async Task SeedBrandsAndFilterConfigAsync(AppDbContext context)
+        {
+            // 1. Seed Brands from existing watch data if table is empty
+            if (!await context.Brands.AnyAsync())
+            {
+                var distinctBrands = await context.Watches
+                    .Select(w => w.Brand)
+                    .Distinct()
+                    .OrderBy(b => b)
+                    .ToListAsync();
+
+                int order = 0;
+                foreach (var brandName in distinctBrands)
+                {
+                    context.Brands.Add(new Brand
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = brandName,
+                        SortOrder = order++,
+                        IsActive = true
+                    });
+                }
+
+                await context.SaveChangesAsync();
+            }
+
+            // 2. Seed FilterConfig (single row) if table is empty
+            if (!await context.FilterConfigs.AnyAsync())
+            {
+                // Derive realistic bounds from actual watch prices
+                var minPrice = await context.Watches.MinAsync(w => w.RetailPrice);
+                var maxPrice = await context.Watches.MaxAsync(w => w.RetailPrice);
+
+                // Round down/up to nearest lakh for clean slider bounds
+                decimal roundedMin = Math.Floor(minPrice / 100000m) * 100000m;
+                decimal roundedMax = Math.Ceiling(maxPrice / 100000m) * 100000m;
+
+                context.FilterConfigs.Add(new FilterConfig
+                {
+                    Id = Guid.NewGuid(),
+                    MinPrice = roundedMin,
+                    MaxPrice = roundedMax
+                });
+
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

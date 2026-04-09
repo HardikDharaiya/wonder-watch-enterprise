@@ -296,6 +296,88 @@ namespace WonderWatch.Web.Controllers
 
             return RedirectToAction("Settings");
         }
+
+        // =============================================================
+        // FILTERS MANAGEMENT
+        // =============================================================
+
+        [HttpGet("filters")]
+        public async Task<IActionResult> Filters()
+        {
+            var brands = await _context.Brands.OrderBy(b => b.SortOrder).ToListAsync();
+            var config = await _context.FilterConfigs.FirstOrDefaultAsync();
+
+            var vm = new AdminFiltersViewModel
+            {
+                Brands = brands,
+                MinPrice = config?.MinPrice ?? 0,
+                MaxPrice = config?.MaxPrice ?? 10000000
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost("filters/add-brand")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddBrand(string brandName)
+        {
+            if (!string.IsNullOrWhiteSpace(brandName))
+            {
+                var exists = await _context.Brands.AnyAsync(b => b.Name == brandName);
+                if (!exists)
+                {
+                    var maxOrder = await _context.Brands.AnyAsync()
+                        ? await _context.Brands.MaxAsync(b => b.SortOrder)
+                        : -1;
+
+                    _context.Brands.Add(new Brand
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = brandName.Trim(),
+                        SortOrder = maxOrder + 1,
+                        IsActive = true
+                    });
+                    await _context.SaveChangesAsync();
+                    TempData["FilterSuccess"] = $"Brand '{brandName}' added.";
+                }
+                else
+                {
+                    TempData["FilterError"] = $"Brand '{brandName}' already exists.";
+                }
+            }
+            return RedirectToAction("Filters");
+        }
+
+        [HttpPost("filters/delete-brand/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteBrand(Guid id)
+        {
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand != null)
+            {
+                _context.Brands.Remove(brand);
+                await _context.SaveChangesAsync();
+                TempData["FilterSuccess"] = $"Brand '{brand.Name}' removed.";
+            }
+            return RedirectToAction("Filters");
+        }
+
+        [HttpPost("filters/update-config")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateFilterConfig(decimal minPrice, decimal maxPrice)
+        {
+            var config = await _context.FilterConfigs.FirstOrDefaultAsync();
+            if (config == null)
+            {
+                config = new FilterConfig { Id = Guid.NewGuid() };
+                _context.FilterConfigs.Add(config);
+            }
+            config.MinPrice = minPrice;
+            config.MaxPrice = maxPrice;
+            await _context.SaveChangesAsync();
+            TempData["FilterSuccess"] = "Price range updated.";
+            return RedirectToAction("Filters");
+        }
     }
 }
 
@@ -419,5 +501,15 @@ namespace WonderWatch.Web.ViewModels
         public string Body { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime Date { get; set; }
+    }
+
+    // ---------------------------------------------------------
+    // FILTERS VIEW MODELS
+    // ---------------------------------------------------------
+    public class AdminFiltersViewModel
+    {
+        public List<Brand> Brands { get; set; } = new();
+        public decimal MinPrice { get; set; }
+        public decimal MaxPrice { get; set; }
     }
 }

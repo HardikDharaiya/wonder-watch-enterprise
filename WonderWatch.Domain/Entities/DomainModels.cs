@@ -138,4 +138,27 @@ namespace WonderWatch.Domain.Entities
 
         public Watch Watch { get; set; } = null!;
     }
+
+    /// <summary>
+    /// Admin-controlled dictionary of brands shown in the catalog filter sidebar.
+    /// NOT a FK on Watch — keeps existing Watch.Brand string field intact.
+    /// </summary>
+    public class Brand
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Single-row configuration table for catalog filter bounds (price slider, etc.).
+    /// Managed by the admin from the Settings/Filters panel.
+    /// </summary>
+    public class FilterConfig
+    {
+        public Guid Id { get; set; }
+        public decimal MinPrice { get; set; }
+        public decimal MaxPrice { get; set; }
+    }
 }

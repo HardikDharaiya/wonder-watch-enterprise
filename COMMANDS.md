@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-09 (Session 6) | Location: India (IST)
+Last updated: 2026-04-09 (Session 8) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -208,3 +208,31 @@ dotnet user-secrets list --project WonderWatch.Web
 - `npm run build:css` ✅ (Tailwind recompiled)
 - Files modified: `ApplicationUser.cs`, `VaultController.cs`, `AdminController.cs`, `Profile.cshtml`, `Addresses.cshtml`, `Notifications.cshtml`, `Settings.cshtml`, `_VaultLayout.cshtml`, `appsettings.json`
 - Files created: `UserAddress.cs`, `UserNotification.cs`, `vault.js`
+
+### Session 7 Final History — 2026-04-09
+- `Stop-Process -Name "WonderWatch.Web" -Force` ✅ (Killed running app to release DLL locks)
+- `dotnet build WonderWatch.Web` ✅ (0 Errors, 18 NuGet warnings)
+- `dotnet ef migrations add AddFiltersConfig --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅
+- `dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅ (Migration `20260409160128_AddFiltersConfig` applied)
+- `dotnet run --project WonderWatch.Web` ✅ (App started on http://localhost:5036. Seed data populated Brands + FilterConfigs tables.)
+- Files modified: `DomainModels.cs`, `AppDbContext.cs`, `SeedData.cs`, `ApplicationContracts.cs`, `ApplicationServices.cs`, `CatalogController.cs`, `AdminController.cs`, `_CatalogFilters.cshtml`, `Index.cshtml` (Catalog), `catalog.css`
+- Files created: `Admin/Filters.cshtml`, `Migrations/20260409160128_AddFiltersConfig.cs`
+
+### Session 8 Final History — 2026-04-09
+- `dotnet ef migrations add UpdateWatchesSeedData --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅
+- `dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅ (Raw SQL Migration applied to synchronize watches/brands properties).
+- `dotnet run --project WonderWatch.Web` ✅
+- Files modified: `SeedData.cs`, `CatalogController.cs`, `_CatalogFilters.cshtml`
+- Files created: `Migrations/20260409170956_UpdateWatchesSeedData.cs`
+
+### Session 9 Final History — 2026-04-09
+- **PDP Overhaul Execution:** Updated `CatalogController.cs` inside `WonderWatch.Web` to pass `StrapMaterial`, `StockQuantity`, and `ComparePriceFormatted` to the frontend via `WatchDetailViewModel`. ✅
+- **View Enhancements:** Refactored `Detail.cshtml` to display a dynamic, database-driven specification sheet instead of a hardcoded mock UI. Added urgency indicator for low stock values (`<5`) and integrated strikethrough compare-at-price functionality. ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors, successful pipeline validation).
+
+### Session 10 Final History — 2026-04-09
+- **PDP Front-end Overhaul Execution:** Updated `Detail.cshtml` taking out buggy luxury 3D viewer replacing it with absolute perfect 2D static visual imagery array. Added back navigation. ✅
+- **Wishlist Fixes:** Injected `@Html.AntiForgeryToken()` block into presentation layer allowing `wishlist.js` validation for POST endpoints. ✅
+- **Interaction CSS Overhaul:** Swapped messy and unsupported `scale-x-100` JIT tailwind classes off wishlist and acquire timepiece buttons over to basic CSS structural color states. ✅
+- `Stop-Process -Id 14824 -Force` to release locked binaries. ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors).

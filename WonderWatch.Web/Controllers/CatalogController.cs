@@ -33,7 +33,7 @@ namespace WonderWatch.Web.Controllers
         {
             // 1. Build the filter DTO
             int? caseSize = null;
-            if (!string.IsNullOrEmpty(size) && int.TryParse(size.Replace("MM", ""), out int parsedSize))
+            if (!string.IsNullOrEmpty(size) && int.TryParse(size.Trim().ToUpperInvariant().Replace("MM", ""), out int parsedSize))
             {
                 caseSize = parsedSize;
             }
@@ -56,6 +56,7 @@ namespace WonderWatch.Web.Controllers
             // 3. Fetch dynamic filter options for the UI
             var availableBrands = await _catalogService.GetAvailableBrandsAsync();
             var availableSizes = await _catalogService.GetAvailableCaseSizesAsync();
+            var filterConfig = await _catalogService.GetFilterConfigAsync();
 
             // 4. Pagination Logic
             int pageSize = 12;
@@ -78,8 +79,10 @@ namespace WonderWatch.Web.Controllers
                 CurrentPage = page,
                 TotalPages = totalPages,
                 TotalItems = totalItems,
-                AvailableBrands = availableBrands, // Pass dynamic brands to view
-                AvailableSizes = availableSizes,   // Pass dynamic sizes to view
+                AvailableBrands = availableBrands,
+                AvailableSizes = availableSizes,
+                PriceMin = filterConfig.MinPrice,
+                PriceMax = filterConfig.MaxPrice,
                 Watches = pagedWatches.Select(w => new WatchCardDto
                 {
                     Id = w.Id,
@@ -116,8 +119,11 @@ namespace WonderWatch.Web.Controllers
                 ReferenceNumber = watch.ReferenceNumber,
                 Description = watch.Description,
                 PriceFormatted = watch.RetailPrice.ToString("C0", indiaCulture),
+                ComparePriceFormatted = watch.ComparePrice > watch.RetailPrice ? watch.ComparePrice.ToString("C0", indiaCulture) : string.Empty,
                 CaseSize = watch.CaseSize,
                 MovementType = watch.MovementType.ToString(),
+                StrapMaterial = watch.StrapMaterial,
+                StockQuantity = watch.StockQuantity,
                 IsSoldOut = watch.IsSoldOut,
                 GlbAssetPath = watch.GlbAssetPath,
                 ImageUrls = watch.Images.OrderBy(i => i.SortOrder).Select(i => i.Path).ToList()
@@ -144,6 +150,11 @@ namespace WonderWatch.Web.ViewModels
 
         public List<string> AvailableBrands { get; set; } = new();
         public List<int> AvailableSizes { get; set; } = new();
+
+        /// <summary>Admin-configured lower bound for price slider</summary>
+        public decimal PriceMin { get; set; }
+        /// <summary>Admin-configured upper bound for price slider</summary>
+        public decimal PriceMax { get; set; }
     }
 
     public class WatchDetailViewModel
@@ -154,8 +165,11 @@ namespace WonderWatch.Web.ViewModels
         public string ReferenceNumber { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string PriceFormatted { get; set; } = string.Empty;
+        public string ComparePriceFormatted { get; set; } = string.Empty;
         public int CaseSize { get; set; }
         public string MovementType { get; set; } = string.Empty;
+        public string StrapMaterial { get; set; } = string.Empty;
+        public int StockQuantity { get; set; }
         public bool IsSoldOut { get; set; }
         public string GlbAssetPath { get; set; } = string.Empty;
         public List<string> ImageUrls { get; set; } = new();

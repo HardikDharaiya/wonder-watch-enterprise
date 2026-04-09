@@ -6,6 +6,7 @@
     var selectedBrands = Context.Request.Query["brands"].ToArray();
     var selectedSize = Context.Request.Query["size"].ToString();
     var selectedSort = Context.Request.Query["sort"].ToString();
+    var searchQuery = Context.Request.Query["searchQuery"].ToString();
     if (string.IsNullOrEmpty(selectedSort)) selectedSort = "newest";
 }
 
@@ -120,6 +121,10 @@
                         @if (!string.IsNullOrEmpty(selectedSize))
                         {
                             <input type="hidden" name="size" value="@selectedSize" />
+                        }
+                        @if (!string.IsNullOrEmpty(searchQuery))
+                        {
+                            <input type="hidden" name="searchQuery" value="@searchQuery" />
                         }
                         <span class="font-sans font-bold text-muted uppercase" style="font-size:10px; letter-spacing:2px;">Sort:</span>
                         
