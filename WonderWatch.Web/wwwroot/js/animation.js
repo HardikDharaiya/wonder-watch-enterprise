@@ -36,8 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. REVEAL ON SCROLL
     const revealElements = document.querySelectorAll('.group, section h2, section p, .bg-surface, .bg-surface-alt');
     if (revealElements.length > 0) {
-        revealElements.forEach(el => {
-            if (el.closest('header') || el.closest('#cart-drawer') || el.closest('aside')) return;
+        // Filter out elements that should not have reveal animations (like headers and sidebars)
+        const filteredElements = Array.from(revealElements).filter(el => {
+            return !el.closest('header') && !el.closest('#cart-drawer') && !el.closest('aside');
+        });
+
+        filteredElements.forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(20px)';
             el.style.transition = 'opacity 800ms cubic-bezier(0.16, 1, 0.3, 1), transform 800ms cubic-bezier(0.16, 1, 0.3, 1)';
@@ -54,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
 
-        revealElements.forEach(el => revealObserver.observe(el));
+        filteredElements.forEach(el => revealObserver.observe(el));
     }
 
     // 4. FIXED: INFINITE MARQUEE (Track-Based Logic)

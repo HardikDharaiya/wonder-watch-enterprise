@@ -141,6 +141,7 @@ body.page-catalog {
 .cat-filter-drawer {
     position: fixed;
     inset: 0;
+    height: 100dvh;
     z-index: 200;
     display: flex;
     pointer-events: none;
@@ -167,7 +168,7 @@ body.page-catalog {
     position: absolute;
     left: 0;
     top: 0;
-    bottom: 0;
+    height: 100dvh;
     width: min(85vw, 320px);
     background: #0A0A0A;
     border-right: 1px solid rgba(255,255,255,0.1);
