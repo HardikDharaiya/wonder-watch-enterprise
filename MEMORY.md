@@ -1,13 +1,12 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-09 | Session: 8
-Status: IN PROGRESS - Catalog Filters Fix & Admin Config completed. Filters now DB-driven with admin management.
+Last updated: 2026-04-10 | Session: 13
+Status: IN PROGRESS - Mobile Responsive Bugs. Filter Drawers and Cart scaling.
 
 ## Project Identity
 - **Project name:** Wonder Watch
 - **Type:** ASP.NET Core 8.0 MVC Web Application
 - **Description:** India's premier dark-luxury watch e-commerce boutique. A curated digital atelier.
 - **Target environment:** Azure App Service + Azure SQL Database
-- **Framework:** .NET 8.0
 - **Language:** C# 12, HTML5, Vanilla ES6 JavaScript, Tailwind CSS JIT
 
 ## Architecture Decisions
@@ -170,3 +169,13 @@ Status: IN PROGRESS - Catalog Filters Fix & Admin Config completed. Filters now 
 
 ### Session 11 Summary — 2026-04-09
 - **PDP Layout Bug Fix**: Identified absolute positioning collision on the "Back to Catalog" anchor which overlapped dynamically centered text constraints on smaller viewport dimensions. Restored node to the native flex column rendering sequence as an inline-flex element.
+
+### Session 12 Summary — 2026-04-10
+- **Wishlist Unauthenticated State Fix**: Unauthenticated users clicking the "Wishlist" button were historically experiencing silent background ASP.NET Core `302 Redirect` HTML downloads rather than a proper `401 Unauthorized` intercept.
+- **Frontend Changes**: Appended the critical `X-Requested-With: XMLHttpRequest` header to the `fetch` API payload in `wishlist.js`. 
+- **UX Alarm**: Added a forced `alert(...)` popup whenever the response reads `401` or `response.redirected` evaluates to true, notifying the user to login *before* redirecting their active window viewport, successfully solving the "silent" click reporting.
+
+### Session 13 Summary — 2026-04-10
+- **Mobile Check UI Fix (Drawers)**: Converted all static `h-screen` representations mathematically failing inside Cart and Filter overlays to active dynamic structural views using `h-[100dvh]` rendering engine parameters.
+- **UI Element Collision**: Extrapolated the exit SVG of the Cart Controller with explicit touch-targets, and de-assigned pointer-events natively inside the SVG to negate event bubbling.
+- **Drawer Animation Bug Fix**: Debugged and fixed scroll reveal `IntersectionObserver` in `animation.js` explicitly injecting blocking inline CSS constraints onto `#cart-drawer` elements. Bypassed translation loop preventing slider lock.

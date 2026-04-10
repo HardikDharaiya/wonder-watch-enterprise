@@ -28,13 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': csrfToken
+                        'RequestVerificationToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({ watchId })
                 });
 
                 // 4. Handle Unauthenticated Users
-                if (response.status === 401) {
+                if (response.status === 401 || response.redirected || response.type === 'opaqueredirect') {
+                    alert('Please log in to add items to your wishlist.');
                     const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
                     window.location.href = `/account/login?returnUrl=${currentUrl}`;
                     return;

@@ -240,3 +240,14 @@ dotnet user-secrets list --project WonderWatch.Web
 ### Session 11 Final History — 2026-04-09
 - **UI Bug fix Execution:** Switched `Detail.cshtml` CSS from `absolute` node injection on Back Navigation anchor to `inline-flex` ensuring it never squashes fluid typography inside vertical alignment calculations. ✅
 - `dotnet build WonderWatch.Web` ✅ (0 Errors).
+
+### Session 12 Final History — 2026-04-10
+- **Wishlist Alarm Execution:** Updated `wishlist.js` `fetch` object to push `X-Requested-With` header preventing silent MVC redirect hijacks. Updated handling structure forcing JS `alert()` logic for unauthenticated 401s prior to safe login redirecting. ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors).
+
+### Session 13 Final History — 2026-04-10
+- **Mobile Rendering UI Fix:** Updated `_CartDrawer.cshtml` to rely upon `h-[100dvh]` rather than `100vh` to avoid address-bar clipping on iOS/Android. ✅
+- **Catalog CSS Modification:** Appended `100dvh` structural container size logic to `.cat-filter-drawer` and `.cat-filter-panel` resolving unreachable filter UI cutoffs. ✅
+- **Cart Button Optimization:** Increased touch-targets mathematically using explicit padding over the cart close icon and detached SVG inner bubbling with `pointer-events-none`. ✅
+- **Drawer Animation Bug Fix:** Extracted cart drawer selector from scroll reveal observer in `animation.js` to unblock `translate-x` transformations on open/close. ✅
+- `npm run build:css` ✅ (Recompiled `global.css` via Tailwind JIT)
