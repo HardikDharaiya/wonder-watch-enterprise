@@ -1,8 +1,12 @@
-﻿@{
+@{
     // Helper function to determine active navigation state
     string GetActiveNavClass(string path)
     {
         var currentPath = Context.Request.Path.ToString().ToLower();
+        if (path == "/") 
+        {
+            return currentPath == "/" ? "text-gold" : "text-muted";
+        }
         if (currentPath.StartsWith(path.ToLower()))
         {
             return "text-gold";
@@ -53,6 +57,7 @@
 
         <!-- Center: Desktop Navigation -->
         <nav class="hidden lg:flex items-center gap-[48px] absolute left-1/2 transform -translate-x-1/2">
+            <a href="/" class="font-sans font-bold text-[12px] @GetActiveNavClass("/") tracking-[1.2px] uppercase hover:text-gold transition-colors focus:outline-none focus:text-gold">Home</a>
             <a href="/collections" class="font-sans font-bold text-[12px] @GetActiveNavClass("/collections") tracking-[1.2px] uppercase hover:text-gold transition-colors focus:outline-none focus:text-gold">Collections</a>
             <a href="/catalog" class="font-sans font-bold text-[12px] @GetActiveNavClass("/catalog") tracking-[1.2px] uppercase hover:text-gold transition-colors focus:outline-none focus:text-gold">Catalog</a>
             <a href="/about" class="font-sans font-bold text-[12px] @GetActiveNavClass("/about") tracking-[1.2px] uppercase hover:text-gold transition-colors focus:outline-none focus:text-gold">About</a>
@@ -107,6 +112,7 @@
             </button>
         </div>
         <nav class="flex flex-col p-[32px] gap-[32px] flex-grow overflow-y-auto">
+            <a href="/" class="font-serif text-[30px] @GetActiveNavClass("/") hover:text-gold transition-colors">Home</a>
             <a href="/collections" class="font-serif text-[30px] @GetActiveNavClass("/collections") hover:text-gold transition-colors">Collections</a>
             <a href="/catalog" class="font-serif text-[30px] @GetActiveNavClass("/catalog") hover:text-gold transition-colors">Catalog</a>
             <a href="/about" class="font-serif text-[30px] @GetActiveNavClass("/about") hover:text-gold transition-colors">About</a>

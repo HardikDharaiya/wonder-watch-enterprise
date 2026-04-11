@@ -2,7 +2,7 @@
 
 **Source:** Derived from `AppDbContext.cs`, `DomainModels.cs`, `ApplicationUser.cs`, and `.bacpac` export `WonderWatch_Dev`.
 **Database:** SQL Server LocalDB (`(localdb)\MSSQLLocalDB`) → `WonderWatch_Dev`
-**Last Updated:** 2026-04-09 | Session 8
+**Last Updated:** 2026-04-11 | Session 14
 
 ---
 
