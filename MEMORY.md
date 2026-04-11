@@ -179,3 +179,7 @@ Status: IN PROGRESS - Mobile Responsive Bugs. Filter Drawers and Cart scaling.
 - **Mobile Check UI Fix (Drawers)**: Converted all static `h-screen` representations mathematically failing inside Cart and Filter overlays to active dynamic structural views using `h-[100dvh]` rendering engine parameters.
 - **UI Element Collision**: Extrapolated the exit SVG of the Cart Controller with explicit touch-targets, and de-assigned pointer-events natively inside the SVG to negate event bubbling.
 - **Drawer Animation Bug Fix**: Debugged and fixed scroll reveal `IntersectionObserver` in `animation.js` explicitly injecting blocking inline CSS constraints onto `#cart-drawer` elements. Bypassed translation loop preventing slider lock.
+
+### Session 14 Summary — 2026-04-11
+- **Navigation Update**: Added a "Home" link (`/`) to the global `_Layout.cshtml` navigation bar (both desktop and mobile menus).
+- **Navigation Logic**: Updated the `GetActiveNavClass` razor function to explicitly handle the root path `/` to ensure accurate active state highlighting without falsely matching all child paths.

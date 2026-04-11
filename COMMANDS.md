@@ -251,3 +251,7 @@ dotnet user-secrets list --project WonderWatch.Web
 - **Cart Button Optimization:** Increased touch-targets mathematically using explicit padding over the cart close icon and detached SVG inner bubbling with `pointer-events-none`. ✅
 - **Drawer Animation Bug Fix:** Extracted cart drawer selector from scroll reveal observer in `animation.js` to unblock `translate-x` transformations on open/close. ✅
 - `npm run build:css` ✅ (Recompiled `global.css` via Tailwind JIT)
+
+### Session 14 Final History — 2026-04-11
+- **Navbar Update Execution**: Adjusted `_Layout.cshtml` to inject `Home` URL paths resolving navigation loops. ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors).
