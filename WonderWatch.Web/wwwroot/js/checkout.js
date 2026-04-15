@@ -9,6 +9,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSpinner = document.getElementById('btn-spinner');
     const errorContainer = document.getElementById('checkout-error');
 
+    const newAddressForm = document.getElementById('NewAddressForm');
+    const addressRadios = document.querySelectorAll('.address-radio');
+
+    // Toggle manual address form visibility
+    addressRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'new') {
+                newAddressForm.classList.remove('max-h-0', 'opacity-0', 'pointer-events-none');
+                newAddressForm.classList.add('max-h-[800px]', 'opacity-100');
+                newAddressForm.removeAttribute('inert');
+            } else {
+                newAddressForm.classList.remove('max-h-[800px]', 'opacity-100');
+                newAddressForm.classList.add('max-h-0', 'opacity-0', 'pointer-events-none');
+                newAddressForm.setAttribute('inert', '');
+            }
+        });
+    });
+
+    // Handle remove product buttons
+    const removeButtons = document.querySelectorAll('.remove-checkout-item-btn');
+    removeButtons.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const watchId = e.currentTarget.dataset.watchId;
+            const csrfTokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (!csrfTokenInput) return;
+
+            try {
+                e.currentTarget.style.opacity = '0.5';
+                e.currentTarget.style.pointerEvents = 'none';
+
+                const response = await fetch('/api/cart/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': csrfTokenInput.value
+                    },
+                    body: JSON.stringify({
+                        WatchId: parseInt(watchId, 10),
+                        Quantity: 0
+                    })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    console.error('Failed to update cart');
+                    e.currentTarget.style.opacity = '1';
+                    e.currentTarget.style.pointerEvents = 'auto';
+                }
+            } catch (err) {
+                console.error('Network error updating cart', err);
+                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.pointerEvents = 'auto';
+            }
+        });
+    });
+
     if (!checkoutForm) return;
 
     checkoutForm.addEventListener('submit', async (e) => {
@@ -27,15 +84,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const csrfToken = csrfTokenInput.value;
 
-        // 3. Gather Form Data
-        const formData = {
-            Line1: document.getElementById('Line1').value.trim(),
-            Line2: document.getElementById('Line2').value.trim(),
-            City: document.getElementById('City').value.trim(),
-            State: document.getElementById('State').value.trim(),
-            PinCode: document.getElementById('PinCode').value.trim(),
-            Phone: document.getElementById('Phone').value.trim()
-        };
+        // 3. Gather Form Data dynamically based on selection
+        const selectedRadio = document.querySelector('input[name="AddressSelection"]:checked');
+        let formData = {};
+
+        if (selectedRadio && selectedRadio.value === 'saved') {
+            formData = {
+                Line1: selectedRadio.dataset.line1,
+                Line2: selectedRadio.dataset.line2 || '',
+                City: selectedRadio.dataset.city,
+                State: selectedRadio.dataset.state,
+                PinCode: selectedRadio.dataset.pincode,
+                Phone: document.getElementById('Phone').value.trim() || selectedRadio.dataset.phone 
+            };
+        } else {
+            // New Address Form validation
+            const line1 = document.getElementById('Line1').value.trim();
+            const city = document.getElementById('City').value.trim();
+            const state = document.getElementById('State').value.trim();
+            const pinCode = document.getElementById('PinCode').value.trim();
+            
+            if (!line1 || !city || !state || !pinCode) {
+                showError('Please fill in all required shipping address fields.');
+                setLoadingState(false);
+                return;
+            }
+
+            formData = {
+                Line1: line1,
+                Line2: document.getElementById('Line2').value.trim(),
+                City: city,
+                State: state,
+                PinCode: pinCode,
+                Phone: document.getElementById('Phone').value.trim()
+            };
+        }
 
         try {
             // 4. Step 1: Create Order on Server

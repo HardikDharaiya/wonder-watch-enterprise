@@ -25,6 +25,7 @@ namespace WonderWatch.Web.Controllers
         private readonly IOrderService _orderService;
         private readonly IPaymentProvider _paymentProvider;
         private readonly ICatalogService _catalogService;
+        private readonly IAddressService _addressService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
         private readonly ILogger<CheckoutController> _logger;
@@ -33,6 +34,7 @@ namespace WonderWatch.Web.Controllers
             IOrderService orderService,
             IPaymentProvider paymentProvider,
             ICatalogService catalogService,
+            IAddressService addressService,
             UserManager<ApplicationUser> userManager,
             IConfiguration config,
             ILogger<CheckoutController> logger)
@@ -40,6 +42,7 @@ namespace WonderWatch.Web.Controllers
             _orderService = orderService;
             _paymentProvider = paymentProvider;
             _catalogService = catalogService;
+            _addressService = addressService;
             _userManager = userManager;
             _config = config;
             _logger = logger;
@@ -74,6 +77,7 @@ namespace WonderWatch.Web.Controllers
                     subtotal += watch.RetailPrice * item.Quantity;
                     items.Add(new CheckoutItemViewModel
                     {
+                        WatchId = watch.Id,
                         WatchName = watch.Name,
                         Brand = watch.Brand,
                         Quantity = item.Quantity,
@@ -83,6 +87,8 @@ namespace WonderWatch.Web.Controllers
                 }
             }
 
+            var addresses = await _addressService.GetByUserAsync(user.Id);
+
             var viewModel = new CheckoutIndexViewModel
             {
                 Items = items,
@@ -90,7 +96,8 @@ namespace WonderWatch.Web.Controllers
                 TotalAmount = subtotal,
                 FullName = user.FullName,
                 Email = user.Email ?? string.Empty,
-                Phone = user.PhoneNumber ?? string.Empty
+                Phone = user.PhoneNumber ?? string.Empty,
+                SavedAddresses = addresses
             };
 
             return View(viewModel);
@@ -208,6 +215,7 @@ namespace WonderWatch.Web.Controllers
                 ShippingAddress = $"{order.ShippingAddress.Line1}, {order.ShippingAddress.City}, {order.ShippingAddress.State} {order.ShippingAddress.PinCode}",
                 Items = order.Items.Select(i => new CheckoutItemViewModel
                 {
+                    WatchId = i.Watch.Id,
                     WatchName = i.Watch.Name,
                     Brand = i.Watch.Brand,
                     Quantity = i.Quantity,
@@ -236,10 +244,13 @@ namespace WonderWatch.Web.ViewModels
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        
+        public List<WonderWatch.Application.DTOs.UserAddressDto> SavedAddresses { get; set; } = new();
     }
 
     public class CheckoutItemViewModel
     {
+        public Guid WatchId { get; set; }
         public string WatchName { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
         public int Quantity { get; set; }

@@ -80,8 +80,13 @@
             
             <div class="flex items-end justify-between mt-[12px]">
                 <div class="flex items-center border border-white-faint">
-                    <span class="font-sans text-[12px] text-muted px-[12px] py-[4px] border-r border-white-faint bg-surface-alt">Qty</span>
-                    <span class="item-quantity font-sans font-bold text-[12px] text-parchment px-[12px] py-[4px]">1</span>
+                    <button type="button" class="item-decrease-btn text-muted hover:text-gold transition-colors px-[10px] py-[4px] border-r border-white-faint focus:outline-none" aria-label="Decrease quantity">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                    <span class="item-quantity font-sans font-bold text-[12px] text-parchment px-[12px] py-[4px] min-w-[32px] text-center">1</span>
+                    <button type="button" class="item-increase-btn text-muted hover:text-gold transition-colors px-[10px] py-[4px] border-l border-white-faint focus:outline-none" aria-label="Increase quantity">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
                 </div>
                 <span class="item-total font-sans font-bold text-[14px] text-gold tracking-[-0.45px]">₹0</span>
             </div>

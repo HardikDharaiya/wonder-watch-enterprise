@@ -508,8 +508,8 @@ namespace WonderWatch.Application.Services
 
             if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser))
             {
-                _logger.LogWarning("SMTP not configured. Email to {To} with subject '{Subject}' will be skipped.", toEmail, subject);
-                return;
+                throw new InvalidOperationException(
+                    "SMTP is not configured. Please save SMTP settings (Host + Username) in the Admin → Settings page before sending emails.");
             }
 
             var message = new MimeKit.MimeMessage();

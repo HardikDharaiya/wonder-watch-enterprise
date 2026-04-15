@@ -94,6 +94,29 @@ namespace WonderWatch.Web.Controllers
 
             return Ok(new { success = true, count = cart.Sum(c => c.Quantity) });
         }
+
+        [HttpPost("update")]
+        public IActionResult UpdateQuantity([FromBody] UpdateQuantityRequest request)
+        {
+            var cart = GetCart();
+            var item = cart.FirstOrDefault(c => c.WatchId == request.WatchId);
+
+            if (item != null)
+            {
+                if (request.Quantity <= 0)
+                {
+                    cart.Remove(item);
+                }
+                else
+                {
+                    item.Quantity = request.Quantity;
+                }
+                SaveCart(cart);
+                _logger.LogInformation("Updated Watch {WatchId} quantity to {Quantity}.", request.WatchId, request.Quantity);
+            }
+
+            return Ok(new { success = true, count = cart.Sum(c => c.Quantity) });
+        }
         [HttpGet("summary")]
         public async Task<IActionResult> GetSummary()
         {
@@ -144,6 +167,12 @@ namespace WonderWatch.Web.Controllers
     public class RemoveFromCartRequest
     {
         public Guid WatchId { get; set; }
+    }
+
+    public class UpdateQuantityRequest
+    {
+        public Guid WatchId { get; set; }
+        public int Quantity { get; set; }
     }
 
     public class CartSummaryResponse

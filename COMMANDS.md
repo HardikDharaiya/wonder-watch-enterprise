@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-09 (Session 8) | Location: India (IST)
+Last updated: 2026-04-15 (Session 16) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -254,4 +254,22 @@ dotnet user-secrets list --project WonderWatch.Web
 
 ### Session 14 Final History — 2026-04-11
 - **Navbar Update Execution**: Adjusted `_Layout.cshtml` to inject `Home` URL paths resolving navigation loops. ✅
+- **Navbar Vault Cleanup Execution**: Stripped overlapping "Vault" definitions out of both Desktop and Mobile Nav trees in `_Layout.cshtml` in favor of forcing native profile Account Icon clicks consistently across views. Removed "Authenticate" sub-menu item from the mobile view layout. ✅
+- **Global Layout Enhancement**: Added `UserManager` and `INotificationService` directly into `_Layout.cshtml`. Moved wishlist icon to display on mobile beside cart. Inserted dynamic unread notification badge icon with routing to the Notifications page before the profile icon in all views. ✅
+- **Cart Drawer Item Quantity**: Created new API endpoint `api/cart/update` inside `CartController.cs` to explicitly override a product's target quantity logic. Injected physical `+` / `-` visual keys into UI of `_CartDrawer.cshtml`, binding these event listeners directly back inside `cart.js`. ✅
+- **Checkout Saved Addresses Overhaul**: Injected `IAddressService` into `CheckoutController` fetching explicitly assigned address objects mapped natively to newly designed selection `radio` containers in the Razor View logic blocks allowing dynamic POST payload modifications prior to Razorpay initializations. ✅
+- **Checkout Bug Tracking Execution**: Fixed checkout page edge cases. Injected `< Back to Cart` logic. Appended Cart API proxy commands directly inside Javascript's event loop to allow line item deletions without reloading via HTTP POST handling. Swapped `disabled`/`pointer-events` toggles into JavaScript blocking HTML form access correctly. ✅
+- **Checkout Build Error Fix**: Resolved `CS1061` by adding a missing `WatchId` property to `CheckoutItemViewModel` and updating `CheckoutController` to populate it in `Index` and `Confirmation` views. ✅
 - `dotnet build WonderWatch.Web` ✅ (0 Errors).
+
+### Session 15 Final History — 2026-04-12
+- **Admin Settings — Save Config 404 Fix**: Changed outer `<form action="#">` → `action="/admin/settings/save"` in `Settings.cshtml`. Confirmed Save Configuration now posts correctly. ✅
+- **Admin Settings — Silent Email False-Success Fix**: `EmailService.SendEmailAsync` previously did a silent `return` (no exception) when SMTP was not configured, so the Test Email button always showed a "success" toast. Fixed by throwing `InvalidOperationException` instead, ensuring the controller catches and displays a real error message. ✅
+- **Admin Settings — Live Config Reload**: `AdminController` now casts `IConfiguration` to `IConfigurationRoot` and calls `.Reload()` after writing to `appsettings.json` in `SaveSettings()`. SMTP settings now take effect immediately without an app restart. ✅
+- **Test Email Guard**: Added an explicit pre-check in `TestEmail()` — returns early with a user-friendly error if `SmtpSettings:Host` or `SmtpSettings:Username` is still empty, preventing cryptic MailKit exceptions. ✅
+- `dotnet build WonderWatch.Web` ✅ (0 Errors, 9 pre-existing NuGet warnings)
+
+### Session 16 Final History — 2026-04-15
+- **Documentation Update**: Updated `README.md` to include explicitly documented `.NET User Secrets` commands for Razorpay setup (`KeyId`, `KeySecret`). ✅
+- **Brain Sync**: Synchronized `MEMORY.md`, `FILES.md`, and `COMMANDS.md` with latest session history and date pointers. ✅
+- **Git Repository Update**: Committed all pending documentation and asset changes to the main branch. ✅

@@ -42,7 +42,18 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
    - **User:** `alexander@wonderwatch.in`
    - **Password:** `WonderAdmin@2026!`
 
-6. **Run the Project**
+6. **Payment Gateway Setup (Razorpay)**
+   The application uses Razorpay for secure payments. In development, credentials should be stored in the .NET User Secrets store:
+   ```bash
+   # Initialize secrets
+   dotnet user-secrets init --project WonderWatch.Web
+
+   # Set your Razorpay Test Keys
+   dotnet user-secrets set "Razorpay:KeyId" "rzp_test_YOUR_KEY_ID" --project WonderWatch.Web
+   dotnet user-secrets set "Razorpay:KeySecret" "YOUR_KEY_SECRET" --project WonderWatch.Web
+   ```
+
+7. **Run the Project**
    ```bash
    cd WonderWatch.Web
    dotnet run
