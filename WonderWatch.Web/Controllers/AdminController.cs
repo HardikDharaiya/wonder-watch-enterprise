@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using WonderWatch.Application.Interfaces;
 using WonderWatch.Domain.Entities;
@@ -27,6 +28,7 @@ namespace WonderWatch.Web.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IConfiguration _config;
         private readonly IEmailService _emailService;
+        private readonly IConfigurationRoot? _configRoot;
 
         public AdminController(
             IAdminService adminService,
@@ -42,6 +44,7 @@ namespace WonderWatch.Web.Controllers
             _logger = logger;
             _config = config;
             _emailService = emailService;
+            _configRoot = config as IConfigurationRoot;
         }
 
         [HttpGet("")]
@@ -239,30 +242,37 @@ namespace WonderWatch.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveSettings(string SmtpHost, string SmtpPort, string SmtpUsername, string SmtpPassword, string SmtpFromEmail, string SmtpFromName)
         {
-            // Write to appsettings.json (runtime config update)
             try
             {
+                // ── Write to appsettings.json ──────────────────────────────
                 var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-                var json = await System.IO.File.ReadAllTextAsync(appSettingsPath);
-                var doc = System.Text.Json.JsonDocument.Parse(json);
-                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new();
+                string existingJson = existingJson = System.IO.File.Exists(appSettingsPath)
+                    ? await System.IO.File.ReadAllTextAsync(appSettingsPath)
+                    : "{}";
 
-                var smtpSection = new Dictionary<string, string>
+                // Deserialize as a mutable node tree to preserve non-SMTP keys
+                var root = System.Text.Json.Nodes.JsonNode.Parse(existingJson) as System.Text.Json.Nodes.JsonObject
+                           ?? new System.Text.Json.Nodes.JsonObject();
+
+                var smtpNode = new System.Text.Json.Nodes.JsonObject
                 {
-                    ["Host"] = SmtpHost ?? "",
-                    ["Port"] = SmtpPort ?? "587",
-                    ["Username"] = SmtpUsername ?? "",
-                    ["Password"] = SmtpPassword ?? "",
+                    ["Host"]      = SmtpHost      ?? "",
+                    ["Port"]      = SmtpPort      ?? "587",
+                    ["Username"]  = SmtpUsername  ?? "",
+                    ["Password"]  = SmtpPassword  ?? "",
                     ["FromEmail"] = SmtpFromEmail ?? "",
-                    ["FromName"] = SmtpFromName ?? "Wonder Watch"
+                    ["FromName"]  = SmtpFromName  ?? "Wonder Watch"
                 };
+                root["SmtpSettings"] = smtpNode;
 
-                dict["SmtpSettings"] = smtpSection;
+                var writeOptions = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                await System.IO.File.WriteAllTextAsync(appSettingsPath,
+                    root.ToJsonString(writeOptions));
 
-                var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
-                await System.IO.File.WriteAllTextAsync(appSettingsPath, System.Text.Json.JsonSerializer.Serialize(dict, options));
+                // ── Reload IConfiguration so EmailService picks up new values immediately ──
+                _configRoot?.Reload();
 
-                TempData["SmtpSuccess"] = "SMTP settings saved. Restart the application for changes to take effect.";
+                TempData["SmtpSuccess"] = "✓ SMTP settings saved and applied. You can now test the connection below.";
             }
             catch (Exception ex)
             {
@@ -283,15 +293,24 @@ namespace WonderWatch.Web.Controllers
                 return RedirectToAction("Settings");
             }
 
+            // Guard: SMTP must be configured before testing
+            var smtpHost = _config["SmtpSettings:Host"];
+            var smtpUser = _config["SmtpSettings:Username"];
+            if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser))
+            {
+                TempData["SmtpError"] = "SMTP is not configured yet. Please fill in and save the SMTP settings first.";
+                return RedirectToAction("Settings");
+            }
+
             try
             {
                 await _emailService.SendTestEmailAsync(TestEmailTo);
-                TempData["SmtpSuccess"] = $"Test email sent to {TestEmailTo}. Check your inbox.";
+                TempData["SmtpSuccess"] = $"✓ Test email dispatched to {TestEmailTo}. Check your inbox (and spam folder).";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Test email failed.");
-                TempData["SmtpError"] = "Failed to send test email: " + ex.Message;
+                _logger.LogError(ex, "Test email failed to {Email}.", TestEmailTo);
+                TempData["SmtpError"] = $"Delivery failed — {ex.Message}";
             }
 
             return RedirectToAction("Settings");

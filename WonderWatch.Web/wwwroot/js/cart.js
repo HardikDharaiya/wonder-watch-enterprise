@@ -92,6 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 clone.querySelector('.item-quantity').textContent = item.quantity;
                 clone.querySelector('.item-total').textContent = item.itemTotalFormatted;
 
+                // Wire up quantity buttons
+                const decreaseBtn = clone.querySelector('.item-decrease-btn');
+                const increaseBtn = clone.querySelector('.item-increase-btn');
+
+                decreaseBtn.addEventListener('click', () => updateQuantity(item.watchId, item.quantity - 1));
+                increaseBtn.addEventListener('click', () => updateQuantity(item.watchId, item.quantity + 1));
+
                 // Wire up remove button
                 const removeBtn = clone.querySelector('.item-remove-btn');
                 removeBtn.addEventListener('click', () => removeFromCart(item.watchId));
@@ -151,6 +158,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error removing from cart:', error);
+        }
+    };
+
+    const updateQuantity = async (watchId, quantity) => {
+        if (quantity <= 0) {
+            return removeFromCart(watchId);
+        }
+        try {
+            const response = await fetch('/api/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ watchId, quantity })
+            });
+
+            if (response.ok) {
+                fetchCartSummary(); // Refresh the drawer UI
+            }
+        } catch (error) {
+            console.error('Error updating quantity:', error);
         }
     };
 

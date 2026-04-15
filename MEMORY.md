@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-10 | Session: 13
-Status: IN PROGRESS - Mobile Responsive Bugs. Filter Drawers and Cart scaling.
+Last updated: 2026-04-15 | Session: 16
+Status: IN PROGRESS - Documentation update (README Razorpay secrets) and final session prep.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -183,3 +183,12 @@ Status: IN PROGRESS - Mobile Responsive Bugs. Filter Drawers and Cart scaling.
 ### Session 14 Summary — 2026-04-11
 - **Navigation Update**: Added a "Home" link (`/`) to the global `_Layout.cshtml` navigation bar (both desktop and mobile menus).
 - **Navigation Logic**: Updated the `GetActiveNavClass` razor function to explicitly handle the root path `/` to ensure accurate active state highlighting without falsely matching all child paths.
+- **Vault Deduplication (Desktop/Mobile Navbars)**: Stripped the redundant text-based "Vault" navigation links from main menus since an explicit profile Action Icon already triggers route validation.
+- **Mobile Nav Authenticate Flow**: Moved the "Authenticate" target away from the side menu. Stripped `hidden` logic off the Action Icon loop so mobile viewers natively process authenticate/profile actions exactly like desktop users.
+- **Global Wishlist & Notifications**: Re-located the "My Wishlist" action out from the mobile-hamburger menu by making the structural Wishlist SVG visible on all layouts (removed `hidden sm:block`). Injected `UserManager` and `INotificationService` into the global `_Layout.cshtml` to securely check and render a live Unread Notification Badge inside the global toolbar on both mobile and desktop explicitly linked to `/vault/notifications`.
+- **Cart Drawer Item Quantity UI**: Enhanced the `_CartDrawer.cshtml` template. Added visual `+` (increase) and `-` (decrease) interactive target buttons dynamically encapsulating the currently isolated item quantity display block.
+- **Cart API Layer**: Built a new POST `UpdateQuantity` endpoint bound to `/api/cart/update` in `CartController.cs`. Created matching `UpdateQuantityRequest` DTO handling increment, decrement, and explicit item zeroing (cart removal proxying) natively from backend sessions. Connected it natively to vanilla js clicks handling internal JS `cart.js`.
+- **Checkout Saved Addresses Overhaul**: Injected `IAddressService` into `CheckoutController.cs` and redesigned `Index.cshtml` to securely pull and present a radio-selectable Vault address format to users. Added logic in `checkout.js` to correctly toggle UI manually blocking and mapping valid `dataset` variables dynamically on explicit POST requests to the `verify` flow.
+- **Checkout Bug Fixes & UX**: Prevented hidden "Ship to a new address" form fields from being focusable by keyboard tab events by injecting CSS `pointer-events-none` & HTML5 `inert` property rules directly onto active layout via JS manipulation.
+- **Checkout Return & Removal Options**: Implemented a "Return to Cart" navigation path. Enabled product deletions explicitly inside Checkout's static Order Summary box by pushing `Quantity = 0` commands directly to the backend Cart Controller.
+- **Checkout Model Synchronization**: Fixed build error `CS1061` by adding the missing `WatchId` Guid property to `CheckoutItemViewModel` and ensuring it is populated throughout the `CheckoutController` pipeline.
