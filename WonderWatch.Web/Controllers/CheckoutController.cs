@@ -127,24 +127,32 @@ namespace WonderWatch.Web.Controllers
                     Items = cart
                 };
 
-                // 2. Create Order in Database (Status: Pending)
-                var order = await _orderService.CreateOrderAsync(user.Id, createOrderDto);
+                // 2. Calculate Order Total
+                decimal totalAmount = 0;
+                foreach (var item in cart)
+                {
+                    var watch = await _catalogService.GetByIdAsync(item.WatchId);
+                    if (watch != null)
+                    {
+                        totalAmount += (watch.RetailPrice * item.Quantity);
+                    }
+                }
 
-                // 3. Create Razorpay Order
-                var razorpayOrderId = await _paymentProvider.CreateRazorpayOrderAsync(order.TotalAmount);
+                if (totalAmount == 0) return BadRequest(new { error = "Invalid cart total." });
 
-                // 4. Update Order with Razorpay ID
-                // Note: In a real-world scenario, you might want a dedicated method for this in IOrderService.
-                // For this blueprint, we assume the RazorpayOrderId is tracked.
+                // 3. Save pending status in session, DO NOT insert into DB yet
+                HttpContext.Session.SetJson("WonderWatch_PendingCheckout", createOrderDto);
+
+                // 4. Create Razorpay Order
+                var razorpayOrderId = await _paymentProvider.CreateRazorpayOrderAsync(totalAmount);
 
                 var keyId = _config["Razorpay:KeyId"] ?? throw new InvalidOperationException("Razorpay KeyId missing.");
 
                 return Json(new
                 {
                     success = true,
-                    orderId = order.Id,
                     razorpayOrderId = razorpayOrderId,
-                    amount = order.TotalAmount * 100, // Razorpay expects paise
+                    amount = totalAmount * 100, // Razorpay expects paise
                     keyId = keyId,
                     prefill = new { name = user.FullName, email = user.Email, contact = request.Phone }
                 });
@@ -165,26 +173,36 @@ namespace WonderWatch.Web.Controllers
 
             try
             {
-                // 1. Verify HMAC-SHA256 Signature
                 var isValid = _paymentProvider.VerifySignature(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature);
 
                 if (!isValid)
                 {
-                    _logger.LogWarning("Payment verification failed for Order {OrderId}. Invalid signature.", request.OrderId);
+                    _logger.LogWarning("Payment verification failed. Invalid signature.");
                     return BadRequest(new { error = "Payment verification failed. Invalid signature." });
                 }
 
-                // 2. Transition Order Status to Paid
-                await _orderService.TransitionStatusAsync(request.OrderId, OrderStatus.Paid);
+                // 2. Retrieve pending order data from session
+                var createOrderDto = HttpContext.Session.GetJson<CreateOrderDto>("WonderWatch_PendingCheckout");
+                if (createOrderDto == null)
+                {
+                    return BadRequest(new { error = "Checkout session expired or missing." });
+                }
 
-                // 3. Clear the Cart
+                // 3. Create Order in Database (Status: Pending)
+                var order = await _orderService.CreateOrderAsync(user.Id, createOrderDto);
+
+                // 4. Transition Order Status to Paid
+                await _orderService.TransitionStatusAsync(order.Id, OrderStatus.Paid);
+
+                // 5. Clear the Cart and Pending Checkout
                 HttpContext.Session.Remove(CartSessionKey);
+                HttpContext.Session.Remove("WonderWatch_PendingCheckout");
 
-                return Json(new { success = true, redirectUrl = $"/checkout/confirmation/{request.OrderId}" });
+                return Json(new { success = true, redirectUrl = $"/checkout/confirmation/{order.Id}" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error verifying payment for Order {OrderId}", request.OrderId);
+                _logger.LogError(ex, "Error verifying payment for Razorpay Order {RazorpayOrderId}", request.RazorpayOrderId);
                 return BadRequest(new { error = "An error occurred during payment verification." });
             }
         }
@@ -270,7 +288,6 @@ namespace WonderWatch.Web.ViewModels
 
     public class VerifyPaymentRequest
     {
-        public Guid OrderId { get; set; }
         public string RazorpayOrderId { get; set; } = string.Empty;
         public string RazorpayPaymentId { get; set; } = string.Empty;
         public string RazorpaySignature { get; set; } = string.Empty;

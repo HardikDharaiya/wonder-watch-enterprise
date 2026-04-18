@@ -87,6 +87,13 @@
                 SETTINGS
             </a>
 
+            <a href="/admin/membership" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("MembershipPlan", "Any")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                MEMBERSHIPS
+            </a>
+
             <!-- Sign Out -->
             <div class="mt-4">
                 <form asp-controller="Account" asp-action="Logout" method="post" class="w-full">

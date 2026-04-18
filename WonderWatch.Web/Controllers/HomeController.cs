@@ -19,14 +19,16 @@ namespace WonderWatch.Web.Controllers
         {
             _catalogService = catalogService;
             _logger = logger;
-        }[HttpGet]
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var filter = new WatchFilterDto { SortBy = "newest" };
-            var watches = await _catalogService.GetAllAsync(filter);
+            var (watches, _) = await _catalogService.GetAllAsync(filter, 1, 3);
             var indiaCulture = new CultureInfo("hi-IN");
             
-            var featuredWatches = watches.Take(3).Select(w => new WatchCardDto
+            var featuredWatches = watches.Select(w => new WatchCardDto
             {
                 Id = w.Id,
                 Name = w.Name,
@@ -52,7 +54,37 @@ namespace WonderWatch.Web.Controllers
         public IActionResult About()
         {
             return View();
-        }[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        }
+
+        [HttpGet]
+        [Route("contact")]
+        public IActionResult Contact()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Route("privacy")]
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Route("terms")]
+        public IActionResult Terms()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Route("shipping")]
+        public IActionResult Shipping()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             _logger.LogError("An error occurred. RequestId: {RequestId}", Activity.Current?.Id ?? HttpContext.TraceIdentifier);

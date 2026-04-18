@@ -1,0 +1,80 @@
+@model IEnumerable<WonderWatch.Application.DTOs.MembershipPlanDto>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Configure Memberships";
+}
+
+<div class="p-[32px] md:p-[48px] max-w-[1200px] mx-auto">
+
+    <!-- HEADER -->
+    <div class="mb-[48px] flex flex-col md:flex-row md:items-end justify-between gap-[24px]">
+        <div>
+            <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Memberships</h1>
+            <p class="font-sans text-[14px] text-muted">Manage Vault membership tiers and perks.</p>
+        </div>
+        <a href="/admin/membership/create" class="inline-flex items-center justify-center bg-gold text-void font-sans font-bold text-[11px] tracking-[2px] uppercase px-[24px] py-[16px] hover:bg-parchment transition-colors focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+            + New Membership Plan
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-[32px] p-[16px] bg-[rgba(201,167,74,0.1)] border border-gold text-gold font-sans text-[14px]">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <!-- PLANS GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-[24px]">
+        @foreach (var plan in Model)
+        {
+            <div class="bg-surface border @(plan.IsActive ? "border-gold-faint" : "border-white-faint opacity-60") p-[32px] flex flex-col h-full relative group">
+                
+                @if (!plan.IsActive)
+                {
+                    <span class="absolute top-[16px] right-[16px] bg-[rgba(255,255,255,0.1)] text-muted font-sans font-bold text-[10px] tracking-[1px] px-[8px] py-[4px] uppercase">Draft</span>
+                }
+                
+                <!-- Plan Header -->
+                <div class="border-b border-white-faint pb-[24px] mb-[24px]">
+                    <span class="font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase block mb-[8px]">@plan.Tier</span>
+                    <h2 class="font-serif text-[32px] text-parchment leading-tight mb-[16px]">@plan.Name</h2>
+                    <div class="flex items-baseline gap-[8px]">
+                        <span class="font-sans font-light text-[24px] text-gold">@plan.PriceFormatted</span>
+                        <span class="font-sans text-[12px] text-muted uppercase tracking-[1px]">/ @plan.BillingCycle</span>
+                    </div>
+                    <div class="mt-[16px] font-sans text-[12px] text-white-faint">
+                        @plan.SubscriberCount Active Subscribers
+                    </div>
+                </div>
+
+                <!-- Features List -->
+                <ul class="flex flex-col gap-[12px] flex-grow mb-[32px]">
+                    @foreach (var feature in plan.Features)
+                    {
+                        <li class="flex items-start gap-[12px]">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="2" stroke-linecap="square" class="flex-shrink-0 mt-1">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span class="font-sans text-[14px] text-muted leading-relaxed">@feature</span>
+                        </li>
+                    }
+                </ul>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-[12px] pt-[24px] border-t border-white-faint mt-auto">
+                    <a href="/admin/membership/edit/@plan.Id" class="flex-1 text-center bg-transparent border border-gold text-gold hover:bg-gold hover:text-void font-sans font-bold text-[10px] tracking-[2px] uppercase px-[16px] py-[12px] transition-colors focus:outline-none">
+                        Edit
+                    </a>
+                    
+                    <form action="/admin/membership/toggle/@plan.Id" method="post" class="flex-1">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="w-full bg-surface-alt border border-white-faint text-parchment hover:text-gold font-sans font-bold text-[10px] tracking-[2px] uppercase px-[16px] py-[12px] transition-colors focus:outline-none">
+                            @(plan.IsActive ? "Deactivate" : "Activate")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

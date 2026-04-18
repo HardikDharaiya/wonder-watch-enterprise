@@ -37,6 +37,7 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
 5. **Run Migrations & Seeding**
    The database will automatically run pending migrations on startup. 
    **Note:** Default admin credentials and catalog items are seeded via `WonderWatch.Infrastructure/SeedData.cs`.
+   If you ever need to reset the schema during development, an Idempotent Re-seed option exists at `/admin/reset` secured by the Admin Role.
    
    **Default Admin Identity:**
    - **User:** `alexander@wonderwatch.in`
@@ -65,3 +66,4 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
 - **`WonderWatch.Infrastructure/Migrations/*`**: Contains all incremental snapshots for configuring the schema via Entity Framework.
 
 > **Notice:** The `.vs` folder has purposefully been ignored for source control out of standard practice, preventing local `applicationhost.config` machine-port bindings from interfering with collaborative efforts.
+

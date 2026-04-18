@@ -28,6 +28,7 @@ namespace WonderWatch.Web.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IConfiguration _config;
         private readonly IEmailService _emailService;
+        private readonly IDatabaseManagementService _dbManagementService;
         private readonly IConfigurationRoot? _configRoot;
 
         public AdminController(
@@ -36,7 +37,8 @@ namespace WonderWatch.Web.Controllers
             AppDbContext context,
             ILogger<AdminController> logger,
             IConfiguration config,
-            IEmailService emailService)
+            IEmailService emailService,
+            IDatabaseManagementService dbManagementService)
         {
             _adminService = adminService;
             _assetService = assetService;
@@ -44,6 +46,7 @@ namespace WonderWatch.Web.Controllers
             _logger = logger;
             _config = config;
             _emailService = emailService;
+            _dbManagementService = dbManagementService;
             _configRoot = config as IConfigurationRoot;
         }
 
@@ -396,6 +399,34 @@ namespace WonderWatch.Web.Controllers
             await _context.SaveChangesAsync();
             TempData["FilterSuccess"] = "Price range updated.";
             return RedirectToAction("Filters");
+        }
+
+        [HttpPost("settings/reset-database")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetDatabaseToFactory(string confirmationText)
+        {
+            if (string.IsNullOrWhiteSpace(confirmationText) || !confirmationText.Equals("RESET DATABASE", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["SmtpError"] = "Invalid confirmation text. Type 'RESET DATABASE' exactly to confirm.";
+                return RedirectToAction("Settings");
+            }
+
+            try
+            {
+                await _dbManagementService.ResetDatabaseAsync();
+                TempData["SmtpSuccess"] = "Database has been successfully reset to factory defaults and seeded with initial data.";
+                // We're signing the user out essentially or telling them it's done.
+                // It should preserve their session since admin is seeded too, 
+                // but let's just log and redirect.
+                _logger.LogWarning("Admin User requested full database reset to factory defaults.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to reset database.");
+                TempData["SmtpError"] = "Failed to reset database: " + ex.Message;
+            }
+
+            return RedirectToAction("Settings");
         }
     }
 }

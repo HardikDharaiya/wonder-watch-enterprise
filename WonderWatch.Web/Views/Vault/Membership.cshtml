@@ -1,0 +1,226 @@
+@model WonderWatch.Web.ViewModels.VaultMembershipViewModel
+@{
+    Layout = "_VaultLayout";
+    ViewData["Title"] = "Upgrade Membership";
+}
+
+<div class="max-w-[960px] mx-auto">
+
+    <!-- HEADER -->
+    <div class="mb-[48px]">
+        <span class="font-sans font-bold text-[10px] text-gold tracking-[2.5px] uppercase block mb-[12px]">Membership</span>
+        <h1 class="font-serif text-[40px] md:text-[48px] text-parchment tracking-[-1.5px] leading-[1.05] mb-[16px]">Elevate Your Experience</h1>
+        <p class="font-sans text-[15px] text-muted leading-relaxed max-w-[520px]">
+            Your current tier: <span class="text-gold font-bold uppercase tracking-[1px]">@Model.CurrentTier</span>.
+            Unlock exclusive privileges by upgrading your membership.
+        </p>
+    </div>
+
+    @if (TempData["MembershipSuccess"] != null)
+    {
+        <div class="mb-[32px] p-[16px] bg-[rgba(201,167,74,0.1)] border border-gold text-gold font-sans text-[14px]">
+            @TempData["MembershipSuccess"]
+        </div>
+    }
+
+    @if (!Model.Plans.Any())
+    {
+        <div class="bg-surface border border-white-faint p-[48px] text-center">
+            <p class="font-sans text-[15px] text-muted">No membership plans are currently available. Please check back later.</p>
+        </div>
+    }
+    else
+    {
+        <!-- PLANS GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-[24px]">
+            @foreach (var plan in Model.Plans.OrderBy(p => p.Price))
+            {
+                var isCurrentTier = string.Equals(plan.Tier.ToString(), Model.CurrentTier, StringComparison.OrdinalIgnoreCase);
+                var isUpgrade = !isCurrentTier && plan.Price > 0;
+                var tierColor = plan.Tier.ToString() switch
+                {
+                    "Gold" => "#C9A74A",
+                    "Platinum" => "#B8C3D0",
+                    _ => "#8B8B8B"
+                };
+
+                <div class="relative bg-surface border @(isCurrentTier ? "border-gold" : "border-white-faint") p-[32px] flex flex-col h-full group transition-all duration-500 hover:border-gold/50">
+
+                    @if (isCurrentTier)
+                    {
+                        <div class="absolute -top-[1px] left-[24px] right-[24px] h-[2px] bg-gold"></div>
+                        <span class="absolute top-[16px] right-[16px] bg-gold text-void font-sans font-bold text-[9px] tracking-[1.5px] uppercase px-[8px] py-[4px]">Current</span>
+                    }
+
+                    <!-- Tier Badge -->
+                    <div class="mb-[24px]">
+                        <div class="inline-flex items-center gap-[6px] bg-[rgba(255,255,255,0.04)] border border-white-faint px-[12px] py-[6px]">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="@tierColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                            <span class="font-sans font-bold text-[10px] tracking-[2px] uppercase" style="color: @tierColor;">@plan.Tier</span>
+                        </div>
+                    </div>
+
+                    <!-- Plan Name -->
+                    <h2 class="font-serif text-[28px] text-parchment leading-tight mb-[8px]">@plan.Name</h2>
+
+                    <!-- Price -->
+                    <div class="flex items-baseline gap-[8px] mb-[24px] pb-[24px] border-b border-white-faint">
+                        <span class="font-sans font-light text-[36px] text-gold leading-none">@plan.PriceFormatted</span>
+                        <span class="font-sans text-[12px] text-muted uppercase tracking-[1px]">/ @plan.BillingCycle</span>
+                    </div>
+
+                    <!-- Features -->
+                    <ul class="flex flex-col gap-[14px] flex-grow mb-[32px]">
+                        @foreach (var feature in plan.Features)
+                        {
+                            <li class="flex items-start gap-[10px]">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="@tierColor" stroke-width="2" stroke-linecap="square" class="flex-shrink-0 mt-[3px]">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span class="font-sans text-[13px] text-muted leading-relaxed">@feature</span>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- CTA -->
+                    @if (isCurrentTier)
+                    {
+                        <button disabled class="w-full bg-surface-alt border border-white-faint text-muted font-sans font-bold text-[11px] tracking-[2px] uppercase px-[16px] py-[14px] cursor-not-allowed">
+                            Active Plan
+                        </button>
+                    }
+                    else if (isUpgrade)
+                    {
+                        <button onclick="initiateMembershipPayment('@plan.Id', '@plan.Name', @((int)(plan.Price * 100)))"
+                                class="w-full bg-gold text-void font-sans font-bold text-[11px] tracking-[2px] uppercase px-[16px] py-[14px] hover:bg-parchment transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                            Upgrade to @plan.Tier
+                        </button>
+                    }
+                    else
+                    {
+                        <button disabled class="w-full bg-surface-alt border border-white-faint text-muted font-sans font-bold text-[11px] tracking-[2px] uppercase px-[16px] py-[14px] cursor-not-allowed">
+                            Free Tier
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- TRUST STRIP -->
+        <div class="mt-[48px] flex flex-col md:flex-row items-center justify-center gap-[32px] py-[24px] border-t border-b border-white-faint">
+            <div class="flex items-center gap-[8px]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span class="font-sans text-[11px] text-muted tracking-[1px] uppercase">Secure Payment</span>
+            </div>
+            <div class="flex items-center gap-[8px]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span class="font-sans text-[11px] text-muted tracking-[1px] uppercase">Instant Activation</span>
+            </div>
+            <div class="flex items-center gap-[8px]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span class="font-sans text-[11px] text-muted tracking-[1px] uppercase">24/7 Concierge</span>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const RAZORPAY_KEY = '@Model.RazorpayKeyId';
+        const USER_EMAIL = '@Model.UserEmail';
+        const USER_NAME = '@Model.UserName';
+        const ANTIFORGERY_TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+            || '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
+
+        async function initiateMembershipPayment(planId, planName, amountPaise) {
+            try {
+                const response = await fetch('/vault/membership/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': ANTIFORGERY_TOKEN
+                    },
+                    body: JSON.stringify({ planId: planId })
+                });
+
+                if (!response.ok) throw new Error('Failed to create order');
+                const data = await response.json();
+
+                const options = {
+                    key: RAZORPAY_KEY,
+                    amount: amountPaise,
+                    currency: 'INR',
+                    name: 'Wonder Watch',
+                    description: `Membership Upgrade: ${planName}`,
+                    order_id: data.orderId,
+                    prefill: { name: USER_NAME, email: USER_EMAIL },
+                    theme: { color: '#C9A74A' },
+                    handler: async function (paymentResponse) {
+                        try {
+                            const verifyResponse = await fetch('/vault/membership/verify-payment', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'RequestVerificationToken': ANTIFORGERY_TOKEN
+                                },
+                                body: JSON.stringify({
+                                    razorpayOrderId: paymentResponse.razorpay_order_id,
+                                    razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                                    razorpaySignature: paymentResponse.razorpay_signature,
+                                    planId: planId
+                                })
+                            });
+
+                            if (!verifyResponse.ok) throw new Error('Verification failed');
+                            const result = await verifyResponse.json();
+
+                            if (result.success) {
+                                window.location.href = result.redirectUrl;
+                            }
+                        } catch (err) {
+                            console.error('Payment verification error:', err);
+                            alert('Payment verification failed. Please contact support.');
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (err) {
+                console.error('Payment initiation error:', err);
+                alert('Unable to initiate payment. Please try again.');
+            }
+        }
+    </script>
+    <!-- Hidden anti-forgery token for JS -->
+    <form id="__AjaxAntiForgeryForm" style="display:none">
+        @Html.AntiForgeryToken()
+    </form>
+    <script>
+        // Override ANTIFORGERY_TOKEN from form
+        (function() {
+            const tokenInput = document.querySelector('#__AjaxAntiForgeryForm input[name="__RequestVerificationToken"]');
+            if (tokenInput) {
+                window.ANTIFORGERY_TOKEN_OVERRIDE = tokenInput.value;
+                // Monkey-patch fetch calls
+                const origFetch = window.fetch;
+                window.fetch = function(url, opts) {
+                    if (opts && opts.headers && opts.headers['RequestVerificationToken'] === '') {
+                        opts.headers['RequestVerificationToken'] = window.ANTIFORGERY_TOKEN_OVERRIDE;
+                    }
+                    return origFetch.call(this, url, opts);
+                };
+            }
+        })();
+    </script>
+}

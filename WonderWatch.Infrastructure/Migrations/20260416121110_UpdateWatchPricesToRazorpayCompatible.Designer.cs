@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WonderWatch.Infrastructure;
 
@@ -11,9 +12,11 @@ using WonderWatch.Infrastructure;
 namespace WonderWatch.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416121110_UpdateWatchPricesToRazorpayCompatible")]
+    partial class UpdateWatchPricesToRazorpayCompatible
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,61 +198,6 @@ namespace WonderWatch.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("FilterConfigs");
-                });
-
-            modelBuilder.Entity("WonderWatch.Domain.Entities.JournalSubscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SubscribedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("JournalSubscriptions");
-                });
-
-            modelBuilder.Entity("WonderWatch.Domain.Entities.MembershipPlan", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BillingCycle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Features")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Tier")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MembershipPlans");
                 });
 
             modelBuilder.Entity("WonderWatch.Domain.Entities.Order", b =>
@@ -599,9 +547,6 @@ namespace WonderWatch.Infrastructure.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("CurrentMembershipPlanId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
@@ -668,8 +613,6 @@ namespace WonderWatch.Infrastructure.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrentMembershipPlanId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -871,21 +814,6 @@ namespace WonderWatch.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Watch");
-                });
-
-            modelBuilder.Entity("WonderWatch.Domain.Identity.ApplicationUser", b =>
-                {
-                    b.HasOne("WonderWatch.Domain.Entities.MembershipPlan", "CurrentMembershipPlan")
-                        .WithMany("Subscribers")
-                        .HasForeignKey("CurrentMembershipPlanId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("CurrentMembershipPlan");
-                });
-
-            modelBuilder.Entity("WonderWatch.Domain.Entities.MembershipPlan", b =>
-                {
-                    b.Navigation("Subscribers");
                 });
 
             modelBuilder.Entity("WonderWatch.Domain.Entities.Order", b =>

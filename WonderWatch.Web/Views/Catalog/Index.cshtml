@@ -21,7 +21,7 @@
    HERO
    ═══════════════════════════════════════════════════════════════════════════ *@
 <section class="relative w-full overflow-hidden flex items-center justify-center text-center border-b border-white-faint bg-void"
-         style="height:340px; padding-top:96px;">
+         style="height:340px; padding-top:72px;">
     <div class="cat-watermark" aria-hidden="true">XII</div>
     <div class="relative flex flex-col items-center" style="z-index:1; gap:10px;">
         <span class="font-sans font-bold text-gold uppercase"
@@ -214,7 +214,8 @@
                                      alt="@watch.Name"
                                      class="cat-card-img w-full h-full"
                                      style="object-fit:contain;"
-                                     loading="lazy" />
+                                     loading="lazy"
+                                     decoding="async" />
                                 
                                 @if (watch.IsSoldOut)
                                 {

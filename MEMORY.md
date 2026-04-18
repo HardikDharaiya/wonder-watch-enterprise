@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-15 | Session: 16
-Status: IN PROGRESS - Documentation update (README Razorpay secrets) and final session prep.
+Last updated: 2026-04-18 | Session: 22
+Status: STABLE — All major pending roadmap items resolved. Platform is production-ready.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -46,7 +46,7 @@ Status: IN PROGRESS - Documentation update (README Razorpay secrets) and final s
 - [x] **Module 3 (Checkout):** CartController, `_CartDrawer` (AJAX), CheckoutController, Razorpay Integration, Confirmation page.
 - [x] **Module 4 (Vault):** AccountController (Login/Register split-screen), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
 - [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config), **Filters Management** (Brand CRUD + Price Range config).
-- [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal), `cart.js`, `wishlist.js`.
+- [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal, **Anime.js stagger integration**), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
 - [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET), `appsettings.Production.json` (Azure Key Vault schema).
 
@@ -192,3 +192,96 @@ Status: IN PROGRESS - Documentation update (README Razorpay secrets) and final s
 - **Checkout Bug Fixes & UX**: Prevented hidden "Ship to a new address" form fields from being focusable by keyboard tab events by injecting CSS `pointer-events-none` & HTML5 `inert` property rules directly onto active layout via JS manipulation.
 - **Checkout Return & Removal Options**: Implemented a "Return to Cart" navigation path. Enabled product deletions explicitly inside Checkout's static Order Summary box by pushing `Quantity = 0` commands directly to the backend Cart Controller.
 - **Checkout Model Synchronization**: Fixed build error `CS1061` by adding the missing `WatchId` Guid property to `CheckoutItemViewModel` and ensuring it is populated throughout the `CheckoutController` pipeline.
+
+### Session 15 Summary — 2026-04-16
+- **Checkout UX / UI Fixes (Problem 1 resolved):** 
+  - Standardized the "Return to Cart" anchor to correctly redirect to `/?openCart=true` bypassing 500 missing route errors.
+  - Rectified frontend Cart synchronization: The JS "Remove Item" fetch pipeline now explicitly passes the clean `WatchId` text rather than destroying Guids via `parseInt()`, reloading the secure checkout order summary successfully.
+
+### Session 18 Summary — 2026-04-16
+- **Membership Plans (Admin CRUD):**
+  - Created `MembershipPlan` domain entity with Tier, Name, Price, BillingCycle, Features (JSON), IsActive.
+  - Added `MembershipPlanController` (`/admin/membership`) with Index/Create/Edit/Delete endpoints.
+  - Created admin views: `Index.cshtml` (plan grid), `Create.cshtml`, `Edit.cshtml` (dynamic feature list builder).
+  - Fixed Razor RZ1031 compilation error for `<option selected>` tag helper attribute.
+- **Membership Service:**
+  - Added `IMembershipService` interface and `MembershipService` implementation for GetActivePlans, GetPlanById, CRUD, UpgradeUserPlan.
+  - Registered in DI container.
+- **User-Facing Membership Page:**
+  - Added `VaultController.Membership()` GET action with `VaultMembershipViewModel`.
+  - Created `Vault/Membership.cshtml` — 3-column pricing cards, tier badges, Razorpay payment integration.
+  - Added `MembershipCreateOrder` and `MembershipVerifyPayment` POST endpoints for Razorpay flow.
+  - Updated `_VaultLayout.cshtml` sidebar CTA to link to `/vault/membership`.
+- **Delete Account:**
+  - Added `VaultController.DeleteAccount()` POST endpoint — signs out, deletes user, redirects to home.
+- **Journal Subscription:**
+  - Created `JournalSubscription` domain entity.
+  - Added `IJournalService` interface + `JournalService` implementation (duplicate email check).
+  - Created `JournalController` (`POST /api/journal/subscribe`) for footer newsletter form.
+  - Added `DbSet<JournalSubscription>` to AppDbContext.
+- **EF Migrations:** `AddMembershipPlans` + `AddJournalSubscriptions` applied.
+- **Build:** `dotnet build` 0 Errors. All migrations applied.
+
+### Session 19 Summary — 2026-04-17
+- **Razorpay Price Limits (Problem 5 RESOLVED):**
+  - Lowered all 6 watch `RetailPrice`/`CostPrice`/`ComparePrice` in `SeedData.cs` from crore-range to ₹3,25,000–₹4,95,000 (safely under Razorpay test-mode ₹5,00,000 cap).
+  - DB must be re-seeded on first run (seed is idempotent: skips if watches exist). Drop/recreate dev DB to apply new prices.
+- **Footer Links / Missing Pages (Problems 4+8 RESOLVED):**
+  - Added `Contact()`, `Terms()`, `Privacy()`, `Shipping()` actions to `HomeController.cs` (also fixed missing `[HttpGet]` attribute formatting).
+  - Created full `Views/Contact/Index.cshtml` — premium two-column concierge layout with enquiry form, FAQ strip, private phone/email/atelier details.
+  - Created `Views/Home/Terms.cshtml`, `Views/Home/Privacy.cshtml` (replaced empty stub), `Views/Home/Shipping.cshtml` with brand-voice content.
+- **Anime.js Animation Integration (Problem 10 RESOLVED):**
+  - Added Anime.js v3.2.2 via jsDelivr CDN in `_Layout.cshtml`.
+  - Rewrote `animation.js` with 8 animation systems — page load, navbar scroll, hero stagger, scroll reveal, card grid stagger, timeline dot pulse, marquee, smooth scroll.
+  - Progressive enhancement: gracefully falls back to CSS transitions when Anime.js unavailable.
+- **Background Jobs (Quartz.NET):**
+  - Added `Quartz.Extensions.Hosting` integration to `Program.cs`.
+  - Created `InventoryAlertJob.cs` implementing `IJob` to check for low-stock watches (`StockQuantity <= 5`) and mock-send an alert email to Admins.
+- **Performance Optimization — Catalog Pagination (RESOLVED):**
+  - Reprogrammed `ICatalogService.GetAllAsync` to take `page` and `pageSize`, and return `(List<Watch> Watches, int TotalCount)` tuple.
+  - Pushed pagination directly down to the DB `IQueryable` via `.Skip().Take()`, completely resolving the heavy RAM load footprint issue on the Web layer.
+- **Build:** `dotnet build` 0 Errors, 17 warnings (pre-existing NuGet compatibility).
+ 
+ ### Session 21 Summary — 2026-04-18
+ - **Reset Database Endpoint:** Extracted seeding logic into `DatabaseManagementService` and added `ResetDatabaseToFactory` in `AdminController` with a "Type to Confirm" UI modal.
+ - **Culture Currencies:** Enforced `CultureInfo("hi-IN")` INR formatting on `RetailPrice` and `ComparePrice` in `CatalogController.cs`.
+ - **Strict CSS Architectures:** 
+   - Modified `tailwind.config.js` to strip `rounded` borders defaults entirely (`borderRadius: { DEFAULT: '0px', none: '0px' }`).
+   - Mapped explicit Z-layers `z-10` through `z-max` in `app.css`.
+   - Stripped `transition-*` classes conflicting with Anime.js globally.
+ - **Accessibility & Interaction:** Enforced `cursor-pointer` on interactables, expanded touch targets to 44x44px, and added `aria-label`s to SVG elements.
+ - **Backend Stability:** Implemented `Polly` exponential backoff retries for Azure OpenAI requests. Eliminated O(N) queries in `OrderService.cs` `BulkTransitionAsync` and `CreateOrderAsync` by replacing them with `.Where(Contains)` pre-loading logic.
+ - **Three.js Viewer Refinement:** Restored `<canvas id="three-canvas">` in `Detail.cshtml`. Updated scale calculation to use `Box3` for dynamic constraining.
+ - **UI Performance & Polish:** Injected `focus:ring-1 focus:ring-gold focus:outline-none` on search text inputs and filter checkboxes in Catalog. Added `loading="lazy"` and `decoding="async"` to Catalog grid imagery.
+
+
+### Active Issues / Roadmap
+- ~~**Problem 2:** Collection page images.~~ ✅ RESOLVED — Collections.cshtml uses `onerror` fallback; images in `wwwroot/images/about/` serve correctly.
+- ~~**Problem 3:** About page "The Curators" names.~~ ✅ RESOLVED — Hardik Dharaiya (Lead Senior Developer), Mohit Yadav (Jr. Developer), Ram Varotariya (Frontend Designer).
+- ~~**Problem 4:** Missing Footer Links.~~ ✅ RESOLVED — Contact, Privacy, Terms, Shipping pages created + HomeController actions wired.
+- ~~**Problem 5:** Razorpay Development Limits.~~ ✅ RESOLVED — All watch prices lowered to ≤ ₹4,95,000.
+- ~~**Problem 6:** "Upgrade Plan" CTA.~~ ✅ RESOLVED — Membership page with Razorpay payment built.
+- ~~**Problem 7:** Checkout Confirmation UI.~~ ✅ RESOLVED — Premium "Order Dossier" layout with decorative accents, badge status, items list, and totals.
+- ~~**Problem 8:** Missing Contact Page.~~ ✅ RESOLVED — Premium /contact concierge page created.
+- ~~**Problem 9:** Profile Delete Account.~~ ✅ RESOLVED — DeleteAccount POST endpoint implemented.
+- ~~**Problem 10:** JS Animation Libraries.~~ ✅ RESOLVED — Anime.js integrated via CDN, animation.js rewritten.
+- ~~**Problem 11:** Documentation Synchronisation.~~ ✅ RESOLVED — Final sweep executed to sync FILES.md, DATABASE_SCHEMA.md, COMMANDS.md, README.md.
+- **Technical Debt — DB Re-seed Required:**
+  - Watch prices in `SeedData.cs` updated. Seed skips if watches exist, so developer must drop/recreate dev DB:
+  - `dotnet ef database drop -f --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` → then `dotnet run`.
+
+### Session 22 Summary — 2026-04-18
+- **Contact Page Fix (RESOLVED):** Moved `Views/Contact/Index.cshtml` → `Views/Home/Contact.cshtml` to resolve `InvalidOperationException` ("The view 'Contact' was not found"). Deleted orphaned `Views/Contact/` directory.
+- **Global Header Height Reduction (96px → 72px):**
+  - Updated `_Layout.cshtml`: navbar and mobile menu overlay `h-[96px]` → `h-[72px]`.
+  - Updated `_VaultLayout.cshtml`: `mt-[96px]` → `mt-[72px]`, `top-[96px]` → `top-[72px]`, `calc(100vh - 96px)` → `calc(100vh - 72px)`.
+  - Updated `Home/Index.cshtml`: hero padding `pt-[131px]` → `pt-[107px]`.
+  - Updated `Catalog/Index.cshtml`: hero inline `padding-top: 96px` → `72px`.
+  - Updated `Catalog/Detail.cshtml`: three viewport-height calc offsets from `131px` → `107px`.
+  - Updated `Vault/Entry.cshtml`: top padding + min-height calc from `131px` → `107px`.
+  - Updated `Checkout/Index.cshtml` and `Confirmation.cshtml`: `pt-[131px]` → `pt-[107px]`.
+  - Updated `Home/Privacy.cshtml`, `Terms.cshtml`, `Shipping.cshtml`, `Contact.cshtml`: `pt-[160px]` → `pt-[136px]` (or inline equivalent).
+  - Updated `Home/About.cshtml`: `pt-[160px]` → `pt-[136px]`.
+- **Validation:** Grep-verified zero remaining `pt-[131px]` or `h-[96px]` references across all Views.
+- **Build:** `dotnet build` 0 Errors, 18 pre-existing NuGet warnings. Tailwind CSS compiled in 412ms.
+

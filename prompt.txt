@@ -1,0 +1,31 @@
+Use your @contextScopeItemMention@contextScopeItemMention@contextScopeItemMentionskills for fixing the below descirbed the problems, before it read this @contextScopeItemMention@contextScopeItemMention@contextScopeItemMention@contextScopeItemMentionand scane the images carefully.
+---
+- Problems:
+1. First see the checkout page there are number of UI and UX flows like if I tap on "x" close button of any product then It will not remove the items from "Order Summary", When I tap click on "Return to Cart" link button then it redirect me to "https://localhost:7105/cart" but it is actually never there, so project shows me Error 500 page "Lost in Time" reference code"00-5d9270a2ce16b00265ce439861a602c3-78c200d3a502540d-00" with some options like return to "Return to Atelier" and "Contact Concierge". other flows you have to find, 
+
+2.  See the collection page there are number of photos used but you have to change them using WonderWatch.Web\wwwroot\images\watches contained watches images that has png format. 
+
+3. In "https://localhost:7105/about" page we have to change the Names of "The Curators" So first name must be "HARDIK DHARAIYA(Lead Senior Developer)", second "MOHIT YADAV(Jr. Developer)" and "RAM VAROTARIYA(Frontend Designer)"
+
+4. If see the footer of @contextScopeItemMentionthat contains number of pages list and some functionalities also, compare it present @contextScopeItemMention by @contextScopeItemMention@contextScopeItemMention if there are missing pages or features then we have to add this in our roadmap to fix, make detailed plan.
+
+5. check the @contextScopeItemMentionor other responsible files that actually responsible for adding the data while first run, so problem is that our watches prizes are so high and razorpay is denied to pay more giant numbers in checkout page, so we have to drop some prices of watches. 
+
+6. if you see related files for this url "https://localhost:7105/vault" then you will notice there are one option in @contextScopeItemMention"Upgrade Plan" we have not discovered this features for user, so we have to think about this, make detailed plan and add it in roadmap.
+
+7. We have to redesign "https://localhost:7105/checkout/confirmation" page where we have to showcase every details because when I'm in "https://localhost:7105/Vault/Orders" page and tap on "View Details" button of any order then it will redirect me to "https://localhost:7105/checkout/confirmation/some-encryptednumbers" but it shows the "https://localhost:7105/checkout/confirmation" is only just adding some number after the url like "https://localhost:7105/checkout/confirmation/238179c4-aa33-44d5-82cf-e080a5f11487". we have redesign it totally 
+
+8. Contact us page is missing, although I'm seeing "Contact Concierge" button in some pages.
+
+9. In profile setting "https://localhost:7105/Vault/Profile" there are number of features we have to add, think about this. also "Request Account Deletion" link button is not working again redirects me to error 500 page. 
+
+10. Use GSAP (GreenSock), Anime.js, Motion One, Animate.css:, Three.js: , Typed.js:, ScrollMagic, LibMan (Library Manager this names are so good use them  if usable for our project. 
+
+---
+- I gave you numbers of url but you don't have to go menually, you have to find related files and scan them and understand, but don't go or reach that URLs
+- I told you number of problems, you have to scan all related files one by one and find the solutions of problems. After finding one problem solution then make highly detailed implementation plan that contains what to change/add/update/modify and where to do it with bullet points. after adding that one problem solution go to second problem do the same pattern. 
+
+---
+- After all I want detailed implementation plan to solve all problems. 
+- after it you have to update the @contextScopeItemMentionthat contains this problems with pending solutions. 
+- add one last step in implementation plan is that update @contextScopeItemMention@contextScopeItemMention@contextScopeItemMention@contextScopeItemMention@contextScopeItemMentionfiles. 

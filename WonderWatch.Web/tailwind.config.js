@@ -26,7 +26,8 @@ module.exports = {
     },
     // OVERRIDING border radius to enforce sharp edges everywhere except avatars
     borderRadius: {
-      none: '0',
+      none: '0px',
+      DEFAULT: '0px',
       full: '9999px'
     },
     fontFamily: {

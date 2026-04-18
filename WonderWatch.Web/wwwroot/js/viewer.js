@@ -130,12 +130,17 @@ class WatchViewer {
                 // Center the model
                 const box = new THREE.Box3().setFromObject(this.model);
                 const center = box.getCenter(new THREE.Vector3());
-                this.model.position.x += (this.model.position.x - center.x);
-                this.model.position.y += (this.model.position.y - center.y);
-                this.model.position.z += (this.model.position.z - center.z);
+                this.model.position.sub(center);
 
-                // FIXED: Apply dynamic scale
-                this.model.scale.set(this.modelScale, this.modelScale, this.modelScale);
+                // Ensure camera bounds exist so the model doesn't load out-of-scale
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const targetSize = 10; // Fit within 10 units
+                let dynamicScale = (targetSize / maxDim);
+                
+                // If modelScale is explicitly passed as != 1 and valid, apply it, else use normalized
+                const finalScale = this.modelScale !== 1 ? this.modelScale : dynamicScale;
+                this.model.scale.set(finalScale, finalScale, finalScale);
 
                 // Apply subtle initial rotation
                 this.model.rotation.y = -Math.PI / 8;

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WonderWatch.Infrastructure;
 
@@ -11,9 +12,11 @@ using WonderWatch.Infrastructure;
 namespace WonderWatch.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416133503_AddMembershipPlans")]
+    partial class AddMembershipPlans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,24 +198,6 @@ namespace WonderWatch.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("FilterConfigs");
-                });
-
-            modelBuilder.Entity("WonderWatch.Domain.Entities.JournalSubscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SubscribedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("JournalSubscriptions");
                 });
 
             modelBuilder.Entity("WonderWatch.Domain.Entities.MembershipPlan", b =>

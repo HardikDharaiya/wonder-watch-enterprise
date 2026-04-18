@@ -40,11 +40,14 @@
 
     <!-- Compiled Tailwind CSS -->
     <link rel="stylesheet" href="~/css/global.css" asp-append-version="true" />
+
+    <!-- Anime.js Animation Library (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-gold selection:text-void bg-void">
 
-    <!-- PUBLIC NAVBAR (Slimmer 96px Height) -->
-    <header class="fixed top-0 left-0 w-full h-[96px] z-50 flex items-center justify-between px-[32px] md:px-[64px] transition-all duration-600 bg-transparent border-b border-transparent">
+    <!-- PUBLIC NAVBAR (72px Height) -->
+    <header class="fixed top-0 left-0 w-full h-[72px] z-50 flex items-center justify-between px-[32px] md:px-[64px] transition-all duration-600 bg-transparent border-b border-transparent">
         
         <!-- Left: Mobile Hamburger (Visible only on mobile) -->
         <button id="mobile-menu-toggle" aria-label="Menu" class="lg:hidden text-parchment hover:text-gold transition-colors focus:outline-none z-50">
@@ -123,7 +126,7 @@
 
     <!-- MOBILE MENU OVERLAY -->
     <div id="mobile-menu" class="fixed inset-0 bg-void z-[60] transform -translate-y-full transition-transform duration-600 flex flex-col">
-        <div class="h-[96px] flex items-center justify-between px-[24px] border-b border-white-faint flex-shrink-0">
+        <div class="h-[72px] flex items-center justify-between px-[24px] border-b border-white-faint flex-shrink-0">
             <span class="font-sans font-extrabold text-[16px] text-gold tracking-[-1px] uppercase">Menu</span>
             <button id="mobile-menu-close" aria-label="Close Menu" class="text-parchment hover:text-gold transition-colors focus:outline-none">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">

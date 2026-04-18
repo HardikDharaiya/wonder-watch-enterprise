@@ -28,7 +28,7 @@ namespace WonderWatch.Application.Services
             _context = context;
         }
 
-        public async Task<List<Watch>> GetAllAsync(WatchFilterDto filter)
+        public async Task<(List<Watch> Watches, int TotalCount)> GetAllAsync(WatchFilterDto filter, int page = 1, int pageSize = 12)
         {
             var query = _context.Watches
                 .Include(w => w.Images)
@@ -78,7 +78,10 @@ namespace WonderWatch.Application.Services
                 _ => query.OrderByDescending(w => w.Id) // Default to newest
             };
 
-            return await query.ToListAsync();
+            var totalCount = await query.CountAsync();
+            var watches = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return (watches, totalCount);
         }
 
         public async Task<Watch?> GetByIdAsync(Guid id)
@@ -187,10 +190,12 @@ namespace WonderWatch.Application.Services
             };
 
             decimal totalAmount = 0;
+            var watchIds = dto.Items.Select(i => i.WatchId).ToList();
+            var watches = await _context.Watches.Where(w => watchIds.Contains(w.Id)).ToListAsync();
 
             foreach (var item in dto.Items)
             {
-                var watch = await _context.Watches.FindAsync(item.WatchId)
+                var watch = watches.FirstOrDefault(w => w.Id == item.WatchId)
                     ?? throw new InvalidOperationException($"Watch {item.WatchId} not found.");
 
                 if (watch.StockQuantity < item.Quantity)
@@ -223,7 +228,10 @@ namespace WonderWatch.Application.Services
 
         public async Task TransitionStatusAsync(Guid orderId, OrderStatus newStatus)
         {
-            var order = await _context.Orders.FindAsync(orderId)
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Watch)
+                .FirstOrDefaultAsync(o => o.Id == orderId)
                 ?? throw new InvalidOperationException($"Order {orderId} not found.");
 
             var oldStatus = order.Status;
@@ -252,14 +260,12 @@ namespace WonderWatch.Application.Services
             // Restore stock if cancelled
             if (newStatus == OrderStatus.Cancelled)
             {
-                var items = await _context.OrderItems.Where(i => i.OrderId == orderId).ToListAsync();
-                foreach (var item in items)
+                foreach (var item in order.Items)
                 {
-                    var watch = await _context.Watches.FindAsync(item.WatchId);
-                    if (watch != null)
+                    if (item.Watch != null)
                     {
-                        watch.StockQuantity += item.Quantity;
-                        watch.IsSoldOut = watch.StockQuantity == 0;
+                        item.Watch.StockQuantity += item.Quantity;
+                        item.Watch.IsSoldOut = item.Watch.StockQuantity == 0;
                     }
                 }
             }
@@ -270,10 +276,50 @@ namespace WonderWatch.Application.Services
 
         public async Task BulkTransitionAsync(List<Guid> orderIds, OrderStatus status)
         {
-            foreach (var id in orderIds)
+            var orders = await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Watch)
+                .Where(o => orderIds.Contains(o.Id))
+                .ToListAsync();
+
+            foreach (var order in orders)
             {
-                await TransitionStatusAsync(id, status);
+                var oldStatus = order.Status;
+
+                bool isValidTransition = (oldStatus, status) switch
+                {
+                    (OrderStatus.Pending, OrderStatus.Paid) => true,
+                    (OrderStatus.Pending, OrderStatus.Cancelled) => true,
+                    (OrderStatus.Paid, OrderStatus.Processing) => true,
+                    (OrderStatus.Paid, OrderStatus.Cancelled) => true,
+                    (OrderStatus.Processing, OrderStatus.Shipped) => true,
+                    (OrderStatus.Shipped, OrderStatus.Delivered) => true,
+                    _ => false
+                };
+
+                if (!isValidTransition)
+                {
+                    _logger.LogWarning("Illegal bulk transition skipped: Order {OrderId} from {OldStatus} to {NewStatus}", order.Id, oldStatus, status);
+                    continue;
+                }
+
+                order.Status = status;
+                order.UpdatedAt = DateTime.UtcNow;
+
+                if (status == OrderStatus.Cancelled)
+                {
+                    foreach (var item in order.Items)
+                    {
+                        if (item.Watch != null)
+                        {
+                            item.Watch.StockQuantity += item.Quantity;
+                            item.Watch.IsSoldOut = item.Watch.StockQuantity == 0;
+                        }
+                    }
+                }
             }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<Order>> GetUserOrdersAsync(Guid userId)
@@ -774,6 +820,202 @@ namespace WonderWatch.Application.Services
                 CreatedAt = DateTime.UtcNow
             });
             await _context.SaveChangesAsync();
+        }
+    }
+
+    // =============================================================
+    // MEMBERSHIP SERVICE — Admin & User Subscription Management
+    // =============================================================
+    public class MembershipService : IMembershipService
+    {
+        private readonly AppDbContext _context;
+
+        public MembershipService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<MembershipPlanDto>> GetActivePlansAsync()
+        {
+            return await _context.MembershipPlans
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.Price)
+                .Select(p => new MembershipPlanDto
+                {
+                    Id = p.Id,
+                    Tier = p.Tier,
+                    Name = p.Name,
+                    Price = p.Price,
+                    PriceFormatted = $"₹{p.Price:N0}",
+                    BillingCycle = p.BillingCycle,
+                    Features = System.Text.Json.JsonSerializer.Deserialize<List<string>>(p.Features, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)) ?? new List<string>(),
+                    IsActive = p.IsActive,
+                    SubscriberCount = p.Subscribers.Count
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<MembershipPlanDto>> GetAllPlansAsync()
+        {
+            return await _context.MembershipPlans
+                .OrderBy(p => p.Price)
+                .Select(p => new MembershipPlanDto
+                {
+                    Id = p.Id,
+                    Tier = p.Tier,
+                    Name = p.Name,
+                    Price = p.Price,
+                    PriceFormatted = $"₹{p.Price:N0}",
+                    BillingCycle = p.BillingCycle,
+                    Features = System.Text.Json.JsonSerializer.Deserialize<List<string>>(p.Features, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)) ?? new List<string>(),
+                    IsActive = p.IsActive,
+                    SubscriberCount = p.Subscribers.Count
+                })
+                .ToListAsync();
+        }
+
+        public async Task<MembershipPlanDto?> GetPlanByIdAsync(Guid id)
+        {
+            var plan = await _context.MembershipPlans
+                .Include(p => p.Subscribers)
+                .FirstOrDefaultAsync(p => p.Id == id);
+                
+            if (plan == null) return null;
+
+            return new MembershipPlanDto
+            {
+                Id = plan.Id,
+                Tier = plan.Tier,
+                Name = plan.Name,
+                Price = plan.Price,
+                PriceFormatted = $"₹{plan.Price:N0}",
+                BillingCycle = plan.BillingCycle,
+                Features = System.Text.Json.JsonSerializer.Deserialize<List<string>>(plan.Features, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)) ?? new List<string>(),
+                IsActive = plan.IsActive,
+                SubscriberCount = plan.Subscribers.Count
+            };
+        }
+
+        public async Task<MembershipPlanDto> CreatePlanAsync(CreateMembershipPlanDto dto)
+        {
+            var plan = new MembershipPlan
+            {
+                Id = Guid.NewGuid(),
+                Tier = dto.Tier,
+                Name = dto.Name,
+                Price = dto.Price,
+                BillingCycle = dto.BillingCycle,
+                Features = System.Text.Json.JsonSerializer.Serialize(dto.Features),
+                IsActive = dto.IsActive,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.MembershipPlans.Add(plan);
+            await _context.SaveChangesAsync();
+            return await GetPlanByIdAsync(plan.Id) ?? throw new Exception("Plan created but not found.");
+        }
+
+        public async Task UpdatePlanAsync(Guid id, CreateMembershipPlanDto dto)
+        {
+            var plan = await _context.MembershipPlans.FindAsync(id);
+            if (plan != null)
+            {
+                plan.Tier = dto.Tier;
+                plan.Name = dto.Name;
+                plan.Price = dto.Price;
+                plan.BillingCycle = dto.BillingCycle;
+                plan.Features = System.Text.Json.JsonSerializer.Serialize(dto.Features);
+                plan.IsActive = dto.IsActive;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task TogglePlanActiveAsync(Guid id)
+        {
+            var plan = await _context.MembershipPlans.FindAsync(id);
+            if (plan != null)
+            {
+                plan.IsActive = !plan.IsActive;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeletePlanAsync(Guid id)
+        {
+            var plan = await _context.MembershipPlans.FindAsync(id);
+            if (plan != null)
+            {
+                _context.MembershipPlans.Remove(plan);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpgradeUserPlanAsync(Guid userId, Guid planId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            var plan = await _context.MembershipPlans.FindAsync(planId);
+
+            if (user != null && plan != null)
+            {
+                user.CurrentMembershipPlanId = plan.Id;
+                user.MembershipTier = plan.Tier;
+                await _context.SaveChangesAsync();
+            }
+        }
+    }
+
+    // =============================================================
+    // JOURNAL SUBSCRIPTION SERVICE
+    // =============================================================
+    public class JournalService : IJournalService
+    {
+        private readonly AppDbContext _context;
+
+        public JournalService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<bool> SubscribeAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return false;
+
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            var exists = await _context.JournalSubscriptions
+                .AnyAsync(s => s.Email == normalizedEmail);
+
+            if (exists) return false; // Already subscribed
+
+            _context.JournalSubscriptions.Add(new Domain.Entities.JournalSubscription
+            {
+                Id = Guid.NewGuid(),
+                Email = normalizedEmail,
+                SubscribedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+    }
+
+    // =============================================================
+    // DATABASE MANAGEMENT SERVICE
+    // =============================================================
+    public class DatabaseManagementService : IDatabaseManagementService
+    {
+        private readonly AppDbContext _context;
+        private readonly IServiceProvider _serviceProvider;
+
+        public DatabaseManagementService(AppDbContext context, IServiceProvider serviceProvider)
+        {
+            _context = context;
+            _serviceProvider = serviceProvider;
+        }
+
+        public async Task ResetDatabaseAsync()
+        {
+            await _context.Database.EnsureDeletedAsync();
+            await SeedData.InitializeAsync(_serviceProvider);
         }
     }
 }

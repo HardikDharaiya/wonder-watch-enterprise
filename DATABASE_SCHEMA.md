@@ -2,7 +2,7 @@
 
 **Source:** Derived from `AppDbContext.cs`, `DomainModels.cs`, `ApplicationUser.cs`, and `.bacpac` export `WonderWatch_Dev`.
 **Database:** SQL Server LocalDB (`(localdb)\MSSQLLocalDB`) → `WonderWatch_Dev`
-**Last Updated:** 2026-04-11 | Session 14
+**Last Updated:** 2026-04-18 | Session 21
 
 ---
 
@@ -27,6 +27,8 @@
 | `UserNotifications` | In-app user notifications | `Guid` PK |
 | `Brands` | Admin-managed filterable brand dictionary | `Guid` PK |
 | `FilterConfigs` | Single-row price slider configuration | `Guid` PK |
+| `MembershipPlans` | Admin-managed subscription tiers | `Guid` PK |
+| `JournalSubscriptions` | Newsletter email subscriptions | `Guid` PK |
 | `__EFMigrationsHistory` | EF Core migration log | `varchar` PK |
 
 ---
@@ -254,6 +256,35 @@ Single-row configuration for catalog price slider bounds.
 
 ---
 
+## Table: `MembershipPlans`
+
+Admin-managed subscription tier definitions.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `Id` | `Guid` | NOT NULL | PK |
+| `Tier` | `int` | NOT NULL | Enum: 0=Silver, 1=Gold, 2=Platinum |
+| `Name` | `nvarchar(max)` | NOT NULL | e.g. "Gold Annual" |
+| `Price` | `decimal(18,2)` | NOT NULL | INR price |
+| `BillingCycle` | `nvarchar(max)` | NOT NULL | e.g. "One-Time", "Annual" |
+| `FeaturesJson` | `nvarchar(max)` | NOT NULL | JSON array of feature strings |
+| `IsActive` | `bit` | NOT NULL | Visibility to users |
+| `CreatedAt` | `datetime2` | NOT NULL | UTC |
+
+---
+
+## Table: `JournalSubscriptions`
+
+Newsletter/journal email subscriptions from footer form.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `Id` | `Guid` | NOT NULL | PK |
+| `Email` | `nvarchar(max)` | NOT NULL | Subscriber email |
+| `SubscribedAt` | `datetime2` | NOT NULL | UTC timestamp |
+
+---
+
 ## ERD Summary (Relationships)
 
 ```
@@ -271,6 +302,8 @@ Watches (1) ──── (*) Wishlists
 
 Brands (standalone)  ← Admin-managed filter dictionary
 FilterConfigs (standalone, single-row) ← Price slider bounds
+MembershipPlans (standalone) ← Admin-managed subscription tiers
+JournalSubscriptions (standalone) ← Newsletter emails
 ```
 
 ---
@@ -285,3 +318,5 @@ FilterConfigs (standalone, single-row) ← Price slider bounds
 | `AddUserAddressesAndNotifications` | 2026-04-09 | Added UserAddresses and UserNotifications tables |
 | `AddFiltersConfig` | 2026-04-09 | Added Brands and FilterConfigs tables |
 | `UpdateWatchesSeedData` | 2026-04-09 | Raw SQL fix for existing models missing straps and brands |
+| `AddMembershipPlans` | 2026-04-16 | Added MembershipPlans table |
+| `AddJournalSubscriptions` | 2026-04-16 | Added JournalSubscriptions table |
