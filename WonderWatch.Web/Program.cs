@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Quartz;
 using Serilog;
 using WonderWatch.Application.Interfaces;
 using WonderWatch.Application.Services;
 using WonderWatch.Domain.Identity;
 using WonderWatch.Infrastructure;
+using WonderWatch.Web.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,9 +88,29 @@ try
     builder.Services.AddScoped<IEmailService, EmailService>();
     builder.Services.AddScoped<IAddressService, AddressService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
+    builder.Services.AddScoped<IMembershipService, MembershipService>();
+    builder.Services.AddScoped<IJournalService, JournalService>();
+    builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+
 
     // 7. MVC Controllers & Views
     builder.Services.AddControllersWithViews();
+
+    // 8. Quartz Setup
+    builder.Services.AddQuartz(q =>
+    {
+        var jobKey = new JobKey("InventoryAlertJob");
+        q.AddJob<InventoryAlertJob>(opts => opts.WithIdentity(jobKey));
+
+        q.AddTrigger(opts => opts
+            .ForJob(jobKey)
+            .WithIdentity("InventoryAlertJob-trigger")
+            .WithSimpleSchedule(x => x
+                .WithIntervalInMinutes(5)
+                .RepeatForever()));
+    });
+
+    builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
     var app = builder.Build();
 

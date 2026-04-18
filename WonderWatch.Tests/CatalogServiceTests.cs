@@ -46,11 +46,11 @@ namespace WonderWatch.Tests
             var filter = new WatchFilterDto();
 
             // Act
-            var result = await service.GetAllAsync(filter);
+            var (watches, _) = await service.GetAllAsync(filter, 1, 12);
 
             // Assert
-            Assert.Equal(3, result.Count); // 4 total, 1 unpublished
-            Assert.DoesNotContain(result, w => w.Name == "Secret Prototype");
+            Assert.Equal(3, watches.Count); // 4 total, 1 unpublished
+            Assert.DoesNotContain(watches, w => w.Name == "Secret Prototype");
         }
 
         [Fact]
@@ -63,11 +63,11 @@ namespace WonderWatch.Tests
             var filter = new WatchFilterDto { SearchQuery = "Master" };
 
             // Act
-            var result = await service.GetAllAsync(filter);
+            var (watches, _) = await service.GetAllAsync(filter, 1, 12);
 
             // Assert
-            Assert.Equal(2, result.Count);
-            Assert.All(result, w => Assert.Contains("Master", w.Name));
+            Assert.Equal(2, watches.Count);
+            Assert.All(watches, w => Assert.Contains("Master", w.Name));
         }
 
         [Fact]
@@ -80,11 +80,11 @@ namespace WonderWatch.Tests
             var filter = new WatchFilterDto { MinPrice = 1000000m, MaxPrice = 4000000m };
 
             // Act
-            var result = await service.GetAllAsync(filter);
+            var (watches, _) = await service.GetAllAsync(filter, 1, 12);
 
             // Assert
-            Assert.Equal(2, result.Count); // Dark Master (1.5M) and Abyss Diver (3.5M)
-            Assert.All(result, w => Assert.True(w.RetailPrice >= 1000000m && w.RetailPrice <= 4000000m));
+            Assert.Equal(2, watches.Count); // Dark Master (1.5M) and Abyss Diver (3.5M)
+            Assert.All(watches, w => Assert.True(w.RetailPrice >= 1000000m && w.RetailPrice <= 4000000m));
         }
 
         [Fact]
@@ -97,11 +97,11 @@ namespace WonderWatch.Tests
             var filter = new WatchFilterDto { MovementType = MovementType.Manual };
 
             // Act
-            var result = await service.GetAllAsync(filter);
+            var (watches, _) = await service.GetAllAsync(filter, 1, 12);
 
             // Assert
-            Assert.Single(result);
-            Assert.Equal("Light Master", result.First().Name);
+            Assert.Single(watches);
+            Assert.Equal("Light Master", watches.First().Name);
         }
 
         [Fact]

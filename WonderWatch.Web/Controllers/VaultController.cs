@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WonderWatch.Application.DTOs;
 using WonderWatch.Application.Interfaces;
 using WonderWatch.Domain.Identity;
@@ -18,23 +19,35 @@ namespace WonderWatch.Web.Controllers
     public class VaultController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IOrderService _orderService;
         private readonly IWishlistService _wishlistService;
         private readonly IAddressService _addressService;
         private readonly INotificationService _notificationService;
+        private readonly IMembershipService _membershipService;
+        private readonly IPaymentProvider _paymentProvider;
+        private readonly ILogger<VaultController> _logger;
 
         public VaultController(
             UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             IOrderService orderService,
             IWishlistService wishlistService,
             IAddressService addressService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IMembershipService membershipService,
+            IPaymentProvider paymentProvider,
+            ILogger<VaultController> logger)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _orderService = orderService;
             _wishlistService = wishlistService;
             _addressService = addressService;
             _notificationService = notificationService;
+            _membershipService = membershipService;
+            _paymentProvider = paymentProvider;
+            _logger = logger;
         }
 
         [HttpGet("entry")]
@@ -378,6 +391,108 @@ namespace WonderWatch.Web.Controllers
 
             return View(viewModel);
         }
+
+        // =============================================================
+        // MEMBERSHIP — Upgrade Plan Page + Razorpay Payment
+        // =============================================================
+        [HttpGet("membership")]
+        public async Task<IActionResult> Membership()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var plans = await _membershipService.GetActivePlansAsync();
+            var razorpayKeyId = HttpContext.RequestServices
+                .GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()["Razorpay:KeyId"] ?? "";
+
+            var viewModel = new VaultMembershipViewModel
+            {
+                CurrentTier = user.MembershipTier.ToString(),
+                Plans = plans,
+                RazorpayKeyId = razorpayKeyId,
+                UserEmail = user.Email ?? "",
+                UserName = user.FullName
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost("membership/create-order")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MembershipCreateOrder([FromBody] MembershipOrderRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var plan = await _membershipService.GetPlanByIdAsync(request.PlanId);
+                if (plan == null) return BadRequest(new { error = "Plan not found" });
+
+                var razorpayOrderId = await _paymentProvider.CreateRazorpayOrderAsync(plan.Price);
+
+                return Json(new { orderId = razorpayOrderId, amount = plan.Price * 100 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create membership order");
+                return StatusCode(500, new { error = "Payment initialization failed" });
+            }
+        }
+
+        [HttpPost("membership/verify-payment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MembershipVerifyPayment([FromBody] MembershipPaymentVerification verification)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var isValid = _paymentProvider.VerifySignature(
+                    verification.RazorpayOrderId,
+                    verification.RazorpayPaymentId,
+                    verification.RazorpaySignature);
+
+                if (!isValid)
+                    return BadRequest(new { error = "Payment verification failed" });
+
+                await _membershipService.UpgradeUserPlanAsync(user.Id, verification.PlanId);
+
+                _logger.LogInformation("User {UserId} upgraded to plan {PlanId}", user.Id, verification.PlanId);
+
+                return Json(new { success = true, redirectUrl = "/vault/profile" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Membership payment verification failed");
+                return StatusCode(500, new { error = "Verification failed" });
+            }
+        }
+
+        // =============================================================
+        // DELETE ACCOUNT
+        // =============================================================
+        [HttpPost("profile/delete-account")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            await _signInManager.SignOutAsync();
+            var result = await _userManager.DeleteAsync(user);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User {UserId} deleted their account.", user.Id);
+                return RedirectToAction("Index", "Home");
+            }
+
+            _logger.LogWarning("Failed to delete user {UserId}: {Errors}", user.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+            TempData["PasswordError"] = "Account deletion failed. Please contact support.";
+            return RedirectToAction("Profile");
+        }
     }
 }
 
@@ -457,5 +572,27 @@ namespace WonderWatch.Web.ViewModels
         public int Quantity { get; set; }
         public string UnitPrice { get; set; } = string.Empty;
         public string LineTotal { get; set; } = string.Empty;
+    }
+
+    public class VaultMembershipViewModel
+    {
+        public string CurrentTier { get; set; } = string.Empty;
+        public List<MembershipPlanDto> Plans { get; set; } = new();
+        public string RazorpayKeyId { get; set; } = string.Empty;
+        public string UserEmail { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+    }
+
+    public class MembershipOrderRequest
+    {
+        public Guid PlanId { get; set; }
+    }
+
+    public class MembershipPaymentVerification
+    {
+        public string RazorpayOrderId { get; set; } = string.Empty;
+        public string RazorpayPaymentId { get; set; } = string.Empty;
+        public string RazorpaySignature { get; set; } = string.Empty;
+        public Guid PlanId { get; set; }
     }
 }

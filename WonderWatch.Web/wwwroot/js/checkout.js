@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'RequestVerificationToken': csrfTokenInput.value
                     },
                     body: JSON.stringify({
-                        WatchId: parseInt(watchId, 10),
+                        WatchId: watchId,
                         Quantity: 0
                     })
                 });
@@ -149,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 handler: async function (response) {
                     // 6. Step 3: Verify Payment on Server
                     await verifyPayment(
-                        createResult.orderId,
                         response.razorpay_order_id,
                         response.razorpay_payment_id,
                         response.razorpay_signature,
@@ -192,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Verifies the Razorpay signature with the server
      */
-    async function verifyPayment(orderId, razorpayOrderId, paymentId, signature, csrfToken) {
+    async function verifyPayment(razorpayOrderId, paymentId, signature, csrfToken) {
         try {
             const verifyResponse = await fetch('/checkout/verify', {
                 method: 'POST',
@@ -201,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     'RequestVerificationToken': csrfToken
                 },
                 body: JSON.stringify({
-                    OrderId: orderId,
                     RazorpayOrderId: razorpayOrderId,
                     RazorpayPaymentId: paymentId,
                     RazorpaySignature: signature

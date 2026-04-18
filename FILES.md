@@ -1,5 +1,6 @@
-# FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-04-15 (Session 16)
+﻿# FILES.md — Wonder Watch Directory Atlas
+Last updated: 2026-04-18 (Session 22)
+
 
 ## Project Root
 D:\Projects\WONDER_WATCH_MVC\
@@ -25,13 +26,15 @@ WONDER_WATCH_MVC/
 WonderWatch.Domain/
 ├── WonderWatch.Domain.csproj
 ├── Entities/
-│   ├── DomainModels.cs    ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage, Brand, FilterConfig
-│   ├── UserAddress.cs     ← Vault saved address details
-│   └── UserNotification.cs ← Vault system/order notifications
+│   ├── DomainModels.cs         ← Watch, Order, OrderItem, Address, Review, Wishlist, WatchImage, Brand, FilterConfig, MembershipPlan
+│   ├── JournalSubscription.cs  ← Newsletter email subscriptions
+│   ├── UserAddress.cs          ← Vault saved address details
+│   └── UserNotification.cs     ← Vault system/order notifications
 ├── Enums/
 │   └── (Inside DomainModels.cs) ← MovementType, OrderStatus, ReviewStatus, MembershipTier
 └── Identity/
     └── ApplicationUser.cs ← Inherits IdentityUser<Guid>, adds custom properties
+
 ```
 
 ## WonderWatch.Infrastructure/ — Data Access Layer
@@ -48,22 +51,26 @@ WonderWatch.Infrastructure/
     ├── 20260409200000_AddUserAddressesAndNotifications.cs
     ├── 20260409160128_AddFiltersConfig.cs
     ├── 20260409170956_UpdateWatchesSeedData.cs
+    ├── 20260416XXXXXX_AddMembershipPlans.cs
+    ├── 20260416XXXXXX_AddJournalSubscriptions.cs
     └── AppDbContextModelSnapshot.cs
+
 ```
 
 ## WonderWatch.Application/ — Business Logic Layer
 ```text
 WonderWatch.Application/
 ├── WonderWatch.Application.csproj
-├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, etc.) and DTOs
-└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, etc.)
+├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, IMembershipService, IJournalService, etc.) and DTOs
+└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, MembershipService, JournalService, etc.)
+
 ```
 
 ## WonderWatch.Web/ — Presentation Layer (MVC)
 ```text
 WonderWatch.Web/
 ├── WonderWatch.Web.csproj
-├── Program.cs             ← DI Container, Middleware Pipeline, Serilog, Identity
+├── Program.cs             ← DI Container, Middleware Pipeline, Serilog, Identity, Quartz
 ├── tailwind.config.js     ← Strict design tokens (Zero border-radius, specific hex codes)
 ├── package.json           ← NPM scripts (build:css)
 ├── appsettings.json
@@ -76,8 +83,13 @@ WonderWatch.Web/
 │   ├── CatalogController.cs
 │   ├── CheckoutController.cs
 │   ├── HomeController.cs
-│   ├── VaultController.cs
+│   ├── JournalController.cs      ← POST /api/journal/subscribe (newsletter)
+│   ├── MembershipPlanController.cs ← Admin CRUD for membership plans
+│   ├── VaultController.cs        ← Includes Membership, DeleteAccount actions
 │   └── WishlistApiController.cs
+├── Jobs/
+│   └── InventoryAlertJob.cs      ← Quartz.NET background chron job for inventory alerts
+
 ├── Middleware/
 │   └── GlobalExceptionMiddleware.cs ← Intercepts errors, returns JSON for AJAX or HTML for MVC
 ├── Styles/
@@ -106,7 +118,11 @@ WonderWatch.Web/
 │   ├── Home/
 │   │   ├── About.cshtml
 │   │   ├── Collections.cshtml
-│   │   └── Index.cshtml
+│   │   ├── Contact.cshtml      ─ Concierge enquiry page (relocated from Views/Contact/ in Session 22)
+│   │   ├── Index.cshtml
+│   │   ├── Privacy.cshtml
+│   │   ├── Shipping.cshtml
+│   │   └── Terms.cshtml
 │   ├── Shared/
 │   │   ├── _AdminLayout.cshtml
 │   │   ├── _CartDrawer.cshtml
@@ -114,14 +130,20 @@ WonderWatch.Web/
 │   │   ├── _ValidationScriptsPartial.cshtml
 │   │   ├── _VaultLayout.cshtml
 │   │   └── Error.cshtml
+│   ├── MembershipPlan/
+│   │   ├── Index.cshtml      ← Admin membership plan list
+│   │   ├── Create.cshtml     ← Admin create plan form
+│   │   └── Edit.cshtml       ← Admin edit plan form
 │   └── Vault/
 │       ├── Addresses.cshtml
 │       ├── Entry.cshtml
 │       ├── Index.cshtml
+│       ├── Membership.cshtml  ← User-facing pricing cards + Razorpay
 │       ├── Notifications.cshtml
 │       ├── Orders.cshtml
 │       ├── Profile.cshtml
 │       └── Wishlist.cshtml
+
 └── wwwroot/
     ├── css/
     │   ├── catalog.css    ← Scoped CSS for complex sibling selectors

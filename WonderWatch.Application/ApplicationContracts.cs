@@ -122,6 +122,32 @@ namespace WonderWatch.Application.DTOs
         public decimal MinPrice { get; set; }
         public decimal MaxPrice { get; set; }
     }
+
+    // ---------------------------------------------------------
+    // MEMBERSHIP PLAN DTOS
+    // ---------------------------------------------------------
+    public class MembershipPlanDto
+    {
+        public Guid Id { get; set; }
+        public MembershipTier Tier { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string PriceFormatted { get; set; } = string.Empty;
+        public string BillingCycle { get; set; } = string.Empty;
+        public List<string> Features { get; set; } = new();
+        public bool IsActive { get; set; }
+        public int SubscriberCount { get; set; }
+    }
+    
+    public class CreateMembershipPlanDto
+    {
+        public MembershipTier Tier { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string BillingCycle { get; set; } = "One-Time";
+        public List<string> Features { get; set; } = new();
+        public bool IsActive { get; set; } = true;
+    }
 }
 
 namespace WonderWatch.Application.Interfaces
@@ -130,7 +156,7 @@ namespace WonderWatch.Application.Interfaces
 
     public interface ICatalogService
     {
-        Task<List<Watch>> GetAllAsync(WatchFilterDto filter);
+        Task<(List<Watch> Watches, int TotalCount)> GetAllAsync(WatchFilterDto filter, int page = 1, int pageSize = 12);
         Task<Watch?> GetByIdAsync(Guid id);
         Task<Watch?> GetBySlugAsync(string slug);
         Task<List<Watch>> SearchAsync(string query);
@@ -202,5 +228,27 @@ namespace WonderWatch.Application.Interfaces
         Task MarkReadAsync(Guid notificationId, Guid userId);
         Task<int> GetUnreadCountAsync(Guid userId);
         Task CreateAsync(Guid userId, string title, string body, NotificationType type);
+    }
+
+    public interface IMembershipService
+    {
+        Task<List<MembershipPlanDto>> GetActivePlansAsync();
+        Task<List<MembershipPlanDto>> GetAllPlansAsync();
+        Task<MembershipPlanDto?> GetPlanByIdAsync(Guid id);
+        Task<MembershipPlanDto> CreatePlanAsync(CreateMembershipPlanDto dto);
+        Task UpdatePlanAsync(Guid id, CreateMembershipPlanDto dto);
+        Task TogglePlanActiveAsync(Guid id);
+        Task DeletePlanAsync(Guid id);
+        Task UpgradeUserPlanAsync(Guid userId, Guid planId);
+    }
+
+    public interface IJournalService
+    {
+        Task<bool> SubscribeAsync(string email);
+    }
+
+    public interface IDatabaseManagementService
+    {
+        Task ResetDatabaseAsync();
     }
 }

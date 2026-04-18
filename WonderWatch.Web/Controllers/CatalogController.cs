@@ -50,8 +50,11 @@ namespace WonderWatch.Web.Controllers
                 StrapMaterial = strap // Pass the strap material to the DTO
             };
 
-            // 2. Fetch all matching watches from the service (Service now handles all filtering)
-            var allWatches = await _catalogService.GetAllAsync(filter);
+            int pageSize = 12;
+            page = Math.Max(1, page);
+
+            // 2. Fetch matching watches from the service (Service now handles all filtering and pagination)
+            var (pagedWatches, totalItems) = await _catalogService.GetAllAsync(filter, page, pageSize);
 
             // 3. Fetch dynamic filter options for the UI
             var availableBrands = await _catalogService.GetAvailableBrandsAsync();
@@ -59,16 +62,8 @@ namespace WonderWatch.Web.Controllers
             var filterConfig = await _catalogService.GetFilterConfigAsync();
 
             // 4. Pagination Logic
-            int pageSize = 12;
-            int totalItems = allWatches.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-
             page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
-
-            var pagedWatches = allWatches
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
 
             var indiaCulture = new CultureInfo("hi-IN");
 
@@ -119,7 +114,8 @@ namespace WonderWatch.Web.Controllers
                 ReferenceNumber = watch.ReferenceNumber,
                 Description = watch.Description,
                 PriceFormatted = watch.RetailPrice.ToString("C0", indiaCulture),
-                ComparePriceFormatted = watch.ComparePrice > watch.RetailPrice ? watch.ComparePrice.ToString("C0", indiaCulture) : string.Empty,
+                ComparePriceFormatted = watch.ComparePrice.ToString("C0", indiaCulture),
+                HasDiscount = watch.ComparePrice > watch.RetailPrice,
                 CaseSize = watch.CaseSize,
                 MovementType = watch.MovementType.ToString(),
                 StrapMaterial = watch.StrapMaterial,
@@ -171,6 +167,7 @@ namespace WonderWatch.Web.ViewModels
         public string StrapMaterial { get; set; } = string.Empty;
         public int StockQuantity { get; set; }
         public bool IsSoldOut { get; set; }
+        public bool HasDiscount { get; set; }
         public string GlbAssetPath { get; set; } = string.Empty;
         public List<string> ImageUrls { get; set; } = new();
     }

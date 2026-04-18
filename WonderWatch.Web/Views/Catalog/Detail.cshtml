@@ -8,7 +8,7 @@
     var isMobile = userAgent.Contains("mobi") || userAgent.Contains("android") || userAgent.Contains("iphone");
 }
 
-<section class="pt-[131px] min-h-screen bg-void border-b border-white-faint">
+<section class="pt-[107px] min-h-screen bg-void border-b border-white-faint">
     <!-- CSRF Token for Wishlist AJAX -->
     <form id="antiForgeryForm" class="hidden">
         @Html.AntiForgeryToken()
@@ -17,12 +17,23 @@
     <div class="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-2">
         
         <!-- LEFT COLUMN: IMAGE PORTRAIT -->
-        <div class="relative w-full h-[60vh] lg:h-[calc(100vh-131px)] bg-surface-alt border-r border-white-faint flex flex-col items-center justify-center overflow-hidden group">
-            <img src="@Model.ImageUrls.FirstOrDefault()" alt="@Model.Name" class="w-full h-full object-contain p-[32px] drop-shadow-2xl z-20" />
+        <div class="relative w-full h-[60vh] lg:h-[calc(100vh-107px)] bg-surface-alt border-r border-white-faint flex flex-col items-center justify-center overflow-hidden group">
+            @if (!string.IsNullOrEmpty(Model.GlbAssetPath))
+            {
+                <canvas id="three-canvas" 
+                        class="absolute inset-0 w-full h-full outline-none z-20"
+                        data-mobile="@(isMobile ? "true" : "false")"
+                        data-model-path="@Model.GlbAssetPath"
+                        data-camera-z="15"
+                        data-model-scale="1"
+                        data-ambient-light="0.5">
+                </canvas>
+            }
+            <img src="@Model.ImageUrls.FirstOrDefault()" alt="@Model.Name" class="w-full h-full object-contain p-[32px] drop-shadow-2xl z-10 @(!string.IsNullOrEmpty(Model.GlbAssetPath) && !isMobile ? "hidden" : "")" />
         </div>
 
         <!-- RIGHT COLUMN: PRODUCT DETAILS -->
-        <div class="p-[32px] md:p-[64px] lg:p-[96px] flex flex-col justify-center lg:min-h-[calc(100vh-131px)] animate-fade-in">
+        <div class="p-[32px] md:p-[64px] lg:p-[96px] flex flex-col justify-center lg:min-h-[calc(100vh-107px)] animate-fade-in">
             
             <div class="mb-[32px] md:mb-[48px]">
                 <!-- Back Navigation -->
@@ -59,7 +70,7 @@
             <div class="mb-[48px] pb-[48px] border-b border-light-void">
                 <div class="flex items-baseline gap-[16px] flex-wrap">
                     <span class="font-sans font-bold text-[24px] md:text-[30px] text-gold tracking-[-1.5px]">@Model.PriceFormatted</span>
-                    @if (!string.IsNullOrEmpty(Model.ComparePriceFormatted))
+                    @if (Model.HasDiscount)
                     {
                         <del class="font-sans text-[14px] md:text-[16px] text-muted tracking-[-0.5px]">@Model.ComparePriceFormatted</del>
                     }
@@ -139,4 +150,12 @@
         </div>
     </div>
 </section>
-
+
+@section Scripts {
+    <!-- Three.js Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="~/js/viewer.js" asp-append-version="true"></script>
+}

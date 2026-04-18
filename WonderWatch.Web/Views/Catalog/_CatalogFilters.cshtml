@@ -137,7 +137,7 @@
                    name="searchQuery"
                    value="@searchQuery"
                    placeholder="Search watches..."
-                   class="cat-search-input"
+                   class="cat-search-input focus:ring-1 focus:ring-gold focus:outline-none"
                    autocomplete="off" />
         </div>
     </div>
@@ -157,7 +157,7 @@
                         <input type="checkbox"
                                name="brands"
                                value="@brand"
-                               class="absolute inset-0 opacity-0 w-full h-full cursor-pointer m-0"
+                               class="absolute inset-0 opacity-0 w-full h-full cursor-pointer m-0 focus:ring-1 focus:ring-gold focus:outline-none"
                                style="z-index: 50;"
                         @(isChecked ? "checked" : "")
                                onchange="this.nextElementSibling.style.opacity = this.checked ? '1' : '0'; this.parentElement.style.borderColor = this.checked ? '#C9A74A' : 'rgba(255,255,255,0.18)';" />
@@ -260,8 +260,26 @@
 <!-- DUAL SLIDER JAVASCRIPT LOGIC -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.cat-filter-form');
         const minSlider = document.getElementById('minPrice');
         const maxSlider = document.getElementById('maxPrice');
+        const searchInput = form.querySelector('input[name="searchQuery"]');
+
+        form.addEventListener('submit', function() {
+            if (minSlider && minSlider.value === minSlider.min) {
+                minSlider.removeAttribute('name');
+            }
+            if (maxSlider && maxSlider.value === maxSlider.max) {
+                maxSlider.removeAttribute('name');
+            }
+            if (searchInput && !searchInput.value.trim()) {
+                searchInput.removeAttribute('name');
+            }
+            const sortInput = form.querySelector('input[name="sort"]');
+            if (sortInput && sortInput.value === 'newest') {
+                sortInput.removeAttribute('name');
+            }
+        });
         const rangeFill = document.getElementById('range-fill');
         const minVal = document.getElementById('minPriceVal');
         const maxVal = document.getElementById('maxPriceVal');

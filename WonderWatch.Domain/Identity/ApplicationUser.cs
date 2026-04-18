@@ -12,6 +12,7 @@ namespace WonderWatch.Domain.Identity
         public string DisplayName { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
         public MembershipTier MembershipTier { get; set; } = MembershipTier.Silver;
+        public Guid? CurrentMembershipPlanId { get; set; }
         public DateTime MemberSince { get; set; } = DateTime.UtcNow;
         public string Nationality { get; set; } = string.Empty;
         public DateTime DateOfBirth { get; set; }
@@ -25,5 +26,6 @@ namespace WonderWatch.Domain.Identity
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
         public ICollection<UserNotification> Notifications { get; set; } = new List<UserNotification>();
+        public MembershipPlan? CurrentMembershipPlan { get; set; }
     }
 }

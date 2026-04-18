@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-15 (Session 16) | Location: India (IST)
+Last updated: 2026-04-18 (Session 22) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -273,3 +273,41 @@ dotnet user-secrets list --project WonderWatch.Web
 - **Documentation Update**: Updated `README.md` to include explicitly documented `.NET User Secrets` commands for Razorpay setup (`KeyId`, `KeySecret`). ✅
 - **Brain Sync**: Synchronized `MEMORY.md`, `FILES.md`, and `COMMANDS.md` with latest session history and date pointers. ✅
 - **Git Repository Update**: Committed all pending documentation and asset changes to the main branch. ✅
+
+### Session 17 Final History — 2026-04-16
+- **Checkout UX Patch**: Fixed bug with cart proxy removal in Checkout generating `NaN` IDs due to `parseInt()`. Passed raw string GUID to `WatchId` safely. ✅
+- **Return to Cart Flow**: Redirected checkout "return to cart" anchor natively to `/?openCart=true` resolving 500 error boundary. ✅
+- `dotnet build WonderWatch.sln` ✅ (0 Errors, successful pipeline validation).
+
+### Session 19 & 20 Final History — 2026-04-17
+- **Performance Optimization**: Refactored `CatalogService.cs` so `GetAllAsync` uses tuple-based return returning total row count, taking `page` and `pageSize` arguments to push `.Skip().Take()` native SQL translation to the Edge (EF Core layer) rather than the application server RAM boundary. ✅
+- **Job Creation**: Created background task structure `Jobs/InventoryAlertJob.cs`. ✅
+- **Quartz Injection**: Modified `Program.cs` embedding `AddQuartz()` processing rules utilizing local memory scheduling mapping standard CRON schedules to `InventoryAlertJob`. ✅
+- **Unit Test Overhaul**: Re-wrote mapping boundaries of `CatalogServiceTests.cs` using Multi-Replace to destruct tuple elements correctly preventing failing assertions. ✅
+- **Bug Fix**: Resolved `Tuple` unpacking failures in `HomeController` preserving database querying performance enhancements on Featured items slice natively. ✅
+- `dotnet build WonderWatch.sln` ✅ (0 Errors, successful pipeline validation).
+ 
+ ### Session 21 Final History — 2026-04-18
+ - **Reset Database:** Restructured seed data to utilize an idempotent re-seed payload on `ResetDatabaseToFactory` ensuring schema wipe-outs are safe. ✅
+ - **Styles Compiler:** Re-ran `npm run build:css` after making widespread `focus:` utility injections into checkboxes / search layouts. ✅
+ - **Polly Execution:** Verified external AI API interactions correctly execute backoffs on `Http429` statuses via logs. ✅
+ - **ThreeJs Rendering Fix:** Re-embedded standard HTML5 `<canvas id="three-canvas">` logic. Model size scaled with generic mapping correctly solving bounding box overflows. ✅
+ - `dotnet build WonderWatch.sln` ✅ (0 Errors, successful pipeline validation).
+
+### Session 22 Final History — 2026-04-18
+- **Contact Page Relocation**: Moved `Views/Contact/Index.cshtml` → `Views/Home/Contact.cshtml` resolving `InvalidOperationException`. Deleted orphaned `Views/Contact/` directory. ✅
+- **Header Height Reduction (96px → 72px)**: Systematically updated all offset-dependent files:
+  - `_Layout.cshtml`: `h-[96px]` → `h-[72px]` (navbar + mobile menu overlay). ✅
+  - `_VaultLayout.cshtml`: `mt-[96px]` → `mt-[72px]`, `top-[96px]` → `top-[72px]`, `calc(100vh - 96px)` → `calc(100vh - 72px)`. ✅
+  - `Home/Index.cshtml`: hero `pt-[131px]` → `pt-[107px]`. ✅
+  - `Catalog/Index.cshtml`: inline `padding-top: 96px` → `72px`. ✅
+  - `Catalog/Detail.cshtml`: 3× `calc(100vh - 131px)` → `calc(100vh - 107px)`. ✅
+  - `Vault/Entry.cshtml`: `pt-[131px]` → `pt-[107px]`, `calc(100vh - 131px)` → `calc(100vh - 107px)`. ✅
+  - `Checkout/Index.cshtml` + `Confirmation.cshtml`: `pt-[131px]` → `pt-[107px]`. ✅
+  - `Home/About.cshtml`, `Privacy.cshtml`, `Terms.cshtml`, `Shipping.cshtml`: `pt-[160px]` → `pt-[136px]`. ✅
+  - `Home/Contact.cshtml`: inline `padding-top: 160px` → `136px`. ✅
+- **Grep Validation**: Confirmed zero remaining `pt-[131px]` or `h-[96px]` references across all Views. ✅
+- `npm run build:css` ✅ (Tailwind recompiled in 412ms)
+- `dotnet build WonderWatch.Web --no-incremental` ✅ (0 Errors, 18 pre-existing NuGet warnings)
+- **Documentation**: Updated `MEMORY.md`, `FILES.md`, `COMMANDS.md`, `task.md` with Session 22 records. ✅
+

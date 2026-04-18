@@ -1,0 +1,136 @@
+@model WonderWatch.Application.DTOs.CreateMembershipPlanDto
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Membership Plan";
+}
+
+<div class="p-[32px] md:p-[48px] max-w-[800px] mx-auto">
+
+    <!-- HEADER -->
+    <div class="mb-[48px]">
+        <a href="/admin/membership" class="inline-flex items-center gap-[8px] text-gold-dim hover:text-gold text-[12px] font-sans tracking-[1px] uppercase mb-[24px] transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Back to Plans
+        </a>
+        <h1 class="font-serif text-[40px] text-parchment tracking-[-1px] leading-none">Edit Membership Plan</h1>
+    </div>
+
+    <form method="post" class="flex flex-col gap-[32px]">
+        @Html.AntiForgeryToken()
+
+        <!-- TIER SELECTION -->
+        <div class="bg-surface border border-gold-faint p-[32px]">
+            <label class="block font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase mb-[16px]">Membership Tier</label>
+            <div class="grid grid-cols-3 gap-[12px]">
+                @foreach (var tier in Enum.GetValues<WonderWatch.Domain.Enums.MembershipTier>())
+                {
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="Tier" value="@tier" class="sr-only peer" @(Model.Tier == tier ? "checked" : "")>
+                        <div class="border border-white-faint peer-checked:border-gold peer-checked:bg-[rgba(201,167,74,0.08)] p-[16px] text-center transition-all duration-300 hover:border-gold/50">
+                            <span class="font-sans font-bold text-[13px] text-parchment block">@tier</span>
+                        </div>
+                    </label>
+                }
+            </div>
+        </div>
+
+        <!-- PLAN DETAILS -->
+        <div class="bg-surface border border-gold-faint p-[32px] flex flex-col gap-[24px]">
+            <h2 class="font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase">Plan Details</h2>
+
+            <div class="flex flex-col gap-[8px]">
+                <label for="Name" class="font-sans text-[12px] text-muted uppercase tracking-[1px]">Plan Name</label>
+                <input type="text" id="Name" name="Name" value="@Model.Name" required
+                       class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[14px] focus:outline-none focus:border-gold transition-colors" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-[16px]">
+                <div class="flex flex-col gap-[8px]">
+                    <label for="Price" class="font-sans text-[12px] text-muted uppercase tracking-[1px]">Price (₹)</label>
+                    <input type="number" id="Price" name="Price" value="@Model.Price" required step="1" min="0"
+                           class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[14px] focus:outline-none focus:border-gold transition-colors" />
+                </div>
+                <div class="flex flex-col gap-[8px]">
+                    <label for="BillingCycle" class="font-sans text-[12px] text-muted uppercase tracking-[1px]">Billing Cycle</label>
+                    <select id="BillingCycle" name="BillingCycle"
+                            class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[14px] focus:outline-none focus:border-gold transition-colors">
+                        @foreach (var cycle in new[] { "One-Time", "Monthly", "Annual", "Lifetime" })
+                        {
+                            if (Model.BillingCycle == cycle)
+                            {
+                                <option value="@cycle" selected>@cycle</option>
+                            }
+                            else
+                            {
+                                <option value="@cycle">@cycle</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-[12px]">
+                <input type="checkbox" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")
+                       class="w-[16px] h-[16px] bg-void border border-white-faint accent-[#C9A74A] cursor-pointer" />
+                <label for="IsActive" class="font-sans text-[13px] text-muted cursor-pointer">Plan is active and visible to users</label>
+            </div>
+        </div>
+
+        <!-- FEATURES -->
+        <div class="bg-surface border border-gold-faint p-[32px]">
+            <div class="flex items-center justify-between mb-[16px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase">Plan Features</h2>
+                <button type="button" id="add-feature-btn" class="text-gold hover:text-parchment text-[12px] font-sans font-bold tracking-[1px] uppercase transition-colors">
+                    + Add Feature
+                </button>
+            </div>
+            <div id="features-list" class="flex flex-col gap-[12px]">
+                <!-- Features pre-populated via JS -->
+            </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="flex items-center gap-[16px]">
+            <button type="submit"
+                    class="bg-gold text-void font-sans font-bold text-[11px] tracking-[2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-void">
+                Save Changes
+            </button>
+            <a href="/admin/membership" class="text-muted hover:text-parchment font-sans text-[12px] tracking-[1px] uppercase transition-colors">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const list = document.getElementById('features-list');
+        const addBtn = document.getElementById('add-feature-btn');
+        let featureIndex = 0;
+
+        function addFeature(value = '') {
+            const escapedValue = value.replace(/"/g, '&quot;');
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-[8px]';
+            row.innerHTML = `
+                <input type="text" name="Features[${featureIndex}]" value="${escapedValue}" required
+                       class="flex-1 bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold transition-colors placeholder:text-muted/40"
+                       placeholder="e.g. Priority customer support" />
+                <button type="button" onclick="this.parentElement.remove()" class="text-[rgba(248,113,113,0.7)] hover:text-[rgba(248,113,113,1)] transition-colors p-[8px]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>`;
+            list.appendChild(row);
+            featureIndex++;
+        }
+
+        addBtn.addEventListener('click', () => addFeature());
+
+        // Pre-populate existing features
+        const existingFeatures = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Features));
+        if (existingFeatures && existingFeatures.length > 0) {
+            existingFeatures.forEach(f => addFeature(f));
+        } else {
+            addFeature();
+        }
+    });
+</script>
+}

@@ -71,11 +71,6 @@ namespace WonderWatch.Infrastructure
 
         private static async Task SeedWatchesAsync(AppDbContext context)
         {
-            if (await context.Watches.AnyAsync())
-            {
-                return; // DB has been seeded
-            }
-
             // Deterministic GUIDs for the 6 Figma watches to ensure stable image/model paths
             var watchIds = new[]
             {
@@ -97,9 +92,9 @@ namespace WonderWatch.Infrastructure
                     ReferenceNumber = "WW-GM3-001",
                     Slug = "grand-mariner-iii",
                     Description = "The Grand Mariner III represents the pinnacle of deep-sea horology. Forged from a single block of proprietary void-black titanium, it features a mesmerizing sapphire dial that reveals the intricate automatic movement beneath.",
-                    RetailPrice = 7240000m, // ₹72,40,000
-                    CostPrice = 4500000m,
-                    ComparePrice = 7500000m,
+                    RetailPrice = 489000m, // ₹4,89,000 (reduced for Razorpay test-mode limit; real: ₹72,40,000)
+                    CostPrice = 300000m,
+                    ComparePrice = 499000m,
                     CaseSize = 42,
                     MovementType = MovementType.Automatic,
                     StockQuantity = 3,
@@ -121,9 +116,9 @@ namespace WonderWatch.Infrastructure
                     ReferenceNumber = "WW-OT-092",
                     Slug = "obsidian-tourbillon",
                     Description = "A masterclass in gravitational defiance. The Obsidian Tourbillon houses a hand-finished flying tourbillon within a forged carbon case, accented with our signature gold primary details.",
-                    RetailPrice = 10530000m, // ₹1,05,30,000
-                    CostPrice = 6800000m,
-                    ComparePrice = 11000000m,
+                    RetailPrice = 495000m, // ₹4,95,000 (reduced for Razorpay test-mode limit; real: ₹1,05,30,000)
+                    CostPrice = 320000m,
+                    ComparePrice = 499000m,
                     CaseSize = 44,
                     MovementType = MovementType.Manual,
                     StockQuantity = 1,
@@ -144,9 +139,9 @@ namespace WonderWatch.Infrastructure
                     ReferenceNumber = "WW-LGE-888",
                     Slug = "legacy-gold-edition",
                     Description = "Crafted from solid 18k rose gold, the Legacy Edition is a tribute to traditional watchmaking. It features a parchment-toned dial with hand-applied indices and a perpetual calendar complication.",
-                    RetailPrice = 8420000m, // ₹84,20,000
-                    CostPrice = 5000000m,
-                    ComparePrice = 8500000m,
+                    RetailPrice = 460000m, // ₹4,60,000 (reduced for Razorpay test-mode limit; real: ₹84,20,000)
+                    CostPrice = 280000m,
+                    ComparePrice = 485000m,
                     CaseSize = 40,
                     MovementType = MovementType.Automatic,
                     StockQuantity = 0,
@@ -167,9 +162,9 @@ namespace WonderWatch.Infrastructure
                     ReferenceNumber = "WW-SCX-404",
                     Slug = "skeleton-core-x",
                     Description = "Stripped of all non-essentials, the Skeleton Core X exposes the beating heart of the machine. The architectural bridges are PVD-coated in void black, contrasting sharply with the gold gear train.",
-                    RetailPrice = 4550000m, // ₹45,50,000
-                    CostPrice = 2800000m,
-                    ComparePrice = 4800000m,
+                    RetailPrice = 385000m, // ₹3,85,000 (reduced for Razorpay test-mode limit; real: ₹45,50,000)
+                    CostPrice = 240000m,
+                    ComparePrice = 420000m,
                     CaseSize = 41,
                     MovementType = MovementType.Automatic,
                     StockQuantity = 5,
@@ -190,9 +185,9 @@ namespace WonderWatch.Infrastructure
                     ReferenceNumber = "WW-ADE-777",
                     Slug = "azure-diver-elite",
                     Description = "Engineered for the abyss. The Azure Diver Elite boasts a water resistance of 1000 meters, a helium escape valve, and a unidirectional ceramic bezel in deep ocean blue.",
-                    RetailPrice = 3890000m, // ₹38,90,000
-                    CostPrice = 2100000m,
-                    ComparePrice = 4000000m,
+                    RetailPrice = 325000m, // ₹3,25,000 (reduced for Razorpay test-mode limit; real: ₹38,90,000)
+                    CostPrice = 200000m,
+                    ComparePrice = 360000m,
                     CaseSize = 43,
                     MovementType = MovementType.Automatic,
                     StockQuantity = 8,
@@ -213,9 +208,9 @@ namespace WonderWatch.Infrastructure
                     ReferenceNumber = "WW-LPS-021",
                     Slug = "luna-phase-silver",
                     Description = "A poetic complication. The Luna Phase Silver tracks the lunar cycle with absolute precision on a dial crafted from meteorite, housed in a polished platinum case.",
-                    RetailPrice = 6120000m, // ₹61,20,000
-                    CostPrice = 3900000m,
-                    ComparePrice = 6500000m,
+                    RetailPrice = 445000m, // ₹4,45,000 (reduced for Razorpay test-mode limit; real: ₹61,20,000)
+                    CostPrice = 275000m,
+                    ComparePrice = 475000m,
                     CaseSize = 39,
                     MovementType = MovementType.Manual,
                     StockQuantity = 2,
@@ -229,6 +224,31 @@ namespace WonderWatch.Infrastructure
                     }
                 }
             };
+
+            if (await context.Watches.AnyAsync())
+            {
+                // Sync prices if they differ to avoid dropping entire DB just for fixing Razorpay limits
+                var existingWatches = await context.Watches.Where(w => watchIds.Contains(w.Id)).ToListAsync();
+                bool updated = false;
+
+                foreach (var seed in watches)
+                {
+                    var existing = existingWatches.FirstOrDefault(w => w.Id == seed.Id);
+                    if (existing != null && (existing.RetailPrice != seed.RetailPrice || existing.ComparePrice != seed.ComparePrice))
+                    {
+                        existing.RetailPrice = seed.RetailPrice;
+                        existing.ComparePrice = seed.ComparePrice;
+                        updated = true;
+                    }
+                }
+
+                if (updated)
+                {
+                    await context.SaveChangesAsync();
+                }
+
+                return; // DB has been seeded with structural data
+            }
 
             await context.Watches.AddRangeAsync(watches);
             await context.SaveChangesAsync();
@@ -260,24 +280,30 @@ namespace WonderWatch.Infrastructure
                 await context.SaveChangesAsync();
             }
 
-            // 2. Seed FilterConfig (single row) if table is empty
-            if (!await context.FilterConfigs.AnyAsync())
+            // 2. Seed FilterConfig (single row) if table is empty, or update if bounds are stale
+            var config = await context.FilterConfigs.FirstOrDefaultAsync();
+
+            var minPrice = await context.Watches.AnyAsync() ? await context.Watches.MinAsync(w => w.RetailPrice) : 3800000m;
+            var maxPrice = await context.Watches.AnyAsync() ? await context.Watches.MaxAsync(w => w.RetailPrice) : 10600000m;
+
+            // Round down/up to nearest lakh for clean slider bounds
+            decimal roundedMin = Math.Floor(minPrice / 100000m) * 100000m;
+            decimal roundedMax = Math.Ceiling(maxPrice / 100000m) * 100000m;
+
+            if (config == null)
             {
-                // Derive realistic bounds from actual watch prices
-                var minPrice = await context.Watches.MinAsync(w => w.RetailPrice);
-                var maxPrice = await context.Watches.MaxAsync(w => w.RetailPrice);
-
-                // Round down/up to nearest lakh for clean slider bounds
-                decimal roundedMin = Math.Floor(minPrice / 100000m) * 100000m;
-                decimal roundedMax = Math.Ceiling(maxPrice / 100000m) * 100000m;
-
                 context.FilterConfigs.Add(new FilterConfig
                 {
                     Id = Guid.NewGuid(),
                     MinPrice = roundedMin,
                     MaxPrice = roundedMax
                 });
-
+                await context.SaveChangesAsync();
+            }
+            else if (config.MinPrice != roundedMin || config.MaxPrice != roundedMax)
+            {
+                config.MinPrice = roundedMin;
+                config.MaxPrice = roundedMax;
                 await context.SaveChangesAsync();
             }
         }

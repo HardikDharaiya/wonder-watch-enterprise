@@ -23,6 +23,9 @@ namespace WonderWatch.Infrastructure
         public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
         public DbSet<Brand> Brands => Set<Brand>();
         public DbSet<FilterConfig> FilterConfigs => Set<FilterConfig>();
+        public DbSet<MembershipPlan> MembershipPlans => Set<MembershipPlan>();
+        public DbSet<JournalSubscription> JournalSubscriptions => Set<JournalSubscription>();
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -212,6 +215,20 @@ namespace WonderWatch.Infrastructure
                 b.HasKey(fc => fc.Id);
                 b.Property(fc => fc.MinPrice).HasPrecision(18, 2);
                 b.Property(fc => fc.MaxPrice).HasPrecision(18, 2);
+            });
+
+            // ---------------------------------------------------------
+            // MEMBERSHIP PLAN CONFIGURATION
+            // ---------------------------------------------------------
+            builder.Entity<MembershipPlan>(b =>
+            {
+                b.HasKey(m => m.Id);
+                b.Property(m => m.Name).IsRequired().HasMaxLength(100);
+                b.Property(m => m.Price).HasPrecision(18, 2);
+                b.HasMany(m => m.Subscribers)
+                 .WithOne(u => u.CurrentMembershipPlan)
+                 .HasForeignKey(u => u.CurrentMembershipPlanId)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }
