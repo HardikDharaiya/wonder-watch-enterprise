@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-18 (Session 22) | Location: India (IST)
+Last updated: 2026-04-19 (Session 23) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -310,4 +310,9 @@ dotnet user-secrets list --project WonderWatch.Web
 - `npm run build:css` ✅ (Tailwind recompiled in 412ms)
 - `dotnet build WonderWatch.Web --no-incremental` ✅ (0 Errors, 18 pre-existing NuGet warnings)
 - **Documentation**: Updated `MEMORY.md`, `FILES.md`, `COMMANDS.md`, `task.md` with Session 22 records. ✅
+
+### Session 23 Final History — 2026-04-19
+- `dotnet ef migrations add AddPayOnDeliveryAndConfirmedStatus --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅
+- `dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅ (Migration successfully applied to update OrderStatus and Orders).
+- **Documentation**: Updated `MEMORY.md`, `FILES.md`, `DATABASE_SCHEMA.md`, `COMMANDS.md` with session records. ✅
 

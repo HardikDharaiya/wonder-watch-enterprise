@@ -91,6 +91,7 @@ try
     builder.Services.AddScoped<IMembershipService, MembershipService>();
     builder.Services.AddScoped<IJournalService, JournalService>();
     builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+    builder.Services.AddScoped<IEnquiryService, EnquiryService>();
 
 
     // 7. MVC Controllers & Views

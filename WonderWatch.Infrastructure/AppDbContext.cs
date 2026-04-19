@@ -25,7 +25,7 @@ namespace WonderWatch.Infrastructure
         public DbSet<FilterConfig> FilterConfigs => Set<FilterConfig>();
         public DbSet<MembershipPlan> MembershipPlans => Set<MembershipPlan>();
         public DbSet<JournalSubscription> JournalSubscriptions => Set<JournalSubscription>();
-
+        public DbSet<Enquiry> Enquiries => Set<Enquiry>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -229,6 +229,17 @@ namespace WonderWatch.Infrastructure
                  .WithOne(u => u.CurrentMembershipPlan)
                  .HasForeignKey(u => u.CurrentMembershipPlanId)
                  .OnDelete(DeleteBehavior.SetNull);
+            });
+            // ---------------------------------------------------------
+            // ENQUIRY CONFIGURATION
+            // ---------------------------------------------------------
+            builder.Entity<Enquiry>(b =>
+            {
+                b.HasKey(e => e.Id);
+                b.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                b.Property(e => e.Email).IsRequired().HasMaxLength(150);
+                b.Property(e => e.Subject).IsRequired().HasMaxLength(100);
+                b.Property(e => e.Message).IsRequired().HasMaxLength(2000);
             });
         }
     }

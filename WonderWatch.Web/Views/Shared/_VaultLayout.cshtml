@@ -191,6 +191,7 @@
 
     <!-- VAULT MAIN CONTENT -->
     <div class="flex-grow p-[24px] md:pl-[48px] md:py-[40px] md:pr-[32px] w-full overflow-x-hidden">
+        @Html.AntiForgeryToken()
         @RenderBody()
     </div>
 

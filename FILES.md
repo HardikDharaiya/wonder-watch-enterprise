@@ -1,4 +1,4 @@
-﻿# FILES.md — Wonder Watch Directory Atlas
+# FILES.md — Wonder Watch Directory Atlas
 Last updated: 2026-04-18 (Session 22)
 
 
@@ -53,6 +53,7 @@ WonderWatch.Infrastructure/
     ├── 20260409170956_UpdateWatchesSeedData.cs
     ├── 20260416XXXXXX_AddMembershipPlans.cs
     ├── 20260416XXXXXX_AddJournalSubscriptions.cs
+    ├── 20260419070443_AddPayOnDeliveryAndConfirmedStatus.cs
     └── AppDbContextModelSnapshot.cs
 
 ```

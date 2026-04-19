@@ -17,7 +17,9 @@ namespace WonderWatch.Domain.Enums
         Processing,
         Shipped,
         Delivered,
-        Cancelled
+        Cancelled,
+        AwaitingConfirmation,
+        Confirmed
     }
 
     public enum ReviewStatus
@@ -79,6 +81,7 @@ namespace WonderWatch.Domain.Entities
         public string RazorpayPaymentId { get; set; } = string.Empty;
         public Address ShippingAddress { get; set; } = null!;
         public decimal TotalAmount { get; set; }
+        public bool IsPayOnDelivery { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
@@ -160,5 +163,17 @@ namespace WonderWatch.Domain.Entities
         public Guid Id { get; set; }
         public decimal MinPrice { get; set; }
         public decimal MaxPrice { get; set; }
+    }
+
+    public class Enquiry
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string Subject { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public bool IsResponded { get; set; }
     }
 }

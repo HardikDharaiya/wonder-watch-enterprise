@@ -7,10 +7,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkoutForm = document.getElementById('checkout-form');
     const payButton = document.getElementById('btn-pay-now');
     const btnSpinner = document.getElementById('btn-spinner');
+    const btnPayText = document.getElementById('btn-pay-text');
     const errorContainer = document.getElementById('checkout-error');
+    const podNote = document.getElementById('pod-note');
 
     const newAddressForm = document.getElementById('NewAddressForm');
     const addressRadios = document.querySelectorAll('.address-radio');
+    const paymentMethodRadios = document.querySelectorAll('.js-payment-method');
+
+    // ================================================
+    // Payment Method Toggle
+    // ================================================
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'pay_on_delivery') {
+                podNote.classList.remove('hidden');
+                btnPayText.textContent = 'Place Order (Pay on Delivery)';
+            } else {
+                podNote.classList.add('hidden');
+                btnPayText.textContent = 'Place Order & Pay';
+            }
+        });
+    });
 
     // Toggle manual address form visibility
     addressRadios.forEach(radio => {
@@ -84,7 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const csrfToken = csrfTokenInput.value;
 
-        // 3. Gather Form Data dynamically based on selection
+        // 3. Detect payment method
+        const selectedPaymentMethod = document.querySelector('input[name="PaymentMethod"]:checked');
+        const isPayOnDelivery = selectedPaymentMethod && selectedPaymentMethod.value === 'pay_on_delivery';
+
+        // 4. Gather Form Data dynamically based on selection
         const selectedRadio = document.querySelector('input[name="AddressSelection"]:checked');
         let formData = {};
 
@@ -95,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 City: selectedRadio.dataset.city,
                 State: selectedRadio.dataset.state,
                 PinCode: selectedRadio.dataset.pincode,
-                Phone: document.getElementById('Phone').value.trim() || selectedRadio.dataset.phone 
+                Phone: document.getElementById('Phone').value.trim() || selectedRadio.dataset.phone,
+                IsPayOnDelivery: isPayOnDelivery
             };
         } else {
             // New Address Form validation
@@ -116,12 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 City: city,
                 State: state,
                 PinCode: pinCode,
-                Phone: document.getElementById('Phone').value.trim()
+                Phone: document.getElementById('Phone').value.trim(),
+                IsPayOnDelivery: isPayOnDelivery
             };
         }
 
         try {
-            // 4. Step 1: Create Order on Server
+            // 5. Step 1: Create Order on Server
             const createResponse = await fetch('/checkout/create-order', {
                 method: 'POST',
                 headers: {
@@ -137,17 +161,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(createResult.error || 'Failed to initialize secure checkout.');
             }
 
-            // 5. Step 2: Initialize Razorpay Modal
+            // PAY ON DELIVERY — Redirect directly to confirmation
+            if (createResult.isPayOnDelivery) {
+                window.location.href = createResult.redirectUrl;
+                return;
+            }
+
+            // STANDARD RAZORPAY FLOW
             const options = {
                 key: createResult.keyId,
-                amount: createResult.amount, // Amount is in paise
+                amount: createResult.amount,
                 currency: "INR",
                 name: "Wonder Watch",
                 description: "Acquisition of Horological Masterpieces",
-                image: "/images/brand/og-image.webp", // Assuming a brand logo exists here
+                image: "/images/brand/og-image.webp",
                 order_id: createResult.razorpayOrderId,
                 handler: async function (response) {
-                    // 6. Step 3: Verify Payment on Server
                     await verifyPayment(
                         response.razorpay_order_id,
                         response.razorpay_payment_id,
@@ -161,11 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     contact: createResult.prefill.contact
                 },
                 theme: {
-                    color: "#C9A74A" // Wonder Watch Gold
+                    color: "#C9A74A"
                 },
                 modal: {
                     ondismiss: function () {
-                        // User closed the modal without completing payment
                         setLoadingState(false);
                         showError('Payment was cancelled. You can try again when ready.');
                     }
@@ -212,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(verifyResult.error || 'Payment verification failed. Please contact concierge.');
             }
 
-            // 7. Step 4: Redirect to Confirmation Page
+            // Redirect to Confirmation Page
             window.location.href = verifyResult.redirectUrl;
 
         } catch (error) {
@@ -243,7 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function showError(message) {
         errorContainer.textContent = message;
         errorContainer.classList.remove('hidden');
-        // Scroll to error
         errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
