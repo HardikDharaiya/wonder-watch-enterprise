@@ -30,6 +30,7 @@ namespace WonderWatch.Application.DTOs
         public string State { get; set; } = string.Empty;
         public string PinCode { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public bool IsPayOnDelivery { get; set; } = false;
         public List<CartItemDto> Items { get; set; } = new();
     }
 
@@ -65,10 +66,12 @@ namespace WonderWatch.Application.DTOs
         public DateTime Date { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string TotalFormatted { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
         public OrderStatus Status { get; set; }
         public int ItemCount { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
         public string WatchName { get; set; } = string.Empty;
+        public bool IsPayOnDelivery { get; set; }
     }
 
     // ---------------------------------------------------------
@@ -148,6 +151,15 @@ namespace WonderWatch.Application.DTOs
         public List<string> Features { get; set; } = new();
         public bool IsActive { get; set; } = true;
     }
+
+    public class SubmitEnquiryDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string Subject { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+    }
 }
 
 namespace WonderWatch.Application.Interfaces
@@ -176,6 +188,9 @@ namespace WonderWatch.Application.Interfaces
         Task TransitionStatusAsync(Guid orderId, OrderStatus status);
         Task BulkTransitionAsync(List<Guid> orderIds, OrderStatus status);
         Task<List<Order>> GetUserOrdersAsync(Guid userId);
+        Task<Order?> GetOrderByIdAsync(Guid orderId, Guid userId);
+        Task PayPendingOrderAsync(Guid orderId, Guid userId, string razorpayPaymentId);
+        Task ConfirmDeliveryAsync(Guid orderId, Guid userId);
     }
 
     public interface IPaymentProvider
@@ -250,5 +265,10 @@ namespace WonderWatch.Application.Interfaces
     public interface IDatabaseManagementService
     {
         Task ResetDatabaseAsync();
+    }
+
+    public interface IEnquiryService
+    {
+        Task<bool> SubmitEnquiryAsync(SubmitEnquiryDto dto);
     }
 }

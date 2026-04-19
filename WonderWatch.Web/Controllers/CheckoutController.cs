@@ -124,6 +124,7 @@ namespace WonderWatch.Web.Controllers
                     State = request.State,
                     PinCode = request.PinCode,
                     Phone = request.Phone,
+                    IsPayOnDelivery = request.IsPayOnDelivery,
                     Items = cart
                 };
 
@@ -140,19 +141,25 @@ namespace WonderWatch.Web.Controllers
 
                 if (totalAmount == 0) return BadRequest(new { error = "Invalid cart total." });
 
-                // 3. Save pending status in session, DO NOT insert into DB yet
+                // PAY ON DELIVERY FLOW
+                if (request.IsPayOnDelivery)
+                {
+                    var order = await _orderService.CreateOrderAsync(user.Id, createOrderDto);
+                    HttpContext.Session.Remove(CartSessionKey);
+                    return Json(new { success = true, isPayOnDelivery = true, redirectUrl = $"/checkout/confirmation/{order.Id}" });
+                }
+
+                // STANDARD RAZORPAY FLOW
                 HttpContext.Session.SetJson("WonderWatch_PendingCheckout", createOrderDto);
-
-                // 4. Create Razorpay Order
                 var razorpayOrderId = await _paymentProvider.CreateRazorpayOrderAsync(totalAmount);
-
                 var keyId = _config["Razorpay:KeyId"] ?? throw new InvalidOperationException("Razorpay KeyId missing.");
 
                 return Json(new
                 {
                     success = true,
+                    isPayOnDelivery = false,
                     razorpayOrderId = razorpayOrderId,
-                    amount = totalAmount * 100, // Razorpay expects paise
+                    amount = totalAmount * 100,
                     keyId = keyId,
                     prefill = new { name = user.FullName, email = user.Email, contact = request.Phone }
                 });
@@ -245,6 +252,90 @@ namespace WonderWatch.Web.Controllers
             return View(viewModel);
         }
     }
+
+    // ===========================================================
+    // PAY UNPAID ORDERS (from Vault Orders page)
+    // ===========================================================
+    [Authorize]
+    [Route("checkout")]
+    public class PayUnpaidController : Controller
+    {
+        private readonly IOrderService _orderService;
+        private readonly IPaymentProvider _paymentProvider;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _config;
+        private readonly ILogger<PayUnpaidController> _logger;
+
+        public PayUnpaidController(
+            IOrderService orderService,
+            IPaymentProvider paymentProvider,
+            UserManager<ApplicationUser> userManager,
+            IConfiguration config,
+            ILogger<PayUnpaidController> logger)
+        {
+            _orderService = orderService;
+            _paymentProvider = paymentProvider;
+            _userManager = userManager;
+            _config = config;
+            _logger = logger;
+        }
+
+        [HttpPost("pay-unpaid/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePaymentForUnpaidOrder(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            try
+            {
+                var order = await _orderService.GetOrderByIdAsync(id, user.Id);
+                if (order == null) return NotFound(new { error = "Order not found." });
+                if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Delivered)
+                    return BadRequest(new { error = "This order cannot be paid at this time." });
+
+                var razorpayOrderId = await _paymentProvider.CreateRazorpayOrderAsync(order.TotalAmount);
+                var keyId = _config["Razorpay:KeyId"] ?? throw new InvalidOperationException("Razorpay KeyId missing.");
+
+                return Json(new
+                {
+                    success = true,
+                    razorpayOrderId,
+                    amount = order.TotalAmount * 100,
+                    keyId,
+                    prefill = new { name = user.FullName, email = user.Email, contact = user.PhoneNumber ?? "" }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating payment for unpaid order {OrderId}", id);
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("pay-unpaid/{id}/verify")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyUnpaidOrderPayment(Guid id, [FromBody] VerifyPaymentRequest request)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            try
+            {
+                var isValid = _paymentProvider.VerifySignature(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature);
+                if (!isValid) return BadRequest(new { error = "Payment verification failed. Invalid signature." });
+
+                await _orderService.PayPendingOrderAsync(id, user.Id, request.RazorpayPaymentId);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying unpaid order payment {OrderId}", id);
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+    }
 }
 
 namespace WonderWatch.Web.ViewModels
@@ -284,6 +375,7 @@ namespace WonderWatch.Web.ViewModels
         public string State { get; set; } = string.Empty;
         public string PinCode { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public bool IsPayOnDelivery { get; set; } = false;
     }
 
     public class VerifyPaymentRequest

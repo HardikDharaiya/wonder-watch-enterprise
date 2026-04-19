@@ -74,6 +74,22 @@
             <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-gold/30 m-4 pointer-events-none"></div>
             <div class="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-gold/30 m-4 pointer-events-none"></div>
 
+            <style>
+                /* Overwrite browser autofill styles for dark theme */
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover, 
+                input:-webkit-autofill:focus, 
+                input:-webkit-autofill:active,
+                select:-webkit-autofill,
+                select:-webkit-autofill:hover,
+                select:-webkit-autofill:focus {
+                    -webkit-box-shadow: 0 0 0 30px #1A1A1A inset !important;
+                    -webkit-text-fill-color: #F5F0E8 !important;
+                    transition: background-color 5000s ease-in-out 0s;
+                    caret-color: #C9A74A;
+                }
+            </style>
+
             <span class="font-sans font-bold text-[11px] text-gold tracking-[2.2px] uppercase mb-[32px] block">Send an Enquiry</span>
 
             <form id="contact-form" method="post" action="#" class="flex flex-col gap-[24px]" novalidate>
@@ -208,7 +224,7 @@
     const submitBtn = document.getElementById('contact-submit-btn');
 
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             // Basic client-side validation
@@ -220,14 +236,37 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'DISPATCHING…';
 
-            // Simulate success (replace with real AJAX if backend is wired)
-            setTimeout(() => {
-                successMsg.classList.remove('hidden');
-                errorMsg.classList.add('hidden');
-                submitBtn.textContent = 'ENQUIRY DISPATCHED';
-                submitBtn.classList.replace('bg-gold', 'bg-surface');
-                submitBtn.classList.add('text-gold', 'border', 'border-gold-faint');
-            }, 1200);
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/contact', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    successMsg.classList.remove('hidden');
+                    errorMsg.classList.add('hidden');
+                    submitBtn.textContent = 'ENQUIRY DISPATCHED';
+                    submitBtn.classList.replace('bg-gold', 'bg-surface');
+                    submitBtn.classList.add('text-gold', 'border', 'border-gold-faint');
+                    form.reset(); // Clear form fields upon successful submission
+                } else {
+                    errorMsg.classList.remove('hidden');
+                    if (result.message) {
+                        errorMsg.querySelector('span').textContent = result.message;
+                    }
+                    successMsg.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'DISPATCH ENQUIRY';
+                }
+            } catch (err) {
+                errorMsg.classList.remove('hidden');
+                successMsg.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'DISPATCH ENQUIRY';
+            }
         });
     }
 </script>

@@ -29,6 +29,7 @@
 | `FilterConfigs` | Single-row price slider configuration | `Guid` PK |
 | `MembershipPlans` | Admin-managed subscription tiers | `Guid` PK |
 | `JournalSubscriptions` | Newsletter email subscriptions | `Guid` PK |
+| `Enquiries` | Customer/visitor contact inquiries | `Guid` PK |
 | `__EFMigrationsHistory` | EF Core migration log | `varchar` PK |
 
 ---
@@ -114,7 +115,8 @@ Extends ASP.NET Core Identity's `IdentityUser<Guid>`.
 |---|---|---|---|
 | `Id` | `uniqueidentifier` | NOT NULL | PK |
 | `UserId` | `uniqueidentifier` | NOT NULL | FK → `AspNetUsers.Id` (RESTRICT DELETE) |
-| `Status` | `int` | NOT NULL | Enum: 0=Pending, 1=Paid, 2=Processing, 3=Shipped, 4=Delivered, 5=Cancelled |
+| `Status` | `int` | NOT NULL | Enum: 0=Pending, 1=Paid, 2=Processing, 3=Shipped, 4=Delivered, 5=Cancelled, 6=AwaitingConfirmation, 7=Confirmed |
+| `IsPayOnDelivery` | `bit` | NOT NULL | Added in `AddPayOnDeliveryAndConfirmedStatus` |
 | `RazorpayOrderId` | `nvarchar(100)` | NOT NULL | Razorpay order ref |
 | `RazorpayPaymentId` | `nvarchar(100)` | NOT NULL | Razorpay payment ref |
 | `TotalAmount` | `decimal(18,2)` | NOT NULL | INR total |
@@ -216,6 +218,7 @@ Pending → Cancelled | Paid → Cancelled
 | `AddUserAvatarUrl` | Session 4 | Added `AvatarUrl` column to `AspNetUsers` |
 | `AddUserAddressesAndNotifications` | Session 6 | Added UserAddress and UserNotification tables |
 | `UpdateWatchesSeedData` | Session 8 | Data update for watch strings and wiping current Brands |
+| `AddPayOnDeliveryAndConfirmedStatus` | Session 23 | Added `AwaitingConfirmation` and `Confirmed` to `OrderStatus` enum, and `IsPayOnDelivery` to `Orders` |
 
 ---
 
@@ -285,6 +288,23 @@ Newsletter/journal email subscriptions from footer form.
 
 ---
 
+## Table: `Enquiries`
+
+Customer/visitor contact forms submitted via The Concierge.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `Id` | `Guid` | NOT NULL | PK |
+| `Name` | `nvarchar(100)` | NOT NULL | Customer name |
+| `Email` | `nvarchar(150)` | NOT NULL | Contact email |
+| `Phone` | `nvarchar(max)` | NULL | Optional phone |
+| `Subject` | `nvarchar(100)` | NOT NULL | Nature of enquiry |
+| `Message` | `nvarchar(2000)` | NOT NULL | Enquiry body |
+| `CreatedAt` | `datetime2` | NOT NULL | UTC |
+| `IsResponded` | `bit` | NOT NULL | Indicates if it has been answered |
+
+---
+
 ## ERD Summary (Relationships)
 
 ```
@@ -304,6 +324,7 @@ Brands (standalone)  ← Admin-managed filter dictionary
 FilterConfigs (standalone, single-row) ← Price slider bounds
 MembershipPlans (standalone) ← Admin-managed subscription tiers
 JournalSubscriptions (standalone) ← Newsletter emails
+Enquiries (standalone) ← Customer inquiries
 ```
 
 ---
@@ -320,3 +341,5 @@ JournalSubscriptions (standalone) ← Newsletter emails
 | `UpdateWatchesSeedData` | 2026-04-09 | Raw SQL fix for existing models missing straps and brands |
 | `AddMembershipPlans` | 2026-04-16 | Added MembershipPlans table |
 | `AddJournalSubscriptions` | 2026-04-16 | Added JournalSubscriptions table |
+| `AddPayOnDeliveryAndConfirmedStatus` | 2026-04-19 | Added IsPayOnDelivery to Orders and updated OrderStatus enum |
+| `AddEnquiriesTable` | 2026-04-19 | Added Enquiries table for Contact Us form |

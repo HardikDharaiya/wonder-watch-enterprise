@@ -13,11 +13,13 @@ namespace WonderWatch.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ICatalogService _catalogService;
+        private readonly IEnquiryService _enquiryService;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ICatalogService catalogService, ILogger<HomeController> logger)
+        public HomeController(ICatalogService catalogService, IEnquiryService enquiryService, ILogger<HomeController> logger)
         {
             _catalogService = catalogService;
+            _enquiryService = enquiryService;
             _logger = logger;
         }
 
@@ -61,6 +63,25 @@ namespace WonderWatch.Web.Controllers
         public IActionResult Contact()
         {
             return View();
+        }
+
+        [HttpPost]
+        [Route("contact")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Contact([FromForm] SubmitEnquiryDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Please ensure all required fields accurately reflect your details." });
+            }
+
+            var result = await _enquiryService.SubmitEnquiryAsync(dto);
+            if (result)
+            {
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = "Our systems failed to dispatch your enquiry. Please try again." });
         }
 
         [HttpGet]

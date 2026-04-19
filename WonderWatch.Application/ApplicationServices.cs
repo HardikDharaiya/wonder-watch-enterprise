@@ -175,6 +175,7 @@ namespace WonderWatch.Application.Services
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 Status = OrderStatus.Pending,
+                IsPayOnDelivery = dto.IsPayOnDelivery,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 ShippingAddress = new Address
@@ -245,6 +246,7 @@ namespace WonderWatch.Application.Services
                 (OrderStatus.Paid, OrderStatus.Cancelled) => true,
                 (OrderStatus.Processing, OrderStatus.Shipped) => true,
                 (OrderStatus.Shipped, OrderStatus.Delivered) => true,
+                (OrderStatus.Delivered, OrderStatus.Confirmed) => true,
                 _ => false
             };
 
@@ -294,6 +296,7 @@ namespace WonderWatch.Application.Services
                     (OrderStatus.Paid, OrderStatus.Cancelled) => true,
                     (OrderStatus.Processing, OrderStatus.Shipped) => true,
                     (OrderStatus.Shipped, OrderStatus.Delivered) => true,
+                    (OrderStatus.Delivered, OrderStatus.Confirmed) => true,
                     _ => false
                 };
 
@@ -331,6 +334,52 @@ namespace WonderWatch.Application.Services
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();
+        }
+
+        public async Task<Order?> GetOrderByIdAsync(Guid orderId, Guid userId)
+        {
+            return await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Watch)
+                .ThenInclude(w => w.Images)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+        }
+
+        public async Task PayPendingOrderAsync(Guid orderId, Guid userId, string razorpayPaymentId)
+        {
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId)
+                ?? throw new InvalidOperationException($"Order {orderId} not found.");
+
+            if (order.Status != OrderStatus.Pending)
+                throw new InvalidOperationException($"Order {orderId} is not in Pending status.");
+
+            order.RazorpayPaymentId = razorpayPaymentId;
+            order.Status = OrderStatus.Paid;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Order {OrderId} paid by user {UserId}. PaymentId: {PaymentId}", orderId, userId, razorpayPaymentId);
+        }
+
+        public async Task ConfirmDeliveryAsync(Guid orderId, Guid userId)
+        {
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId)
+                ?? throw new InvalidOperationException($"Order {orderId} not found.");
+
+            if (order.Status != OrderStatus.Delivered)
+                throw new InvalidOperationException($"Order {orderId} is not in Delivered status.");
+
+            // For PoD orders, user must have paid before confirming
+            if (order.IsPayOnDelivery && string.IsNullOrEmpty(order.RazorpayPaymentId))
+                throw new InvalidOperationException("Payment is required before confirming delivery for Pay on Delivery orders.");
+
+            order.Status = OrderStatus.Confirmed;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Order {OrderId} delivery confirmed by user {UserId}", orderId, userId);
         }
     }
 
@@ -1016,6 +1065,49 @@ namespace WonderWatch.Application.Services
         {
             await _context.Database.EnsureDeletedAsync();
             await SeedData.InitializeAsync(_serviceProvider);
+        }
+    }
+
+    // =============================================================
+    // ENQUIRY SERVICE
+    // =============================================================
+    public class EnquiryService : IEnquiryService
+    {
+        private readonly AppDbContext _context;
+        private readonly ILogger<EnquiryService> _logger;
+
+        public EnquiryService(AppDbContext context, ILogger<EnquiryService> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
+        public async Task<bool> SubmitEnquiryAsync(SubmitEnquiryDto dto)
+        {
+            try
+            {
+                var enquiry = new Enquiry
+                {
+                    Id = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Phone = dto.Phone,
+                    Subject = dto.Subject,
+                    Message = dto.Message,
+                    CreatedAt = DateTime.UtcNow,
+                    IsResponded = false
+                };
+
+                _context.Enquiries.Add(enquiry);
+                await _context.SaveChangesAsync();
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error submitting enquiry.");
+                return false;
+            }
         }
     }
 }

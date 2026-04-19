@@ -11,6 +11,7 @@ using WonderWatch.Application.DTOs;
 using WonderWatch.Application.Interfaces;
 using WonderWatch.Domain.Identity;
 using WonderWatch.Web.ViewModels;
+using Microsoft.Extensions.Configuration;
 
 namespace WonderWatch.Web.Controllers
 {
@@ -26,6 +27,7 @@ namespace WonderWatch.Web.Controllers
         private readonly INotificationService _notificationService;
         private readonly IMembershipService _membershipService;
         private readonly IPaymentProvider _paymentProvider;
+        private readonly IConfiguration _config;
         private readonly ILogger<VaultController> _logger;
 
         public VaultController(
@@ -37,6 +39,7 @@ namespace WonderWatch.Web.Controllers
             INotificationService notificationService,
             IMembershipService membershipService,
             IPaymentProvider paymentProvider,
+            IConfiguration config,
             ILogger<VaultController> logger)
         {
             _userManager = userManager;
@@ -47,6 +50,7 @@ namespace WonderWatch.Web.Controllers
             _notificationService = notificationService;
             _membershipService = membershipService;
             _paymentProvider = paymentProvider;
+            _config = config;
             _logger = logger;
         }
 
@@ -138,6 +142,7 @@ namespace WonderWatch.Web.Controllers
             var viewModel = new VaultOrdersViewModel
             {
                 ActiveFilter = filter?.ToUpper() ?? "ALL",
+                RazorpayKeyId = _config["Razorpay:KeyId"] ?? string.Empty,
                 Orders = orders.Select(o => new OrderSummaryDto
                 {
                     Id = o.Id,
@@ -145,14 +150,36 @@ namespace WonderWatch.Web.Controllers
                     Date = o.CreatedAt,
                     UpdatedAt = o.UpdatedAt,
                     TotalFormatted = o.TotalAmount.ToString("C0", indiaCulture),
+                    TotalAmount = o.TotalAmount,
                     Status = o.Status,
                     ItemCount = o.Items.Sum(i => i.Quantity),
                     ImageUrl = o.Items.FirstOrDefault()?.Watch.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Path ?? "/images/placeholder.webp",
-                    WatchName = o.Items.Count == 1 ? o.Items.First().Watch.Name : $"{o.Items.First().Watch.Name} + {o.Items.Count - 1} more"
+                    WatchName = o.Items.Count == 1 ? o.Items.First().Watch.Name : $"{o.Items.First().Watch.Name} + {o.Items.Count - 1} more",
+                    IsPayOnDelivery = o.IsPayOnDelivery
                 }).ToList()
             };
 
             return View(viewModel);
+        }
+
+        [HttpPost("orders/{id}/confirm-delivery")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmDelivery(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            try
+            {
+                await _orderService.ConfirmDeliveryAsync(id, user.Id);
+                await _notificationService.CreateAsync(user.Id, "Delivery Confirmed", "Your order has been confirmed as received. Thank you for your acquisition.", Domain.Enums.NotificationType.Order);
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirming delivery for order {OrderId}", id);
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpGet("wishlist")]
@@ -518,6 +545,7 @@ namespace WonderWatch.Web.ViewModels
     public class VaultOrdersViewModel
     {
         public string ActiveFilter { get; set; } = "ALL";
+        public string RazorpayKeyId { get; set; } = string.Empty;
         public List<OrderSummaryDto> Orders { get; set; } = new();
     }
 

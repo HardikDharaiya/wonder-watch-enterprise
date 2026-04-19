@@ -1,5 +1,5 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-18 | Session: 22
+Last updated: 2026-04-19 | Session: 23
 Status: STABLE — All major pending roadmap items resolved. Platform is production-ready.
 
 ## Project Identity
@@ -285,3 +285,17 @@ Status: STABLE — All major pending roadmap items resolved. Platform is product
 - **Validation:** Grep-verified zero remaining `pt-[131px]` or `h-[96px]` references across all Views.
 - **Build:** `dotnet build` 0 Errors, 18 pre-existing NuGet warnings. Tailwind CSS compiled in 412ms.
 
+### Session 23 Summary — 2026-04-19
+- **Domain Schema Updates**: Added `AwaitingConfirmation` and `Confirmed` to `OrderStatus` enum. Added `IsPayOnDelivery` to the `Order` entity. ✅
+- **Application & Vault Updates**: Rewrote `OrderService`, `CheckoutController`, and `VaultController` to handle the Pay on Delivery flow, adding methods for paying unpaid orders via Razorpay and confirming delivery. ✅
+- **UI UX Updates**: Updated the UI on the Checkout and Vault Orders views to allow users to toggle "Pay on Delivery" and confirm delivery dynamically. ✅
+- **EF Core Migration**: Generated and applied `AddPayOnDeliveryAndConfirmedStatus` migration to update Identity backend. ✅
+- **Documentation**: Synchronized `MEMORY.md`, `FILES.md`, `DATABASE_SCHEMA.md`, `COMMANDS.md`, and `README.md` with Session 23 records. ✅
+
+### Session 24 Summary — 2026-04-19
+- **Domain Schema Updates**: Added `Enquiry` entity to track customer interactions via The Concierge contact form.
+- **EF Core Migration**: Generated and applied `AddEnquiriesTable` migration.
+- **Application Services**: Added `SubmitEnquiryDto`, `IEnquiryService`, and implementation `EnquiryService` tracking creation dates and response status. Registered in DI.
+- **Web Layer**: Hooked `/contact` POST endpoint in `HomeController.cs` accepting `[FromForm]` inputs.
+- **UI Interaction**: Upgraded `Contact.cshtml` JS to natively pass `FormData` through `fetch()` POST avoiding full page reloads. Displayed secure dispatch alerts.
+- **Documentation**: Updated `DATABASE_SCHEMA.md` and `MEMORY.md` reflecting contact form capability integrations.
