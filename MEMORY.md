@@ -53,7 +53,7 @@ Status: STABLE — OTP verification system implemented. Platform is production-r
 - [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config), **Filters Management** (Brand CRUD + Price Range config).
 - [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal, **Anime.js stagger integration**), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
-- [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET), `appsettings.Production.json` (Azure Key Vault schema).
+- [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET + Tests, conditional Azure deployment), `appsettings.Production.json` (Azure Key Vault schema).
 
 ## Active Issues / Pending Tasks
 - **Performance Optimization - Catalog Pagination:** The Web layer currently calls `.ToListAsync()` before `.Skip().Take()`, causing massive RAM load for large catalogs. Must push pagination to the `IQueryable` inside `CatalogService.cs`.
