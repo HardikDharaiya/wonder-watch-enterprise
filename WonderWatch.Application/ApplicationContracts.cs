@@ -225,6 +225,7 @@ namespace WonderWatch.Application.Interfaces
         Task SendOrderConfirmationAsync(Order order);
         Task SendShippingUpdateAsync(Order order);
         Task SendTestEmailAsync(string toEmail);
+        Task SendOtpAsync(string toEmail, string otp, string purpose);
     }
 
     public interface IAddressService

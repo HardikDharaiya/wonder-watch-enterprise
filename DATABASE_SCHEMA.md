@@ -2,7 +2,7 @@
 
 **Source:** Derived from `AppDbContext.cs`, `DomainModels.cs`, `ApplicationUser.cs`, and `.bacpac` export `WonderWatch_Dev`.
 **Database:** SQL Server LocalDB (`(localdb)\MSSQLLocalDB`) → `WonderWatch_Dev`
-**Last Updated:** 2026-04-18 | Session 21
+**Last Updated:** 2026-04-29 | Session 24
 
 ---
 
@@ -15,7 +15,7 @@
 | `AspNetUserRoles` | Many-to-many user↔role mapping | Composite |
 | `AspNetUserClaims` | User claims | `int` PK |
 | `AspNetUserLogins` | External login providers | Composite |
-| `AspNetUserTokens` | Auth tokens | Composite |
+| `AspNetUserTokens` | Auth tokens (used by OTP system) | Composite |
 | `AspNetRoleClaims` | Role-based claims | `int` PK |
 | `Watches` | Luxury watch product catalog | `Guid` PK |
 | `WatchImages` | Watch image paths (1→many per watch) | `Guid` PK |
@@ -45,9 +45,9 @@ Extends ASP.NET Core Identity's `IdentityUser<Guid>`.
 | `NormalizedUserName` | `nvarchar(256)` | NULL | Indexed |
 | `Email` | `nvarchar(256)` | NULL | Identity email |
 | `NormalizedEmail` | `nvarchar(256)` | NULL | Indexed |
-| `EmailConfirmed` | `bit` | NOT NULL | |
+| `EmailConfirmed` | `bit` | NOT NULL | **OTP Gate:** Set to `false` on registration; set to `true` only after successful OTP verification |
 | `PasswordHash` | `nvarchar(max)` | NULL | BCrypt hash |
-| `SecurityStamp` | `nvarchar(max)` | NULL | |
+| `SecurityStamp` | `nvarchar(max)` | NULL | **OTP Seed:** Used by Identity's `EmailTokenProvider` to generate 6-digit TOTP codes via `GenerateTwoFactorTokenAsync` |
 | `ConcurrencyStamp` | `nvarchar(max)` | NULL | |
 | `PhoneNumber` | `nvarchar(max)` | NULL | |
 | `PhoneNumberConfirmed` | `bit` | NOT NULL | |

@@ -201,17 +201,22 @@
     <div>
         <span class="block font-sans font-bold text-muted uppercase mb-3"
               style="font-size:9px; letter-spacing:2.5px;">Strap Material</span>
-        <div class="flex" style="gap:8px;">
+        <div class="flex" style="gap:12px;">
             @foreach (var material in new[] { "Gold", "Steel", "Leather", "Rubber" })
             {
                 bool isStrapActive = string.Equals(selectedStrap, material, StringComparison.OrdinalIgnoreCase);
-                <label class="relative cursor-pointer">
+                <label class="relative flex flex-col items-center cursor-pointer group" style="gap:6px;">
                     <input type="radio" name="strap" value="@material.ToLower()" class="sr-only" @(isStrapActive ? "checked" : "")
-                           onchange="document.querySelectorAll('.cat-strap-box').forEach(b => { b.style.borderColor='rgba(255,255,255,0.18)'; b.style.transform='scale(1)'; }); this.nextElementSibling.style.borderColor='#C9A74A'; this.nextElementSibling.style.transform='scale(1.1)';" />
+                           onchange="document.querySelectorAll('.cat-strap-box').forEach(b => { b.style.borderColor='rgba(255,255,255,0.18)'; b.style.transform='scale(1)'; }); document.querySelectorAll('.cat-strap-text').forEach(t => t.style.color='#B4AFA2'); this.nextElementSibling.style.borderColor='#C9A74A'; this.nextElementSibling.style.transform='scale(1.1)'; this.parentElement.querySelector('.cat-strap-text').style.color='#C9A74A';" />
                     
                     <div class="cat-strap-box transition-all duration-300"
-                         style="width:36px; height:36px; border: 1px solid @(isStrapActive ? "#C9A74A" : "rgba(255,255,255,0.18)"); transform: @(isStrapActive ? "scale(1.1)" : "scale(1)"); background-color: @(material == "Gold" ? "#C9A74A" : material == "Steel" ? "#5a5a5a" : material == "Leather" ? "#4a3525" : "#1c1c1c");">
+                         style="width:32px; height:32px; border: 1px solid @(isStrapActive ? "#C9A74A" : "rgba(255,255,255,0.18)"); transform: @(isStrapActive ? "scale(1.1)" : "scale(1)"); background-color: @(material == "Gold" ? "#C9A74A" : material == "Steel" ? "#5a5a5a" : material == "Leather" ? "#4a3525" : "#1c1c1c");">
                     </div>
+
+                    <span class="cat-strap-text font-sans uppercase transition-colors duration-300 text-center"
+                          style="font-size:8px; letter-spacing:1px; color: @(isStrapActive ? "#C9A74A" : "#B4AFA2"); margin-top: 2px;">
+                        @material
+                    </span>
                 </label>
             }
         </div>

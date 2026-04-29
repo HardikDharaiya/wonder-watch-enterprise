@@ -54,12 +54,33 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
    dotnet user-secrets set "Razorpay:KeySecret" "YOUR_KEY_SECRET" --project WonderWatch.Web
    ```
 
-7. **Run the Project**
+7. **SMTP Configuration (OTP Emails)**
+   The OTP verification system requires a configured SMTP server. Set up via Admin Panel (`/admin/settings`) or directly in `appsettings.json`:
+   ```json
+   "SmtpSettings": {
+     "Host": "smtp.gmail.com",
+     "Port": 587,
+     "Username": "your-email@gmail.com",
+     "Password": "your-app-password",
+     "FromEmail": "noreply@wonderwatch.in",
+     "FromName": "Wonder Watch"
+   }
+   ```
+
+8. **Run the Project**
    ```bash
    cd WonderWatch.Web
    dotnet run
    ```
    Open the target localhost URL provided in your console to view the store.
+
+## 🌟 Key Functional Features
+- **3D Showrooms**: Dynamic Model loading via Three.js natively rendering luxury timepieces.
+- **OTP Verification & Password Recovery**: Email-based 6-digit OTP for registration verification and secure password reset. Uses Identity's native `TwoFactorTokenAsync` — zero additional database tables.
+- **Journal Subscriptions**: Complete Ajax-friendly Footer subscription catching marketing campaigns securely.
+- **The Concierge**: Seamless fetch-API integrated support communications pipeline.
+- **Pay on Delivery**: Robust fallback payment mechanisms supporting custom region rules logic.
+- **Vault Memberships**: Admin-driven tier management supporting recurrent logic and billing features via Razorpay.
 
 ## 📁 Key File Contexts
 - **`.github/workflows/ci-cd.yml`**: Contains the GitHub Actions scripts responsible for checking out, building .NET, building Tailwind, testing, and deploying zero-downtime releases to our Azure environment.

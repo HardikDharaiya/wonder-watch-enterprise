@@ -648,6 +648,45 @@ namespace WonderWatch.Application.Services
 
             await SendEmailAsync(toEmail, "Wonder Watch — SMTP Test", html);
         }
+
+        public async Task SendOtpAsync(string toEmail, string otp, string purpose)
+        {
+            var isVerification = purpose.Equals("verification", StringComparison.OrdinalIgnoreCase);
+            var subject = isVerification
+                ? "Wonder Watch — Verify Your Identity"
+                : "Wonder Watch — Password Reset Code";
+            var heading = isVerification
+                ? "Verify Your Identity"
+                : "Reset Your Password";
+            var description = isVerification
+                ? "Enter the following code to verify your email and access The Vault."
+                : "Enter the following code to reset your password.";
+
+            var html = $@"
+                <div style='font-family:""Helvetica Neue"",Arial,sans-serif;max-width:560px;margin:0 auto;padding:0;background:#0A0A0A;'>
+                    <!-- Header Bar -->
+                    <div style='padding:32px 40px;border-bottom:1px solid #1A1A1A;'>
+                        <span style='font-size:11px;font-weight:700;letter-spacing:3px;color:#C9A74A;text-transform:uppercase;'>Wonder Watch</span>
+                    </div>
+                    <!-- Body -->
+                    <div style='padding:48px 40px;'>
+                        <h1 style='font-size:28px;color:#F0E6D3;margin:0 0 12px;font-weight:300;letter-spacing:-0.5px;'>{heading}</h1>
+                        <p style='font-size:14px;line-height:1.7;color:#888;margin:0 0 32px;'>{description}</p>
+                        <!-- OTP Code Block -->
+                        <div style='background:#111;border:1px solid #222;padding:24px;text-align:center;margin:0 0 32px;'>
+                            <span style='font-size:36px;font-weight:700;letter-spacing:12px;color:#C9A74A;font-family:""Courier New"",monospace;'>{otp}</span>
+                        </div>
+                        <p style='font-size:12px;color:#555;line-height:1.6;margin:0 0 8px;'>This code expires in <strong style='color:#888;'>10 minutes</strong>.</p>
+                        <p style='font-size:12px;color:#555;line-height:1.6;margin:0;'>If you did not request this code, you may safely ignore this email.</p>
+                    </div>
+                    <!-- Footer -->
+                    <div style='padding:24px 40px;border-top:1px solid #1A1A1A;'>
+                        <p style='font-size:10px;color:#444;margin:0;letter-spacing:1px;text-transform:uppercase;'>The Vault &middot; Secure Access</p>
+                    </div>
+                </div>";
+
+            await SendEmailAsync(toEmail, subject, html);
+        }
     }
 
     // =============================================================

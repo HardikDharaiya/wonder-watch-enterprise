@@ -1,5 +1,5 @@
 # FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-04-18 (Session 22)
+Last updated: 2026-04-29 (Session 24)
 
 
 ## Project Root
@@ -62,8 +62,8 @@ WonderWatch.Infrastructure/
 ```text
 WonderWatch.Application/
 ├── WonderWatch.Application.csproj
-├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, IMembershipService, IJournalService, etc.) and DTOs
-└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, MembershipService, JournalService, etc.)
+├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, IMembershipService, IJournalService, IEmailService + SendOtpAsync, etc.) and DTOs/ViewModels (VerifyOtpViewModel, ForgotPasswordViewModel, ResetPasswordViewModel)
+└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, MembershipService, JournalService, EmailService + branded OTP email template, etc.)
 
 ```
 
@@ -78,7 +78,7 @@ WonderWatch.Web/
 ├── appsettings.Development.json
 ├── appsettings.Production.json ← Azure Key Vault schema
 ├── Controllers/
-│   ├── AccountController.cs
+│   ├── AccountController.cs    ← Login, Register, VerifyOtp, ResendOtp, ForgotPassword, ResetPassword
 │   ├── AdminController.cs
 │   ├── CartController.cs
 │   ├── CatalogController.cs
@@ -99,8 +99,11 @@ WonderWatch.Web/
 │   ├── _ViewImports.cshtml
 │   ├── _ViewStart.cshtml
 │   ├── Account/
+│   │   ├── ForgotPassword.cshtml  ← Email input form for password recovery
 │   │   ├── Login.cshtml
-│   │   └── Register.cshtml
+│   │   ├── Register.cshtml
+│   │   ├── ResetPassword.cshtml   ← New password form (post-OTP verification)
+│   │   └── VerifyOtp.cshtml       ← 6-digit OTP entry with auto-advance + paste support
 │   ├── Admin/
 │   │   ├── CreateWatch.cshtml
 │   │   ├── Filters.cshtml     ← Brand CRUD + Price range config
