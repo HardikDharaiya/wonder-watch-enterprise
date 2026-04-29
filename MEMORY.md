@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-19 | Session: 23
-Status: STABLE — All major pending roadmap items resolved. Platform is production-ready.
+Last updated: 2026-04-29 | Session: 24
+Status: STABLE — OTP verification system implemented. Platform is production-ready.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -14,8 +14,13 @@ Status: STABLE — All major pending roadmap items resolved. Platform is product
   - *Reason:* Absolute separation of concerns. Domain is pure C# POCOs. Business logic is isolated in Application services.
 - **ORM:** Entity Framework Core 8.0 (Code-First)
   - *Reason:* Strongly typed database schema. Lazy loading explicitly DISABLED to prevent N+1 query performance issues.
-- **Authentication:** ASP.NET Core Identity (Local only)
+- **Authentication:** ASP.NET Core Identity (Local only) + OTP Verification
   - *Reason:* Strict security. No Google OAuth or external providers allowed per brand guidelines.
+  - *OTP System:* Uses Identity's native `TwoFactorTokenAsync` with `EmailTokenProvider` for 6-digit TOTP codes.
+  - *Registration Flow:* User registers → OTP sent via branded email → VerifyOtp page → EmailConfirmed = true → auto sign-in.
+  - *Login Gate:* Unverified users at login are intercepted, sent a fresh OTP, and redirected to VerifyOtp.
+  - *Password Reset Flow:* ForgotPassword → OTP sent → VerifyOtp → ResetPassword (server-generated reset token).
+  - *No new DB tables required.* Uses Identity's existing SecurityStamp for TOTP generation.
 - **Payments:** Razorpay .NET SDK
   - *Reason:* Industry standard for India. Secured via server-side HMAC-SHA256 signature verification.
 - **3D Showroom:** Three.js r128 + GLTFLoader + DRACOLoader
@@ -44,7 +49,7 @@ Status: STABLE — All major pending roadmap items resolved. Platform is product
 - [x] **Module 1 (Home):** Index (Full-bleed 3D background), Collections (Houses of Horology grid).
 - [x] **Module 2 (Catalog):** Index (DB-driven dynamic filters, Search bar, CSS Grid 3→2→2 responsive, Custom Checkboxes/Sliders, INR lakh/crore price slider).
 - [x] **Module 3 (Checkout):** CartController, `_CartDrawer` (AJAX), CheckoutController, Razorpay Integration, Confirmation page.
-- [x] **Module 4 (Vault):** AccountController (Login/Register split-screen), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
+- [x] **Module 4 (Vault):** AccountController (Login/Register split-screen, **OTP Verification**, **Forgot/Reset Password**), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
 - [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config), **Filters Management** (Brand CRUD + Price Range config).
 - [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal, **Anime.js stagger integration**), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
@@ -299,3 +304,10 @@ Status: STABLE — All major pending roadmap items resolved. Platform is product
 - **Web Layer**: Hooked `/contact` POST endpoint in `HomeController.cs` accepting `[FromForm]` inputs.
 - **UI Interaction**: Upgraded `Contact.cshtml` JS to natively pass `FormData` through `fetch()` POST avoiding full page reloads. Displayed secure dispatch alerts.
 - **Documentation**: Updated `DATABASE_SCHEMA.md` and `MEMORY.md` reflecting contact form capability integrations.
+
+### Session 25 Summary — Journal Subscription Overhaul
+- **UI/Layout Form Handling**: Upgraded the static footer HTML form within `_Layout.cshtml` to handle AJAX submissions for the `JournalController`.
+- **API Fetch Logistics**: Prevented full page reload errors mapped to `action="#"` via vanilla JavaScript `e.preventDefault()`. Connected to `POST /api/journal/subscribe` passing JSON body.
+- **User Experience**: Embedded a hidden response message container directly beneath the input field. Provided dark-luxury styling for success (`#C9A74A` gold text) and error states. Tied a `disabled:opacity-50` state overlay protecting duplicate concurrent submissions on the button.
+- **Testing**: Confirmed that submitting duplicates gracefully handles the returning JSON structure via `JournalService` matching email constraints securely.
+- **Documentation**: Updated `MEMORY.md`, `COMMANDS.md`, and marked tracking tasks complete.

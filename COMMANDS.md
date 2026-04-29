@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-19 (Session 23) | Location: India (IST)
+Last updated: 2026-04-29 (Session 24) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -316,3 +316,17 @@ dotnet user-secrets list --project WonderWatch.Web
 - `dotnet ef database update --project WonderWatch.Infrastructure --startup-project WonderWatch.Web` ✅ (Migration successfully applied to update OrderStatus and Orders).
 - **Documentation**: Updated `MEMORY.md`, `FILES.md`, `DATABASE_SCHEMA.md`, `COMMANDS.md` with session records. ✅
 
+### Session 25 Final History
+- **Executed Multi-Replace**: Edited `_Layout.cshtml` safely pushing JavaScript and CSS boundaries for the journal form without breaking structural elements. ✅
+- **Documentation Updates**: Validated `DATABASE_SCHEMA.md` already contains `JournalSubscriptions` from Session 18 integration. ✅
+- **Documentation Sync**: Synchronized `MEMORY.md`, `COMMANDS.md`, and marked tracking files complete. ✅
+
+### Session 24 Final History — 2026-04-29
+- **OTP Verification System**: Implemented complete email OTP verification for registration and password reset using ASP.NET Core Identity's native `TwoFactorTokenAsync` with `EmailTokenProvider`. Zero new database tables. ✅
+- **Application Layer**: Added `SendOtpAsync` to `IEmailService` / `EmailService` with branded dark-luxury HTML email template. ✅
+- **AccountController Overhaul**: Added 6 new endpoints — `VerifyOtp` (GET/POST), `ResendOtp` (POST), `ForgotPassword` (GET/POST), `ResetPassword` (GET/POST). Registration no longer auto-signs-in; login gate intercepts unverified users. ✅
+- **New ViewModels**: `VerifyOtpViewModel`, `ForgotPasswordViewModel`, `ResetPasswordViewModel` added to `ApplicationContracts.cs`. ✅
+- **New Views**: `VerifyOtp.cshtml` (6-digit box input with auto-advance, paste support, 60s resend timer), `ForgotPassword.cshtml`, `ResetPassword.cshtml` — all dark-luxury aesthetic. ✅
+- **Login.cshtml Fixes**: Corrected Forgot Password link URL, added green success banner for post-reset login flow. ✅
+- `dotnet build WonderWatch.sln` ✅ (0 Errors, 22 pre-existing NuGet warnings)
+- **Documentation**: Updated `MEMORY.md`, `FILES.md`, `DATABASE_SCHEMA.md`, `COMMANDS.md`, `README.md` with OTP system records. ✅
