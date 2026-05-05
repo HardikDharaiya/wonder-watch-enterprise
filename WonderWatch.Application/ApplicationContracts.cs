@@ -218,6 +218,11 @@ namespace WonderWatch.Application.Interfaces
         Task<DashboardKpiDto> GetDashboardKPIsAsync();
         Task<List<Watch>> GetInventoryAlertsAsync(); // Returns watches where stock <= 4
         Task ModerateReviewAsync(Guid reviewId, ReviewStatus status);
+
+        // CRUD methods for Watch management
+        Task<Watch?> GetWatchByIdForEditAsync(Guid id);
+        Task UpdateWatchAsync(Guid id, Watch updatedWatch, List<IFormFile>? newImages, IFormFile? newGlbFile);
+        Task<bool> DeleteWatchAsync(Guid id);
     }
 
     public interface IEmailService

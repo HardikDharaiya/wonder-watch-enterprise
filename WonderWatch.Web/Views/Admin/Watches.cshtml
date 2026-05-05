@@ -1,129 +1,184 @@
-@model WonderWatch.Web.ViewModels.AdminWatchListViewModel
+@model List<WonderWatch.Domain.Entities.Watch>
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Watch Inventory";
+    ViewData["Title"] = "Inventory";
 }
 
-<div class="p-[32px] md:p-[48px] max-w-[1600px] mx-auto">
-    
+<div class="p-[16px] md:p-[48px] max-w-[1400px] mx-auto">
+
+    <!-- TOAST NOTIFICATIONS -->
+    @if (TempData["WatchSuccess"] != null)
+    {
+        <div id="successToast" class="fixed top-[24px] right-[24px] z-[9999] bg-[#0D2818] border border-[#2ECC71]/30 text-[#2ECC71] font-sans text-[13px] tracking-[0.5px] px-[24px] py-[16px] flex items-center gap-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] animate-slide-in max-w-[420px]">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>@TempData["WatchSuccess"]</span>
+            <button onclick="this.parentElement.remove()" class="ml-auto text-[#2ECC71]/50 hover:text-[#2ECC71] transition-colors">&times;</button>
+        </div>
+    }
+    @if (TempData["WatchError"] != null)
+    {
+        <div id="errorToast" class="fixed top-[24px] right-[24px] z-[9999] bg-[#2D0A0A] border border-danger/30 text-danger font-sans text-[13px] tracking-[0.5px] px-[24px] py-[16px] flex items-center gap-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] animate-slide-in max-w-[420px]">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span>@TempData["WatchError"]</span>
+            <button onclick="this.parentElement.remove()" class="ml-auto text-danger/50 hover:text-danger transition-colors">&times;</button>
+        </div>
+    }
+
     <!-- HEADER & ACTIONS -->
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-[24px] mb-[48px]">
         <div>
-            <h1 class="font-serif text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Watch Inventory</h1>
-            <p class="font-sans text-[14px] text-muted">Manage catalog references, stock levels, and pricing.</p>
+            <h1 class="font-serif text-[36px] md:text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Inventory</h1>
+            <p class="font-sans text-[14px] text-muted">@Model.Count reference(s) in the catalog.</p>
         </div>
-        <a href="/admin/watches/create" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600 whitespace-nowrap text-center">
-            Add New Reference
+        <a href="/admin/watches/create"
+           class="bg-gold text-void font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600 inline-flex items-center gap-[12px] self-start md:self-auto">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Reference
         </a>
     </div>
 
     <!-- INVENTORY TABLE -->
-    <div class="bg-surface border border-white-faint overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
-                <thead>
-                    <tr>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint w-[80px]">Asset</th>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Reference</th>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Masterpiece</th>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Retail Price</th>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Stock</th>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint">Status</th>
-                        <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[24px] border-b border-white-faint text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Watches.Any())
+    <div class="bg-surface border border-white-faint overflow-x-auto">
+        <table class="w-full min-w-[800px]">
+            <thead>
+                <tr class="border-b border-white-faint">
+                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-left p-[20px]">Reference</th>
+                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-left p-[20px]">Brand</th>
+                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-right p-[20px]">Price</th>
+                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-center p-[20px]">Stock</th>
+                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-center p-[20px]">Status</th>
+                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-right p-[20px]">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var watch in Model)
                     {
-                        <tr>
-                            <td colspan="7" class="p-[64px] text-center">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1" stroke-linecap="square" class="mx-auto mb-[24px]">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
-                                <h3 class="font-serif text-[24px] text-parchment mb-[8px]">No References Found</h3>
-                                <p class="font-sans text-[14px] text-muted">The inventory is currently empty. Add a new reference to begin.</p>
+                        var thumbnail = watch.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Path ?? "/images/placeholder.webp";
+                        var indiaCulture = new System.Globalization.CultureInfo("hi-IN");
+                        <tr class="border-b border-white-faint/50 hover:bg-surface-alt/30 transition-colors group">
+                            <!-- Reference: Thumbnail + Name -->
+                            <td class="p-[20px]">
+                                <div class="flex items-center gap-[16px]">
+                                    <div class="w-[56px] h-[56px] bg-void border border-white-faint flex-shrink-0 overflow-hidden">
+                                        <img src="@thumbnail" alt="@watch.Name" class="w-full h-full object-cover" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <a href="/admin/watches/view/@watch.Id" class="font-sans font-medium text-[14px] text-parchment hover:text-gold transition-colors block truncate max-w-[200px]">@watch.Name</a>
+                                        <span class="font-sans text-[11px] text-muted tracking-[1px]">@watch.ReferenceNumber</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- Brand -->
+                            <td class="p-[20px] font-sans text-[13px] text-muted">@watch.Brand</td>
+                            <!-- Price -->
+                            <td class="p-[20px] font-sans text-[14px] text-parchment text-right font-medium">@watch.RetailPrice.ToString("C0", indiaCulture)</td>
+                            <!-- Stock -->
+                            <td class="p-[20px] text-center">
+                                @if (watch.StockQuantity <= 0)
+                                {
+                                    <span class="inline-block font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-danger/20 text-danger px-[12px] py-[4px]">Sold Out</span>
+                                }
+                                else if (watch.StockQuantity <= 4)
+                                {
+                                    <span class="inline-block font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-[#D4A017]/20 text-gold px-[12px] py-[4px]">@watch.StockQuantity Left</span>
+                                }
+                                else
+                                {
+                                    <span class="font-sans text-[14px] text-parchment">@watch.StockQuantity</span>
+                                }
+                            </td>
+                            <!-- Status -->
+                            <td class="p-[20px] text-center">
+                                @if (watch.IsPublished)
+                                {
+                                    <span class="inline-block font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-[#2ECC71]/15 text-[#2ECC71] px-[12px] py-[4px]">Published</span>
+                                }
+                                else
+                                {
+                                    <span class="inline-block font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-muted/15 text-muted px-[12px] py-[4px]">Draft</span>
+                                }
+                            </td>
+                            <!-- Actions -->
+                            <td class="p-[20px] text-right">
+                                <div class="flex items-center justify-end gap-[8px] flex-nowrap whitespace-nowrap">
+                                    <a href="/admin/watches/view/@watch.Id" title="View"
+                                       class="w-[36px] h-[36px] flex items-center justify-center border border-white-faint text-muted hover:text-gold hover:border-gold transition-colors">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </a>
+                                    <a href="/admin/watches/edit/@watch.Id" title="Edit"
+                                       class="w-[36px] h-[36px] flex items-center justify-center border border-white-faint text-muted hover:text-gold hover:border-gold transition-colors">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </a>
+                                    <button type="button" title="Delete" onclick="openDeleteModal('@watch.Id', '@watch.Name.Replace("'", "\\'")')"
+                                            class="w-[36px] h-[36px] flex items-center justify-center border border-white-faint text-muted hover:text-danger hover:border-danger transition-colors">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     }
-                    else
-                    {
-                        foreach (var watch in Model.Watches)
-                        {
-                            <tr class="border-b border-white-faint hover:bg-surface-alt transition-colors duration-600 last:border-0 group">
-                                
-                                <!-- Asset Image -->
-                                <td class="p-[24px]">
-                                    <div class="w-[48px] h-[60px] bg-void border border-white-faint p-[4px] flex items-center justify-center group-hover:border-gold-faint transition-colors duration-600">
-                                        <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-contain" loading="lazy" />
-                                    </div>
-                                </td>
-                                
-                                <!-- Reference -->
-                                <td class="p-[24px]">
-                                    <span class="font-mono text-[12px] text-gold">@watch.ReferenceNumber</span>
-                                </td>
-                                
-                                <!-- Masterpiece Name -->
-                                <td class="p-[24px]">
-                                    <span class="font-sans font-medium text-[14px] text-body line-clamp-1">@watch.Name</span>
-                                </td>
-                                
-                                <!-- Retail Price -->
-                                <td class="p-[24px]">
-                                    <span class="font-sans font-bold text-[14px] text-parchment tracking-[-0.45px]">@watch.RetailPriceFormatted</span>
-                                </td>
-                                
-                                <!-- Stock -->
-                                <td class="p-[24px]">
-                                    <div class="flex items-center gap-[8px]">
-                                        <span class="font-sans font-bold text-[14px] @(watch.StockQuantity <= 4 ? "text-danger" : "text-parchment")">
-                                            @watch.StockQuantity
-                                        </span>
-                                        @if (watch.StockQuantity <= 4)
-                                        {
-                                            <span class="bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[6px] py-[2px] rounded-none">
-                                                Low
-                                            </span>
-                                        }
-                                    </div>
-                                </td>
-                                
-                                <!-- Status Badge -->
-                                <td class="p-[24px]">
-                                    @if (watch.IsPublished)
-                                    {
-                                        <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-[#22C55E]">
-                                            Published
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]">
-                                            Draft
-                                        </span>
-                                    }
-                                </td>
-                                
-                                <!-- Actions -->
-                                <td class="p-[24px] text-right">
-                                    <div class="flex items-center justify-end gap-[16px]">
-                                        <a href="/admin/watches/edit/@watch.Id" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">
-                                            Edit
-                                        </a>
-                                        <span class="text-white-faint">|</span>
-                                        <a href="/catalog/@watch.ReferenceNumber" target="_blank" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-parchment transition-colors">
-                                            View
-                                        </a>
-                                    </div>
-                                </td>
-                                
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="p-[48px] text-center">
+                            <p class="font-sans text-[16px] text-muted mb-[16px]">No references in inventory.</p>
+                            <a href="/admin/watches/create" class="font-sans font-bold text-[11px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">+ Create First Reference</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="fixed inset-0 z-[9999] hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface border border-white-faint p-[48px] w-[90%] max-w-[480px] shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+        <h3 class="font-serif text-[24px] text-parchment mb-[16px]">Remove Reference</h3>
+        <p class="font-sans text-[14px] text-muted mb-[32px]">
+            Are you sure you want to remove <strong id="deleteWatchName" class="text-parchment"></strong>?
+            <br/><span class="text-[12px] mt-[8px] block">If this reference has existing orders it will be archived (unpublished) instead of permanently deleted.</span>
+        </p>
+        <div class="flex items-center justify-end gap-[16px]">
+            <button onclick="closeDeleteModal()" class="font-sans font-bold text-[11px] text-muted tracking-[2px] uppercase hover:text-parchment transition-colors px-[24px] py-[12px]">
+                Cancel
+            </button>
+            <form id="deleteForm" method="post" class="inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bg-danger text-void font-sans font-bold text-[11px] tracking-[2px] uppercase px-[32px] py-[14px] hover:bg-[#C0392B] transition-colors">
+                    Confirm Delete
+                </button>
+            </form>
         </div>
     </div>
-
 </div>
+
+@section Scripts {
+<script>
+    // Auto-dismiss toasts after 5 seconds
+    setTimeout(() => {
+        document.querySelectorAll('#successToast, #errorToast').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(100%)';
+            setTimeout(() => el.remove(), 400);
+        });
+    }, 5000);
+
+    function openDeleteModal(watchId, watchName) {
+        document.getElementById('deleteWatchName').textContent = watchName;
+        document.getElementById('deleteForm').action = '/admin/watches/delete/' + watchId;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+</script>
+<style>
+    @@keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+    .animate-slide-in { animation: slideIn 0.4s ease-out forwards; }
+</style>
+}
