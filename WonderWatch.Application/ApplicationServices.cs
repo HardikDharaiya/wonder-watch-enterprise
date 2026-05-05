@@ -579,6 +579,111 @@ namespace WonderWatch.Application.Services
             review.Status = status;
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Watch?> GetWatchByIdForEditAsync(Guid id)
+        {
+            return await _context.Watches
+                .Include(w => w.Images.OrderBy(i => i.SortOrder))
+                .FirstOrDefaultAsync(w => w.Id == id);
+        }
+
+        public async Task UpdateWatchAsync(Guid id, Watch updatedWatch, List<IFormFile>? newImages, IFormFile? newGlbFile)
+        {
+            var watch = await _context.Watches
+                .Include(w => w.Images)
+                .FirstOrDefaultAsync(w => w.Id == id)
+                ?? throw new InvalidOperationException($"Watch {id} not found.");
+
+            // Update scalar fields
+            watch.Name = updatedWatch.Name;
+            watch.Brand = updatedWatch.Brand;
+            watch.ReferenceNumber = updatedWatch.ReferenceNumber;
+            watch.Description = updatedWatch.Description;
+            watch.RetailPrice = updatedWatch.RetailPrice;
+            watch.CostPrice = updatedWatch.CostPrice;
+            watch.ComparePrice = updatedWatch.ComparePrice;
+            watch.CaseSize = updatedWatch.CaseSize;
+            watch.MovementType = updatedWatch.MovementType;
+            watch.StockQuantity = updatedWatch.StockQuantity;
+            watch.IsPublished = updatedWatch.IsPublished;
+            watch.IsSoldOut = updatedWatch.StockQuantity <= 0;
+            watch.StrapMaterial = updatedWatch.StrapMaterial;
+
+            // Regenerate slug from name
+            watch.Slug = System.Text.RegularExpressions.Regex.Replace(
+                watch.Name.ToLower().Replace(" ", "-"), "[^a-z0-9-]", "");
+
+            // Handle new images if uploaded
+            if (newImages != null && newImages.Any(f => f.Length > 0))
+            {
+                // Remove old image records
+                _context.WatchImages.RemoveRange(watch.Images);
+
+                var assetService = new AssetService();
+                var imagePaths = await assetService.SaveImagesAsync(newImages.ToList(), id);
+                for (int i = 0; i < imagePaths.Count; i++)
+                {
+                    watch.Images.Add(new WatchImage
+                    {
+                        Id = Guid.NewGuid(),
+                        WatchId = id,
+                        Path = imagePaths[i],
+                        SortOrder = i + 1
+                    });
+                }
+            }
+
+            // Handle new GLB if uploaded
+            if (newGlbFile != null && newGlbFile.Length > 0)
+            {
+                var assetService = new AssetService();
+                watch.GlbAssetPath = await assetService.SaveGlbAsync(newGlbFile, id);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteWatchAsync(Guid id)
+        {
+            var watch = await _context.Watches
+                .Include(w => w.Images)
+                .Include(w => w.Reviews)
+                .FirstOrDefaultAsync(w => w.Id == id);
+
+            if (watch == null) return false;
+
+            // Check if any orders reference this watch
+            var hasOrders = await _context.Set<OrderItem>()
+                .AnyAsync(oi => oi.WatchId == id);
+
+            if (hasOrders)
+            {
+                // Soft-delete: unpublish and zero stock to preserve order history
+                watch.IsPublished = false;
+                watch.StockQuantity = 0;
+                watch.IsSoldOut = true;
+            }
+            else
+            {
+                // Hard-delete: safe to remove entirely
+                // Remove wishlists referencing this watch
+                var wishlists = await _context.Wishlists
+                    .Where(w => w.WatchId == id).ToListAsync();
+                _context.Wishlists.RemoveRange(wishlists);
+
+                // Remove reviews
+                _context.Reviews.RemoveRange(watch.Reviews);
+
+                // Remove images
+                _context.WatchImages.RemoveRange(watch.Images);
+
+                // Remove the watch
+                _context.Watches.Remove(watch);
+            }
+
+            await _context.SaveChangesAsync();
+            return !hasOrders; // true = hard-deleted, false = soft-deleted
+        }
     }
 
     public class EmailService : IEmailService

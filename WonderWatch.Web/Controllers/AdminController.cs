@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -122,7 +123,7 @@ namespace WonderWatch.Web.Controllers
                 var watchId = Guid.NewGuid();
 
                 // Generate Slug from Name
-                var slug = model.Name.ToLower().Replace(" ", "-").Replace("[^a-z0-9-]", "");
+                var slug = Regex.Replace(model.Name.ToLower().Replace(" ", "-"), "[^a-z0-9-]", "");
 
                 var watch = new Watch
                 {
@@ -168,6 +169,7 @@ namespace WonderWatch.Web.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Admin created new watch: {WatchName} ({WatchId})", watch.Name, watch.Id);
+                TempData["WatchSuccess"] = $"'{watch.Name}' has been added to the inventory.";
                 return RedirectToAction(nameof(Watches));
             }
             catch (Exception ex)
@@ -176,6 +178,163 @@ namespace WonderWatch.Web.Controllers
                 ModelState.AddModelError(string.Empty, "An error occurred while saving the watch. Please check the logs.");
                 return View(model);
             }
+        }
+
+        // =============================================================
+        // EDIT WATCH
+        // =============================================================
+
+        [HttpGet("watches/edit/{id}")]
+        public async Task<IActionResult> EditWatch(Guid id)
+        {
+            var watch = await _adminService.GetWatchByIdForEditAsync(id);
+            if (watch == null)
+            {
+                TempData["WatchError"] = "Reference not found.";
+                return RedirectToAction(nameof(Watches));
+            }
+
+            var model = new WatchEditViewModel
+            {
+                Id = watch.Id,
+                Name = watch.Name,
+                Brand = watch.Brand,
+                ReferenceNumber = watch.ReferenceNumber,
+                Description = watch.Description,
+                RetailPrice = watch.RetailPrice,
+                CostPrice = watch.CostPrice,
+                ComparePrice = watch.ComparePrice,
+                CaseSize = watch.CaseSize,
+                MovementType = watch.MovementType,
+                StockQuantity = watch.StockQuantity,
+                IsPublished = watch.IsPublished,
+                StrapMaterial = watch.StrapMaterial,
+                ExistingImageUrls = watch.Images.Select(i => i.Path).ToList(),
+                ExistingGlbPath = watch.GlbAssetPath
+            };
+
+            return View(model);
+        }
+
+        [HttpPost("watches/edit/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditWatch(Guid id, WatchEditViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Re-populate existing images for the form
+                var existingWatch = await _adminService.GetWatchByIdForEditAsync(id);
+                if (existingWatch != null)
+                {
+                    model.ExistingImageUrls = existingWatch.Images.Select(i => i.Path).ToList();
+                    model.ExistingGlbPath = existingWatch.GlbAssetPath;
+                }
+                return View(model);
+            }
+
+            try
+            {
+                var updatedWatch = new Watch
+                {
+                    Name = model.Name,
+                    Brand = model.Brand,
+                    ReferenceNumber = model.ReferenceNumber,
+                    Description = model.Description,
+                    RetailPrice = model.RetailPrice,
+                    CostPrice = model.CostPrice,
+                    ComparePrice = model.ComparePrice,
+                    CaseSize = model.CaseSize,
+                    MovementType = model.MovementType,
+                    StockQuantity = model.StockQuantity,
+                    IsPublished = model.IsPublished,
+                    StrapMaterial = model.StrapMaterial ?? string.Empty
+                };
+
+                await _adminService.UpdateWatchAsync(id, updatedWatch, model.ImageFiles, model.GlbFile);
+                _logger.LogInformation("Admin updated watch: {WatchName} ({WatchId})", model.Name, id);
+                TempData["WatchSuccess"] = $"'{model.Name}' has been updated successfully.";
+                return RedirectToAction(nameof(Watches));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating watch {WatchId}.", id);
+                ModelState.AddModelError(string.Empty, "An error occurred while updating. Please check the logs.");
+                var existingWatch = await _adminService.GetWatchByIdForEditAsync(id);
+                if (existingWatch != null)
+                {
+                    model.ExistingImageUrls = existingWatch.Images.Select(i => i.Path).ToList();
+                    model.ExistingGlbPath = existingWatch.GlbAssetPath;
+                }
+                return View(model);
+            }
+        }
+
+        // =============================================================
+        // DELETE WATCH
+        // =============================================================
+
+        [HttpPost("watches/delete/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteWatch(Guid id)
+        {
+            try
+            {
+                var hardDeleted = await _adminService.DeleteWatchAsync(id);
+                if (hardDeleted)
+                {
+                    TempData["WatchSuccess"] = "Reference permanently removed from inventory.";
+                }
+                else
+                {
+                    TempData["WatchSuccess"] = "Reference archived (unpublished). It has existing orders and cannot be permanently deleted.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting watch {WatchId}.", id);
+                TempData["WatchError"] = "Failed to remove reference: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Watches));
+        }
+
+        // =============================================================
+        // VIEW WATCH (Read-Only Detail)
+        // =============================================================
+
+        [HttpGet("watches/view/{id}")]
+        public async Task<IActionResult> ViewWatch(Guid id)
+        {
+            var watch = await _adminService.GetWatchByIdForEditAsync(id);
+            if (watch == null)
+            {
+                TempData["WatchError"] = "Reference not found.";
+                return RedirectToAction(nameof(Watches));
+            }
+
+            var indiaCulture = new CultureInfo("hi-IN");
+            var model = new AdminWatchDetailViewModel
+            {
+                Id = watch.Id,
+                Name = watch.Name,
+                Brand = watch.Brand,
+                ReferenceNumber = watch.ReferenceNumber,
+                Slug = watch.Slug,
+                Description = watch.Description,
+                RetailPriceFormatted = watch.RetailPrice.ToString("C0", indiaCulture),
+                CostPriceFormatted = watch.CostPrice.ToString("C0", indiaCulture),
+                ComparePriceFormatted = watch.ComparePrice.ToString("C0", indiaCulture),
+                CaseSize = watch.CaseSize,
+                MovementType = watch.MovementType.ToString(),
+                StockQuantity = watch.StockQuantity,
+                IsPublished = watch.IsPublished,
+                IsSoldOut = watch.IsSoldOut,
+                StrapMaterial = watch.StrapMaterial,
+                GlbAssetPath = watch.GlbAssetPath,
+                ImageUrls = watch.Images.Select(i => i.Path).ToList()
+            };
+
+            return View(model);
         }
 
         [HttpGet("orders")]
@@ -514,6 +673,38 @@ namespace WonderWatch.Web.ViewModels
 
         public IFormFile? GlbFile { get; set; }
         public List<IFormFile>? ImageFiles { get; set; }
+        public string StrapMaterial { get; set; } = string.Empty;
+    }
+
+    public class WatchEditViewModel : WatchCreateViewModel
+    {
+        public Guid Id { get; set; }
+        public List<string> ExistingImageUrls { get; set; } = new();
+        public string ExistingGlbPath { get; set; } = string.Empty;
+    }
+
+    // ---------------------------------------------------------
+    // WATCH DETAIL VIEW MODEL (Read-Only)
+    // ---------------------------------------------------------
+    public class AdminWatchDetailViewModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string ReferenceNumber { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string RetailPriceFormatted { get; set; } = string.Empty;
+        public string CostPriceFormatted { get; set; } = string.Empty;
+        public string ComparePriceFormatted { get; set; } = string.Empty;
+        public int CaseSize { get; set; }
+        public string MovementType { get; set; } = string.Empty;
+        public int StockQuantity { get; set; }
+        public bool IsPublished { get; set; }
+        public bool IsSoldOut { get; set; }
+        public string StrapMaterial { get; set; } = string.Empty;
+        public string GlbAssetPath { get; set; } = string.Empty;
+        public List<string> ImageUrls { get; set; } = new();
     }
 
     // ---------------------------------------------------------

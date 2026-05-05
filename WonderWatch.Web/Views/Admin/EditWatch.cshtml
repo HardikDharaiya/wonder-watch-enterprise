@@ -1,0 +1,199 @@
+@model WonderWatch.Web.ViewModels.WatchEditViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Reference";
+}
+
+<div class="p-[24px] md:p-[48px] max-w-[1200px] mx-auto">
+
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-[24px] mb-[48px]">
+        <div>
+            <nav class="flex items-center gap-[8px] mb-[16px]">
+                <a href="/admin/watches" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">Inventory</a>
+                <span class="text-muted text-[10px]">&slash;</span>
+                <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">Edit</span>
+            </nav>
+            <h1 class="font-serif text-[36px] md:text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Edit Reference</h1>
+            <p class="font-sans text-[14px] text-muted">Modify details for <strong class="text-parchment">@Model.Name</strong></p>
+        </div>
+    </div>
+
+    <!-- FORM -->
+    <form asp-controller="Admin" asp-action="EditWatch" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="flex flex-col gap-[32px]">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <!-- Global Validation Summary -->
+        <div asp-validation-summary="ModelOnly" class="bg-[rgba(127,29,29,0.2)] border border-danger/50 text-danger font-sans text-[12px] p-[16px] rounded-none @(ViewData.ModelState.IsValid ? "hidden" : "")"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-[32px]">
+
+            <!-- LEFT COLUMN: MAIN DETAILS -->
+            <div class="lg:col-span-8 flex flex-col gap-[32px]">
+
+                <!-- Basic Information -->
+                <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                    <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Basic Information</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+                        <div class="md:col-span-2">
+                            <label asp-for="Name" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Masterpiece Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" type="text" required
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="Name" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Brand" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Brand / Maker <span class="text-danger">*</span></label>
+                            <input asp-for="Brand" type="text" required
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="Brand" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="ReferenceNumber" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Reference Code <span class="text-danger">*</span></label>
+                            <input asp-for="ReferenceNumber" type="text" required
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="ReferenceNumber" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label asp-for="Description" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Editorial Description <span class="text-danger">*</span></label>
+                            <textarea asp-for="Description" required rows="6"
+                                      class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none resize-y"></textarea>
+                            <span asp-validation-for="Description" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media & Assets -->
+                <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                    <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Media & 3D Assets</h2>
+
+                    <!-- Existing Images Preview -->
+                    @if (Model.ExistingImageUrls.Any())
+                    {
+                        <div class="mb-[24px]">
+                            <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[12px]">Current Images</p>
+                            <div class="flex flex-wrap gap-[12px]">
+                                @foreach (var img in Model.ExistingImageUrls)
+                                {
+                                    <div class="w-[80px] h-[80px] bg-void border border-white-faint overflow-hidden">
+                                        <img src="@img" alt="Current" class="w-full h-full object-cover" />
+                                    </div>
+                                }
+                            </div>
+                            <p class="font-sans text-[11px] text-muted mt-[8px]">Upload new images to replace all current images.</p>
+                        </div>
+                    }
+
+                    <div class="flex flex-col gap-[32px]">
+                        <div>
+                            <label asp-for="ImageFiles" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Replace Images (WebP/JPG/PNG)</label>
+                            <input asp-for="ImageFiles" type="file" multiple accept="image/*"
+                                   class="block w-full text-[14px] text-muted file:mr-[16px] file:py-[12px] file:px-[24px] file:rounded-none file:border-0 file:text-[11px] file:font-sans file:font-bold file:tracking-[2px] file:uppercase file:bg-surface-alt file:text-gold hover:file:bg-white-faint file:transition-colors file:cursor-pointer cursor-pointer border border-white-faint bg-void p-[8px]" />
+                        </div>
+                        <div>
+                            <label asp-for="GlbFile" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Replace 3D Model (GLB)</label>
+                            @if (!string.IsNullOrEmpty(Model.ExistingGlbPath))
+                            {
+                                <p class="font-sans text-[11px] text-[#2ECC71] mb-[8px]">✓ 3D asset currently attached</p>
+                            }
+                            <input asp-for="GlbFile" type="file" accept=".glb"
+                                   class="block w-full text-[14px] text-muted file:mr-[16px] file:py-[12px] file:px-[24px] file:rounded-none file:border-0 file:text-[11px] file:font-sans file:font-bold file:tracking-[2px] file:uppercase file:bg-surface-alt file:text-gold hover:file:bg-white-faint file:transition-colors file:cursor-pointer cursor-pointer border border-white-faint bg-void p-[8px]" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: PRICING & SPECS -->
+            <div class="lg:col-span-4 flex flex-col gap-[32px]">
+
+                <!-- Pricing -->
+                <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                    <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Pricing (INR)</h2>
+                    <div class="flex flex-col gap-[24px]">
+                        <div>
+                            <label asp-for="RetailPrice" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Retail Price (₹) <span class="text-danger">*</span></label>
+                            <input asp-for="RetailPrice" type="number" step="0.01" required
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="RetailPrice" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="ComparePrice" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Compare at Price (₹)</label>
+                            <input asp-for="ComparePrice" type="number" step="0.01"
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="ComparePrice" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CostPrice" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Cost Price (₹) <span class="text-muted lowercase tracking-normal font-normal ml-1">(Internal)</span></label>
+                            <input asp-for="CostPrice" type="number" step="0.01"
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="CostPrice" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Specifications -->
+                <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                    <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Specifications</h2>
+                    <div class="flex flex-col gap-[24px]">
+                        <div>
+                            <label asp-for="StockQuantity" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Stock Quantity <span class="text-danger">*</span></label>
+                            <input asp-for="StockQuantity" type="number" required min="0"
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="StockQuantity" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CaseSize" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Case Size (mm) <span class="text-danger">*</span></label>
+                            <input asp-for="CaseSize" type="number" required
+                                   class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none" />
+                            <span asp-validation-for="CaseSize" class="font-sans text-[11px] text-danger tracking-[1px] mt-[8px] block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="MovementType" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[8px] block">Movement Type <span class="text-danger">*</span></label>
+                            <div class="relative">
+                                <select asp-for="MovementType" asp-items="Html.GetEnumSelectList<WonderWatch.Domain.Enums.MovementType>()" class="w-full bg-void border border-white-faint text-parchment font-sans text-[14px] px-[16px] py-[12px] appearance-none focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none cursor-pointer">
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-[16px] pointer-events-none text-gold">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visibility -->
+                <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                    <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Visibility</h2>
+                    <div class="flex items-center justify-between gap-[24px]">
+                        <div>
+                            <span class="font-sans font-medium text-[16px] text-parchment block mb-[4px]">Publish to Catalog</span>
+                            <span class="font-sans text-[12px] text-muted">Make this reference visible to clients.</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input asp-for="IsPublished" type="checkbox" class="sr-only peer">
+                            <div class="w-[40px] h-[20px] bg-surface-alt border border-white-faint peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold peer-checked:bg-gold peer-checked:border-gold transition-colors duration-300 rounded-none"></div>
+                            <div class="absolute left-[2px] top-[2px] bg-muted peer-checked:bg-void w-[16px] h-[16px] transition-transform duration-300 peer-checked:translate-x-[20px] rounded-none"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUBMIT BAR -->
+        <div class="bg-surface border border-white-faint p-[24px] md:p-[32px] flex flex-col sm:flex-row items-center justify-between gap-[16px] sticky bottom-0 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+            <a href="/admin/watches" class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase hover:text-danger transition-colors">
+                Discard Changes
+            </a>
+            <button type="submit" class="bg-gold text-void font-sans font-bold text-[12px] tracking-[1.2px] uppercase px-[48px] py-[20px] hover:bg-parchment transition-colors duration-600 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-surface">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

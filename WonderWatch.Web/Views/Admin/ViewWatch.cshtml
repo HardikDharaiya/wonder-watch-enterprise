@@ -1,0 +1,169 @@
+@model WonderWatch.Web.ViewModels.AdminWatchDetailViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="p-[24px] md:p-[48px] max-w-[1200px] mx-auto">
+
+    <!-- HEADER & ACTIONS -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-[24px] mb-[48px]">
+        <div>
+            <nav class="flex items-center gap-[8px] mb-[16px]">
+                <a href="/admin/watches" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">Inventory</a>
+                <span class="text-muted text-[10px]">&slash;</span>
+                <span class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase">Detail</span>
+            </nav>
+            <h1 class="font-serif text-[32px] md:text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[8px]">@Model.Name</h1>
+            <p class="font-sans text-[14px] text-muted">@Model.Brand &middot; Ref. @Model.ReferenceNumber</p>
+        </div>
+        <div class="flex items-center gap-[12px] self-start md:self-auto">
+            <a href="/admin/watches/edit/@Model.Id"
+               class="bg-gold text-void font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[28px] py-[14px] hover:bg-parchment transition-colors inline-flex items-center gap-[10px]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Edit
+            </a>
+            <a href="/catalog/@Model.Slug" target="_blank"
+               class="border border-white-faint text-muted font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[28px] py-[14px] hover:text-gold hover:border-gold transition-colors inline-flex items-center gap-[10px]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                View Live
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-[32px]">
+
+        <!-- LEFT: IMAGE GALLERY -->
+        <div class="lg:col-span-7">
+            <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Gallery</h2>
+
+                @if (Model.ImageUrls.Any())
+                {
+                    <!-- Main Image -->
+                    <div class="w-full aspect-square bg-void border border-white-faint overflow-hidden mb-[16px]">
+                        <img id="mainPreview" src="@Model.ImageUrls.First()" alt="@Model.Name" class="w-full h-full object-contain" />
+                    </div>
+                    <!-- Thumbnails -->
+                    @if (Model.ImageUrls.Count > 1)
+                    {
+                        <div class="flex gap-[12px] overflow-x-auto pb-[8px]">
+                            @foreach (var img in Model.ImageUrls)
+                            {
+                                <button type="button" onclick="document.getElementById('mainPreview').src='@img'"
+                                        class="w-[72px] h-[72px] bg-void border border-white-faint overflow-hidden flex-shrink-0 hover:border-gold transition-colors focus:border-gold">
+                                    <img src="@img" alt="Thumbnail" class="w-full h-full object-cover" />
+                                </button>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="w-full aspect-square bg-void border border-white-faint flex items-center justify-center">
+                        <p class="font-sans text-[14px] text-muted">No images uploaded</p>
+                    </div>
+                }
+
+                <!-- 3D Asset Indicator -->
+                @if (!string.IsNullOrEmpty(Model.GlbAssetPath))
+                {
+                    <div class="mt-[24px] flex items-center gap-[12px] bg-void border border-white-faint p-[16px]">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        <div>
+                            <span class="font-sans font-bold text-[11px] text-gold tracking-[1px] uppercase block">3D Showroom Asset</span>
+                            <span class="font-sans text-[11px] text-muted">GLB model attached for AR/3D viewer</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT: SPECIFICATIONS -->
+        <div class="lg:col-span-5 flex flex-col gap-[32px]">
+
+            <!-- Status Badge -->
+            <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Status</h2>
+                <div class="flex flex-wrap gap-[12px]">
+                    @if (Model.IsPublished)
+                    {
+                        <span class="font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-[#2ECC71]/15 text-[#2ECC71] px-[16px] py-[8px] inline-flex items-center gap-[6px]">
+                            <span class="w-[6px] h-[6px] bg-[#2ECC71] inline-block"></span> Published
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-muted/15 text-muted px-[16px] py-[8px] inline-flex items-center gap-[6px]">
+                            <span class="w-[6px] h-[6px] bg-muted inline-block"></span> Draft
+                        </span>
+                    }
+                    @if (Model.IsSoldOut)
+                    {
+                        <span class="font-sans font-bold text-[10px] tracking-[1.5px] uppercase bg-danger/20 text-danger px-[16px] py-[8px]">Sold Out</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Pricing</h2>
+                <div class="flex flex-col gap-[16px]">
+                    <div class="flex justify-between items-center">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Retail</span>
+                        <span class="font-serif text-[24px] text-parchment">@Model.RetailPriceFormatted</span>
+                    </div>
+                    <div class="border-t border-white-faint/30"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Compare At</span>
+                        <span class="font-sans text-[16px] text-muted line-through">@Model.ComparePriceFormatted</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Cost (Internal)</span>
+                        <span class="font-sans text-[16px] text-parchment">@Model.CostPriceFormatted</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Details -->
+            <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Specifications</h2>
+                <div class="flex flex-col gap-[16px]">
+                    <div class="flex justify-between">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Case Size</span>
+                        <span class="font-sans text-[14px] text-parchment">@Model.CaseSize mm</span>
+                    </div>
+                    <div class="border-t border-white-faint/30"></div>
+                    <div class="flex justify-between">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Movement</span>
+                        <span class="font-sans text-[14px] text-parchment">@Model.MovementType</span>
+                    </div>
+                    <div class="border-t border-white-faint/30"></div>
+                    <div class="flex justify-between">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Stock</span>
+                        <span class="font-sans text-[14px] text-parchment font-bold">@Model.StockQuantity units</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.StrapMaterial))
+                    {
+                        <div class="border-t border-white-faint/30"></div>
+                        <div class="flex justify-between">
+                            <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Strap</span>
+                            <span class="font-sans text-[14px] text-parchment">@Model.StrapMaterial</span>
+                        </div>
+                    }
+                    <div class="border-t border-white-faint/30"></div>
+                    <div class="flex justify-between">
+                        <span class="font-sans text-[12px] text-muted tracking-[1px] uppercase">Slug</span>
+                        <span class="font-sans text-[12px] text-gold font-mono">@Model.Slug</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="bg-surface border border-white-faint p-[24px] md:p-[32px]">
+                <h2 class="font-sans font-bold text-[11px] text-gold tracking-[3.3px] uppercase mb-[24px] border-b border-white-faint pb-[16px]">Description</h2>
+                <p class="font-sans text-[14px] text-muted leading-[1.8]">@Model.Description</p>
+            </div>
+        </div>
+    </div>
+</div>

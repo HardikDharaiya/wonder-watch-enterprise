@@ -23,14 +23,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — Wonder Watch Admin</title>
     <link rel="stylesheet" href="~/css/global.css" asp-append-version="true" />
+    <style>
+        /* Mobile sidebar transition */
+        .admin-sidebar {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @@media (max-width: 1023px) {
+            .admin-sidebar { transform: translateX(-100%); }
+            .admin-sidebar.open { transform: translateX(0); }
+        }
+        @@media (min-width: 1024px) {
+            .admin-sidebar { transform: translateX(0) !important; }
+        }
+    </style>
 </head>
-<body class="min-h-screen flex selection:bg-gold selection:text-void">
+<body class="min-h-screen flex flex-col lg:flex-row selection:bg-gold selection:text-void">
+
+    <!-- MOBILE OVERLAY -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+
+    <!-- MOBILE TOP BAR -->
+    <header class="lg:hidden fixed top-0 left-0 right-0 z-30 bg-surface border-b border-gold-faint flex items-center justify-between px-[16px] py-[12px]">
+        <button id="hamburgerBtn" onclick="toggleSidebar()" class="w-[40px] h-[40px] flex items-center justify-center text-gold hover:text-parchment transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div class="flex items-center gap-[8px]">
+            <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+                <path d="M12 16L24 36L36 16M18 16L24 26L30 16" stroke="#C9A74A" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" />
+            </svg>
+            <span class="font-sans font-bold text-[14px] text-gold tracking-[1.5px]">ADMIN</span>
+        </div>
+        <div class="w-[40px]"></div>
+    </header>
 
     <!-- ADMIN SIDEBAR (256px Wide, Fixed) -->
-    <aside class="fixed top-0 left-0 w-[256px] h-screen bg-surface border-r border-gold-faint flex flex-col z-50">
+    <aside id="adminSidebar" class="admin-sidebar fixed top-0 left-0 w-[256px] h-screen bg-surface border-r border-gold-faint flex flex-col z-50">
         
         <!-- Top Header -->
         <div class="p-[32px] border-b border-[rgba(201,167,74,0.1)] flex items-center gap-[12px]">
+            <!-- Close button for mobile -->
+            <button onclick="closeSidebar()" class="lg:hidden absolute top-[16px] right-[16px] w-[32px] h-[32px] flex items-center justify-center text-muted hover:text-parchment transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
                 <rect width="48" height="48" fill="transparent" />
                 <path d="M12 16L24 36L36 16M18 16L24 26L30 16" stroke="#C9A74A" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" />
@@ -44,7 +82,7 @@
         <!-- Navigation -->
         <nav class="flex flex-col gap-[8px] py-[32px] flex-grow overflow-y-auto">
             
-            <a href="/Admin" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Index")">
+            <a href="/Admin" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Index")">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                     <rect x="3" y="3" width="7" height="7" />
                     <rect x="14" y="3" width="7" height="7" />
@@ -54,7 +92,7 @@
                 DASHBOARD
             </a>
 
-            <a href="/Admin/Watches" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Watches")">
+            <a href="/Admin/Watches" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Watches")">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                     <circle cx="12" cy="12" r="7" />
                     <polyline points="12 9 12 12 13.5 13.5" />
@@ -63,7 +101,7 @@
                 WATCHES
             </a>
 
-            <a href="/Admin/Orders" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Orders")">
+            <a href="/Admin/Orders" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Orders")">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                     <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
@@ -72,14 +110,21 @@
                 ORDERS
             </a>
 
-            <a href="/Admin/Reviews" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Reviews")">
+            <a href="/Admin/Reviews" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Reviews")">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 REVIEWS
             </a>
 
-            <a href="/Admin/Settings" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Settings")">
+            <a href="/admin/filters" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Filters")">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                FILTERS
+            </a>
+
+            <a href="/Admin/Settings" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("Admin", "Settings")">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -87,7 +132,7 @@
                 SETTINGS
             </a>
 
-            <a href="/admin/membership" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("MembershipPlan", "Any")">
+            <a href="/admin/membership" onclick="closeSidebar()" class="flex items-center gap-3 py-[8px] px-[16px] text-[11px] font-sans font-bold tracking-[2.2px] uppercase transition-colors duration-600 @GetActiveClasses("MembershipPlan", "Any")">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
@@ -125,12 +170,24 @@
     </aside>
 
     <!-- ADMIN MAIN CONTENT -->
-    <main class="flex-grow ml-[256px] min-h-screen bg-void">
+    <main class="flex-grow lg:ml-[256px] min-w-0 min-h-screen bg-void pt-[60px] lg:pt-0 overflow-x-hidden">
         @RenderBody()
     </main>
 
     <!-- GLOBAL SCRIPTS -->
     <script src="~/js/animation.js" type="module" asp-append-version="true"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+            document.body.classList.toggle('overflow-hidden');
+        }
+        function closeSidebar() {
+            document.getElementById('adminSidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
