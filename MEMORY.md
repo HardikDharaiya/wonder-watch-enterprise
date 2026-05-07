@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-04-29 | Session: 24
-Status: STABLE — OTP verification system implemented. Platform is production-ready.
+Last updated: 2026-05-07 | Session: 27
+Status: STABLE — Admin Panel UI/UX remediation complete. Platform is production-ready.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -311,3 +311,31 @@ Status: STABLE — OTP verification system implemented. Platform is production-r
 - **User Experience**: Embedded a hidden response message container directly beneath the input field. Provided dark-luxury styling for success (`#C9A74A` gold text) and error states. Tied a `disabled:opacity-50` state overlay protecting duplicate concurrent submissions on the button.
 - **Testing**: Confirmed that submitting duplicates gracefully handles the returning JSON structure via `JournalService` matching email constraints securely.
 - **Documentation**: Updated `MEMORY.md`, `COMMANDS.md`, and marked tracking tasks complete.
+
+### Session 26 Summary — Admin Panel Remediation & CI/CD Fixes
+- **Admin Inventory CRUD**: Completed the Admin Inventory management by creating `EditWatch.cshtml` and `ViewWatch.cshtml` pages. Implemented server-side update logic in `AdminController.cs` and AJAX-based delete functionality.
+- **Admin Responsive Design**: Remediated the Admin panel layouts to be fully responsive across mobile devices, ensuring data tables and forms are usable on small screens.
+- **CI/CD Pipeline Fix**: Corrected a YAML syntax error (missing space after colon) in `.github/workflows/ci-cd.yml` causing parsing failures.
+- **Azure Deployment Guard**: Added conditional execution steps in the CI/CD workflow to gracefully skip the deployment stage if the `AZURE_WEBAPP_PUBLISH_PROFILE` secret is missing, allowing builds and tests to still pass.
+- **Documentation**: Updated `MEMORY.md`, `COMMANDS.md`, `FILES.md`, `DATABASE_SCHEMA.md`, and `README.md` to reflect Session 26 completions.
+
+### Session 27 Summary — 2026-05-07 — Admin Panel UI/UX Remediation (Round 2)
+- **Root Cause Identified**: The pre-compiled `global.css` lacked essential responsive utility classes (e.g., `lg:ml-[256px]`, specific font-size/padding overrides) required for the admin layout, causing content to render behind the fixed sidebar on desktop viewports.
+- **Strategy**: Injected custom `<style>` blocks directly into `_AdminLayout.cshtml` to bypass Tailwind JIT limitations without requiring a full CSS rebuild. All custom classes use the `admin-` prefix convention.
+- **_AdminLayout.cshtml Fixes**:
+  - Added `admin-main` CSS class with `@media (min-width: 1024px) { margin-left: 256px; }` to offset main content from the fixed sidebar.
+  - Strengthened active nav indicator: `border-left: 3px solid #C9A74A` + gold text + 8% gold background.
+  - Improved user card bottom section: increased padding, `font-size: 11px` for role label.
+  - Added `.table-fade-hint` CSS + JS-driven overflow detection for inventory tables.
+  - Implemented global `ESC` key handler for mobile sidebar dismissal.
+- **Admin/Index.cshtml (Dashboard) Fixes**:
+  - **C1 FIXED**: "Dashboard" heading fully visible (was clipped behind sidebar).
+  - **C2 FIXED**: All 4 KPI cards (Total Revenue, Pending Orders, Active Users, Low Stock Alerts) fully visible.
+  - **C3 FIXED**: "Inventory Alerts (Stock ≤ 4)" heading fully visible.
+  - **M2 FIXED**: KPI icon background opacity increased (10% → 15%) for readability.
+  - **M3 FIXED**: Responsive typography — heading scales from `1.25rem` (mobile) to `1.75rem` (desktop), KPI values scale accordingly.
+  - **M4 FIXED**: Table `min-width` reduced from 800px to 600px for better tablet fitting. Mobile cell padding reduced.
+  - **P2 FIXED**: KPI card hover interaction added (translateY + gold border shimmer).
+  - **P3 FIXED**: System timestamp alignment corrected for mobile stacking.
+- **Browser Verification**: Tested at 1920px (desktop), 768px (tablet), and 375px (mobile). All KPI cards visible, sidebar offset working, table scrollable, mobile top bar functional.
+- **Build**: `dotnet build` — 0 Errors, 11 pre-existing NuGet warnings.

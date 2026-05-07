@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-04-29 (Session 24) | Location: India (IST)
+Last updated: 2026-05-07 (Session 27) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -331,6 +331,16 @@ dotnet user-secrets list --project WonderWatch.Web
 - `dotnet build WonderWatch.sln` ✅ (0 Errors, 22 pre-existing NuGet warnings)
 - **Documentation**: Updated `MEMORY.md`, `FILES.md`, `DATABASE_SCHEMA.md`, `COMMANDS.md`, `README.md` with OTP system records. ✅
 
-### CI/CD Fixes — 2026-04-29
-- **Fixed YAML Syntax Error**: Corrected a parsing error in `.github/workflows/ci-cd.yml` on line 7 (missing space after colon in `branches: [ "main" ]`), which was causing all workflow runs to fail. ✅
-- **Fixed Azure Deployment Failure**: Updated the CI/CD workflow to check for the presence of the `AZURE_WEBAPP_PUBLISH_PROFILE` secret before attempting deployment. This prevents the pipeline from failing when deployment credentials are not configured, allowing the build and test stages to succeed and report correctly. ✅
+### Session 26 Final History — 2026-04-29
+- **Admin CRUD Execution**: Scaffolded and built `EditWatch.cshtml` and `ViewWatch.cshtml`. Connected POST endpoints for watch updates and DELETE operations for removing watches. ✅
+- **Responsive Overhaul**: Injected Tailwind CSS mobile responsiveness classes (`overflow-x-auto`, stack-on-mobile flex/grid utilities) throughout the Admin portal. ✅
+- **CI/CD Fixes**: Corrected a parsing error in `.github/workflows/ci-cd.yml` on line 7 (missing space after colon). Updated the CI/CD workflow to check for the presence of the `AZURE_WEBAPP_PUBLISH_PROFILE` secret before attempting deployment. ✅
+- `dotnet build WonderWatch.sln` ✅ (0 Errors, successful pipeline validation).
+- **Documentation**: Synchronized all tracking documentation for session completions. ✅
+
+### Session 27 Final History — 2026-05-07
+- **Admin Panel UI/UX Remediation (Round 2)**: Injected custom CSS overrides into `_AdminLayout.cshtml` to fix sidebar-content clipping. Updated `Admin/Index.cshtml` with responsive KPI cards, typography, and table styles. ✅
+- `dotnet build --no-restore` ✅ (0 Errors, 11 pre-existing NuGet warnings)
+- `dotnet run --project WonderWatch.Web --urls "http://localhost:7105"` ✅ (Server started, DB seeded successfully)
+- **Browser Verification**: Playwright tests at 1920px, 768px, and 375px — all KPI cards visible, sidebar offset working, mobile responsive. ✅
+- **Documentation**: Updated `MEMORY.md`, `COMMANDS.md`, `FILES.md`, `README.md` with Session 27 records. ✅

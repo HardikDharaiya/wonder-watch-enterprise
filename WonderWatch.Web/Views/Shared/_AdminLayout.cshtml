@@ -10,7 +10,7 @@
         if (string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
             (string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase) || action == "Any"))
         {
-            return "bg-[rgba(201,167,74,0.1)] border-l-2 border-gold text-gold";
+            return "bg-[rgba(201,167,74,0.15)] border-l-[3px] border-gold text-gold";
         }
         return "text-gold-dim hover:bg-white-faint hover:text-parchment border-l-2 border-transparent";
     }
@@ -34,6 +34,37 @@
         }
         @@media (min-width: 1024px) {
             .admin-sidebar { transform: translateX(0) !important; }
+            .admin-main { margin-left: 256px; }
+        }
+
+        /* Table scroll fade hint */
+        .table-fade-hint { position: relative; }
+        .table-fade-hint::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 48px;
+            background: linear-gradient(to bottom, transparent, rgba(10,10,10,0.6));
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .table-fade-hint.has-overflow::after { opacity: 1; }
+
+        /* Admin responsive overrides (not in pre-built CSS) */
+        .admin-kpi-value { font-size: 24px; }
+        .admin-kpi-card { padding: 20px; min-height: 120px; }
+        .admin-heading { font-size: 32px; margin-bottom: 12px; }
+        .admin-header-wrap { margin-bottom: 32px; gap: 16px; }
+        @@media (min-width: 768px) {
+            .admin-kpi-value { font-size: 30px; }
+            .admin-kpi-card { padding: 32px; min-height: 160px; }
+            .admin-heading { font-size: 48px; margin-bottom: 16px; }
+            .admin-header-wrap { margin-bottom: 48px; gap: 24px; }
+        }
+        .admin-table-cell { padding: 12px; }
+        @@media (min-width: 768px) {
+            .admin-table-cell { padding: 24px; }
         }
     </style>
 </head>
@@ -157,20 +188,20 @@
         </nav>
 
         <!-- Bottom User Card -->
-        <div class="border-t border-[rgba(201,167,74,0.1)] bg-surface-alt bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)] px-[17px] py-[9px] flex items-center gap-[12px]">
+        <div class="border-t border-[rgba(201,167,74,0.1)] bg-surface-alt bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)] flex items-center gap-[12px]" style="padding: 14px 20px;">
             <div class="w-[32px] h-[32px] rounded-full bg-[rgba(201,167,74,0.2)] border border-gold/40 flex items-center justify-center flex-shrink-0">
                 <span class="font-sans font-bold text-[12px] text-gold">AV</span>
             </div>
             <div class="flex flex-col">
                 <span class="font-sans font-bold text-[11px] text-body leading-tight">Alexander V.</span>
-                <span class="font-sans font-normal text-[9px] text-gold-dim tracking-[-0.45px] leading-tight mt-[2px]">CHIEF CURATOR</span>
+                <span class="font-sans font-normal text-gold-dim leading-tight mt-[2px]" style="font-size: 10px; letter-spacing: 0.5px;">CHIEF CURATOR</span>
             </div>
         </div>
 
     </aside>
 
     <!-- ADMIN MAIN CONTENT -->
-    <main class="flex-grow lg:ml-[256px] min-w-0 min-h-screen bg-void pt-[60px] lg:pt-0 overflow-x-hidden">
+    <main class="admin-main flex-grow min-w-0 min-h-screen bg-void pt-[60px] lg:pt-0 overflow-x-hidden">
         @RenderBody()
     </main>
 
@@ -187,6 +218,20 @@
             document.getElementById('sidebarOverlay').classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // Table scroll fade hint
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.table-fade-hint').forEach(function(el) {
+                var check = function() {
+                    el.classList.toggle('has-overflow', el.scrollWidth > el.clientWidth);
+                };
+                check();
+                window.addEventListener('resize', check);
+            });
+        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

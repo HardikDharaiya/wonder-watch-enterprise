@@ -1,4 +1,4 @@
-@model List<WonderWatch.Domain.Entities.Watch>
+@model WonderWatch.Web.ViewModels.AdminWatchListViewModel
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Inventory";
@@ -28,7 +28,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-[24px] mb-[48px]">
         <div>
             <h1 class="font-serif text-[36px] md:text-[48px] text-parchment tracking-[-1.2px] leading-none mb-[16px]">Inventory</h1>
-            <p class="font-sans text-[14px] text-muted">@Model.Count reference(s) in the catalog.</p>
+            <p class="font-sans text-[14px] text-muted">@Model.Watches.Count reference(s) in the catalog.</p>
         </div>
         <a href="/admin/watches/create"
            class="bg-gold text-void font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[32px] py-[16px] hover:bg-parchment transition-colors duration-600 inline-flex items-center gap-[12px] self-start md:self-auto">
@@ -43,7 +43,6 @@
             <thead>
                 <tr class="border-b border-white-faint">
                     <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-left p-[20px]">Reference</th>
-                    <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-left p-[20px]">Brand</th>
                     <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-right p-[20px]">Price</th>
                     <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-center p-[20px]">Stock</th>
                     <th class="font-sans font-bold text-[10px] text-gold tracking-[3px] uppercase text-center p-[20px]">Status</th>
@@ -51,18 +50,16 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Model.Any())
+                @if (Model.Watches.Any())
                 {
-                    @foreach (var watch in Model)
+                    @foreach (var watch in Model.Watches)
                     {
-                        var thumbnail = watch.Images?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Path ?? "/images/placeholder.webp";
-                        var indiaCulture = new System.Globalization.CultureInfo("hi-IN");
                         <tr class="border-b border-white-faint/50 hover:bg-surface-alt/30 transition-colors group">
                             <!-- Reference: Thumbnail + Name -->
                             <td class="p-[20px]">
                                 <div class="flex items-center gap-[16px]">
                                     <div class="w-[56px] h-[56px] bg-void border border-white-faint flex-shrink-0 overflow-hidden">
-                                        <img src="@thumbnail" alt="@watch.Name" class="w-full h-full object-cover" />
+                                        <img src="@watch.ImageUrl" alt="@watch.Name" class="w-full h-full object-cover" />
                                     </div>
                                     <div class="min-w-0">
                                         <a href="/admin/watches/view/@watch.Id" class="font-sans font-medium text-[14px] text-parchment hover:text-gold transition-colors block truncate max-w-[200px]">@watch.Name</a>
@@ -70,10 +67,8 @@
                                     </div>
                                 </div>
                             </td>
-                            <!-- Brand -->
-                            <td class="p-[20px] font-sans text-[13px] text-muted">@watch.Brand</td>
                             <!-- Price -->
-                            <td class="p-[20px] font-sans text-[14px] text-parchment text-right font-medium">@watch.RetailPrice.ToString("C0", indiaCulture)</td>
+                            <td class="p-[20px] font-sans text-[14px] text-parchment text-right font-medium">@watch.RetailPriceFormatted</td>
                             <!-- Stock -->
                             <td class="p-[20px] text-center">
                                 @if (watch.StockQuantity <= 0)
@@ -111,7 +106,7 @@
                                        class="w-[36px] h-[36px] flex items-center justify-center border border-white-faint text-muted hover:text-gold hover:border-gold transition-colors">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </a>
-                                    <button type="button" title="Delete" onclick="openDeleteModal('@watch.Id', '@watch.Name.Replace("'", "\\'")')"
+                                    <button type="button" title="Delete" data-watch-id="@watch.Id" data-watch-name="@watch.Name" onclick="openDeleteModal(this.dataset.watchId, this.dataset.watchName)"
                                             class="w-[36px] h-[36px] flex items-center justify-center border border-white-faint text-muted hover:text-danger hover:border-danger transition-colors">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                     </button>
@@ -123,7 +118,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="p-[48px] text-center">
+                        <td colspan="5" class="p-[48px] text-center">
                             <p class="font-sans text-[16px] text-muted mb-[16px]">No references in inventory.</p>
                             <a href="/admin/watches/create" class="font-sans font-bold text-[11px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">+ Create First Reference</a>
                         </td>

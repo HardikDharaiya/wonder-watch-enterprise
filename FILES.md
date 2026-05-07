@@ -1,5 +1,5 @@
 # FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-04-29 (Session 24)
+Last updated: 2026-05-07 (Session 27)
 
 
 ## Project Root
@@ -106,11 +106,13 @@ WonderWatch.Web/
 │   │   └── VerifyOtp.cshtml       ← 6-digit OTP entry with auto-advance + paste support
 │   ├── Admin/
 │   │   ├── CreateWatch.cshtml
+│   │   ├── EditWatch.cshtml   ← Admin edit watch form
 │   │   ├── Filters.cshtml     ← Brand CRUD + Price range config
 │   │   ├── Index.cshtml
 │   │   ├── Orders.cshtml
 │   │   ├── Reviews.cshtml
 │   │   ├── Settings.cshtml
+│   │   ├── ViewWatch.cshtml   ← Admin watch detail view
 │   │   └── Watches.cshtml
 │   ├── Catalog/
 │   │   ├── _CatalogFilters.cshtml ← Partial: Search bar, brand checkboxes, price slider, strap/size filters

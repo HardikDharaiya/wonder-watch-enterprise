@@ -81,7 +81,7 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
 - **The Concierge**: Seamless fetch-API integrated support communications pipeline.
 - **Pay on Delivery**: Robust fallback payment mechanisms supporting custom region rules logic.
 - **Vault Memberships**: Admin-driven tier management supporting recurrent logic and billing features via Razorpay.
-
+- **Admin Management Portal**: Fully responsive CMS optimized for desktop, tablet, and mobile viewports with a polished Dark Luxury aesthetic for catalog control, order tracking, and settings configuration.
 ## 📁 Key File Contexts
 - **`.github/workflows/ci-cd.yml`**: Contains the GitHub Actions scripts responsible for checking out, building .NET, building Tailwind, testing, and deploying zero-downtime releases to our Azure environment.
 - **`WonderWatch.Infrastructure/Migrations/*`**: Contains all incremental snapshots for configuring the schema via Entity Framework.
