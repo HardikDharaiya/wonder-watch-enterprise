@@ -339,3 +339,10 @@ Status: STABLE — Admin Panel UI/UX remediation complete. Platform is productio
   - **P3 FIXED**: System timestamp alignment corrected for mobile stacking.
 - **Browser Verification**: Tested at 1920px (desktop), 768px (tablet), and 375px (mobile). All KPI cards visible, sidebar offset working, table scrollable, mobile top bar functional.
 - **Build**: `dotnet build` — 0 Errors, 11 pre-existing NuGet warnings.
+
+### Session 28 - SMTP Credential Leak Remediation
+- **Git Reset**: Cleaned up the local repository by fetching and hard-resetting to origin/main to remove any lingering secrets from git history.
+- **User Secrets Migration**: Migrated SMTP configuration out of ppsettings.json and into .NET User Secrets to prevent future accidental credential commits.
+- **appsettings Cleanup**: Cleared out existing sensitive values from ppsettings.json and created a reference ppsettings.template.json with dummy values.
+- **Admin Controller Refactor**: Refactored AdminController.SaveSettings to programmatically update the local secrets.json file instead of ppsettings.json. Added masking to the Settings UI to obscure existing passwords.
+- **Cleanup & Verification**: Verified that EmailService reads correctly from IConfiguration, which seamlessly integrates User Secrets. Cleaned up temporary files and temporary repository clones.

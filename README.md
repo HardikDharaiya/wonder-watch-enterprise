@@ -55,16 +55,13 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
    ```
 
 7. **SMTP Configuration (OTP Emails)**
-   The OTP verification system requires a configured SMTP server. Set up via Admin Panel (`/admin/settings`) or directly in `appsettings.json`:
-   ```json
-   "SmtpSettings": {
-     "Host": "smtp.gmail.com",
-     "Port": 587,
-     "Username": "your-email@gmail.com",
-     "Password": "your-app-password",
-     "FromEmail": "noreply@wonderwatch.in",
-     "FromName": "Wonder Watch"
-   }
+   The OTP verification system requires a configured SMTP server. Set up via Admin Panel (`/admin/settings`) or directly via .NET User Secrets for local development:
+   ```bash
+   dotnet user-secrets set "SmtpSettings:Host" "smtp.gmail.com" --project WonderWatch.Web
+   dotnet user-secrets set "SmtpSettings:Port" "587" --project WonderWatch.Web
+   dotnet user-secrets set "SmtpSettings:Username" "your-email@gmail.com" --project WonderWatch.Web
+   dotnet user-secrets set "SmtpSettings:Password" "your-app-password" --project WonderWatch.Web
+   dotnet user-secrets set "SmtpSettings:FromEmail" "noreply@wonderwatch.in" --project WonderWatch.Web
    ```
 
 8. **Run the Project**

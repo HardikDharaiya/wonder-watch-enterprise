@@ -75,6 +75,7 @@ WonderWatch.Web/
 ├── tailwind.config.js     ← Strict design tokens (Zero border-radius, specific hex codes)
 ├── package.json           ← NPM scripts (build:css)
 ├── appsettings.json
+├── appsettings.template.json
 ├── appsettings.Development.json
 ├── appsettings.Production.json ← Azure Key Vault schema
 ├── Controllers/

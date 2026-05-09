@@ -344,3 +344,12 @@ dotnet user-secrets list --project WonderWatch.Web
 - `dotnet run --project WonderWatch.Web --urls "http://localhost:7105"` ✅ (Server started, DB seeded successfully)
 - **Browser Verification**: Playwright tests at 1920px, 768px, and 375px — all KPI cards visible, sidebar offset working, mobile responsive. ✅
 - **Documentation**: Updated `MEMORY.md`, `COMMANDS.md`, `FILES.md`, `README.md` with Session 27 records. ✅
+
+### Session 28 Final History - 2026-05-09
+- **Git Reset Execution**: Executed \git fetch origin\ and \git reset --hard origin/main\ to completely wipe locally uncommitted credential leaks from the source tree.
+- **User Secrets Initialized**: Executed \dotnet user-secrets init --project WonderWatch.Web\ (conceptually utilized the existing \UserSecretsId\).
+- **Admin Controller Update**: Multi-replaced \SaveSettings\ POST endpoint in \AdminController.cs\ to save directly to the User Secrets JSON file instead of \ppsettings.json\.
+- **Appsettings Replacement**: Stripped \ppsettings.json\ of any real credentials and updated \ppsettings.template.json\ to act as a secure reference structure.
+- **Documentation Synchronization**: Updated \MEMORY.md\, \README.md\, \COMMANDS.md\, \FILES.md\ mapping User Secrets execution.
+- \dotnet build WonderWatch.sln\ (0 Errors, pipeline validated).
+

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -394,7 +395,11 @@ namespace WonderWatch.Web.Controllers
             ViewBag.SmtpHost = _config["SmtpSettings:Host"];
             ViewBag.SmtpPort = _config["SmtpSettings:Port"];
             ViewBag.SmtpUsername = _config["SmtpSettings:Username"];
-            ViewBag.SmtpPassword = _config["SmtpSettings:Password"];
+            
+            // Mask password for security
+            var hasPassword = !string.IsNullOrEmpty(_config["SmtpSettings:Password"]);
+            ViewBag.SmtpPassword = hasPassword ? "••••••••" : "";
+
             ViewBag.SmtpFromEmail = _config["SmtpSettings:FromEmail"];
             ViewBag.SmtpFromName = _config["SmtpSettings:FromName"];
             return View();
@@ -406,35 +411,59 @@ namespace WonderWatch.Web.Controllers
         {
             try
             {
-                // ── Write to appsettings.json ──────────────────────────────
-                var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-                string existingJson = existingJson = System.IO.File.Exists(appSettingsPath)
-                    ? await System.IO.File.ReadAllTextAsync(appSettingsPath)
+                // ── Write to .NET User Secrets instead of appsettings.json ─────────
+                var userSecretsId = System.Reflection.Assembly.GetExecutingAssembly()
+                    .GetCustomAttribute<Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute>()?.UserSecretsId;
+
+                if (string.IsNullOrEmpty(userSecretsId))
+                {
+                    throw new Exception("UserSecretsId not found. User Secrets are only available in Development mode.");
+                }
+
+                var secretsPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "Microsoft", "UserSecrets", userSecretsId, "secrets.json"
+                );
+
+                string existingJson = System.IO.File.Exists(secretsPath)
+                    ? await System.IO.File.ReadAllTextAsync(secretsPath)
                     : "{}";
 
-                // Deserialize as a mutable node tree to preserve non-SMTP keys
                 var root = System.Text.Json.Nodes.JsonNode.Parse(existingJson) as System.Text.Json.Nodes.JsonObject
                            ?? new System.Text.Json.Nodes.JsonObject();
 
-                var smtpNode = new System.Text.Json.Nodes.JsonObject
+                root["SmtpSettings:Host"] = SmtpHost ?? "";
+                root["SmtpSettings:Port"] = SmtpPort ?? "587";
+                root["SmtpSettings:Username"] = SmtpUsername ?? "";
+                
+                // Only update password if a new one is provided and it's not the mask
+                if (!string.IsNullOrWhiteSpace(SmtpPassword) && SmtpPassword != "••••••••")
                 {
-                    ["Host"]      = SmtpHost      ?? "",
-                    ["Port"]      = SmtpPort      ?? "587",
-                    ["Username"]  = SmtpUsername  ?? "",
-                    ["Password"]  = SmtpPassword  ?? "",
-                    ["FromEmail"] = SmtpFromEmail ?? "",
-                    ["FromName"]  = SmtpFromName  ?? "Wonder Watch"
-                };
-                root["SmtpSettings"] = smtpNode;
+                    root["SmtpSettings:Password"] = SmtpPassword;
+                }
+                // If the user completely cleared the password field, we can clear it
+                else if (string.IsNullOrWhiteSpace(SmtpPassword))
+                {
+                    root["SmtpSettings:Password"] = "";
+                }
+
+                root["SmtpSettings:FromEmail"] = SmtpFromEmail ?? "";
+                root["SmtpSettings:FromName"] = SmtpFromName ?? "Wonder Watch";
 
                 var writeOptions = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
-                await System.IO.File.WriteAllTextAsync(appSettingsPath,
-                    root.ToJsonString(writeOptions));
+                
+                var directory = Path.GetDirectoryName(secretsPath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                await System.IO.File.WriteAllTextAsync(secretsPath, root.ToJsonString(writeOptions));
 
                 // ── Reload IConfiguration so EmailService picks up new values immediately ──
                 _configRoot?.Reload();
 
-                TempData["SmtpSuccess"] = "✓ SMTP settings saved and applied. You can now test the connection below.";
+                TempData["SmtpSuccess"] = "✓ SMTP settings saved to User Secrets and applied.";
             }
             catch (Exception ex)
             {
