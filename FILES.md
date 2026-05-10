@@ -1,5 +1,5 @@
 # FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-05-10 (Session 28 — Admin Orders Overhaul)
+Last updated: 2026-05-10 (Session 31 — Admin Dashboard Command Centre)
 
 
 ## Project Root
@@ -62,8 +62,8 @@ WonderWatch.Infrastructure/
 ```text
 WonderWatch.Application/
 ├── WonderWatch.Application.csproj
-├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, IMembershipService, IJournalService, IEmailService + SendOtpAsync, etc.) and DTOs/ViewModels (VerifyOtpViewModel, ForgotPasswordViewModel, ResetPasswordViewModel)
-└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, MembershipService, JournalService, EmailService + branded OTP email template, etc.)
+├── ApplicationContracts.cs ← ALL Interfaces (ICatalogService, IOrderService, IMembershipService, IJournalService, IEmailService + SendOtpAsync, etc.) and DTOs/ViewModels (VerifyOtpViewModel, ForgotPasswordViewModel, ResetPasswordViewModel, DailyRevenueDto, TopSellingWatchDto, RecentOrderDto)
+└── ApplicationServices.cs  ← ALL Implementations (CatalogService, OrderService, MembershipService, JournalService, EmailService + branded OTP email template, AdminService + GetTopSellingWatchesAsync, GetRecentOrdersAsync, etc.)
 
 ```
 
@@ -109,7 +109,7 @@ WonderWatch.Web/
 │   │   ├── CreateWatch.cshtml
 │   │   ├── EditWatch.cshtml   ← Admin edit watch form
 │   │   ├── Filters.cshtml     ← Brand CRUD + Price range config
-│   │   ├── Index.cshtml
+│   │   ├── Index.cshtml        ← 7-Zone Command Centre (KPIs, Chart.js revenue, pipeline, top sellers, alerts, system health)
 │   │   ├── OrderDetail.cshtml ← Full order detail: timeline stepper, items, customer/payment info, status update
 │   │   ├── Orders.cshtml      ← Enhanced order list: KPI cards, status tabs, bulk actions, payment column
 │   │   ├── Reviews.cshtml
@@ -132,7 +132,7 @@ WonderWatch.Web/
 │   │   ├── Shipping.cshtml
 │   │   └── Terms.cshtml
 │   ├── Shared/
-│   │   ├── _AdminLayout.cshtml
+│   │   ├── _AdminLayout.cshtml ← Chart.js CDN + 120-line Command Centre CSS (glassmorphism, pipeline bars, health bars)
 │   │   ├── _CartDrawer.cshtml
 │   │   ├── _Layout.cshtml
 │   │   ├── _ValidationScriptsPartial.cshtml

@@ -46,6 +46,48 @@ namespace WonderWatch.Application.DTOs
         public int OrdersPending { get; set; }
         public int ActiveUsers { get; set; }
         public int LowStockCount { get; set; }
+        // Zone 2: Extended KPI strip
+        public int TotalOrders { get; set; }
+        public int OrdersShipped { get; set; }
+        // Zone 3: Revenue sparkline (7-day)
+        public List<DailyRevenueDto> RevenueTimeline { get; set; } = new();
+        // Zone 3: Order Pipeline
+        public int PipelinePending { get; set; }
+        public int PipelinePaid { get; set; }
+        public int PipelineProcessing { get; set; }
+        public int PipelineShipped { get; set; }
+        public int PipelineDelivered { get; set; }
+        // Zone 7: System Health
+        public int TotalWatches { get; set; }
+        public int PublishedWatches { get; set; }
+        public int PendingReviews { get; set; }
+    }
+
+    public class DailyRevenueDto
+    {
+        public string Date { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+    }
+
+    public class TopSellingWatchDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public string RevenueFormatted { get; set; } = string.Empty;
+    }
+
+    public class RecentOrderDto
+    {
+        public Guid Id { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string TotalFormatted { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string TimeAgo { get; set; } = string.Empty;
+        public bool IsPayOnDelivery { get; set; }
     }
 
     public class WatchCardDto
@@ -216,6 +258,8 @@ namespace WonderWatch.Application.Interfaces
     public interface IAdminService
     {
         Task<DashboardKpiDto> GetDashboardKPIsAsync();
+        Task<List<TopSellingWatchDto>> GetTopSellingWatchesAsync(int count = 3);
+        Task<List<RecentOrderDto>> GetRecentOrdersAsync(int count = 5);
         Task<List<Watch>> GetInventoryAlertsAsync(); // Returns watches where stock <= 4
         Task ModerateReviewAsync(Guid reviewId, ReviewStatus status);
 

@@ -546,21 +546,130 @@ namespace WonderWatch.Application.Services
 
         public async Task<DashboardKpiDto> GetDashboardKPIsAsync()
         {
+            var revenueStatuses = new[] { OrderStatus.Delivered, OrderStatus.Shipped, OrderStatus.Paid };
             var totalRevenue = await _context.Orders
-                .Where(o => o.Status == OrderStatus.Delivered || o.Status == OrderStatus.Shipped || o.Status == OrderStatus.Paid)
+                .Where(o => revenueStatuses.Contains(o.Status))
                 .SumAsync(o => o.TotalAmount);
 
             var pendingOrders = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Paid);
             var activeUsers = await _context.Users.CountAsync();
             var lowStock = await _context.Watches.CountAsync(w => w.StockQuantity <= 4);
 
+            // Zone 2: Extended KPIs
+            var totalOrders = await _context.Orders.CountAsync();
+            var ordersShipped = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Shipped);
+
+            // Zone 3: Revenue Timeline (last 7 days) — materialise then group in memory
+            var sevenDaysAgo = DateTime.UtcNow.Date.AddDays(-6);
+            var recentOrders = await _context.Orders
+                .Where(o => revenueStatuses.Contains(o.Status) && o.CreatedAt >= sevenDaysAgo)
+                .Select(o => new { o.CreatedAt, o.TotalAmount })
+                .ToListAsync();
+
+            var revenueTimeline = Enumerable.Range(0, 7)
+                .Select(offset =>
+                {
+                    var day = sevenDaysAgo.AddDays(offset);
+                    return new DailyRevenueDto
+                    {
+                        Date = day.ToString("ddd"),
+                        Amount = recentOrders
+                            .Where(o => o.CreatedAt.Date == day)
+                            .Sum(o => o.TotalAmount)
+                    };
+                }).ToList();
+
+            // Zone 3: Order Pipeline counts
+            var pipelinePending = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Pending);
+            var pipelinePaid = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Paid);
+            var pipelineProcessing = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Processing);
+            var pipelineShipped = ordersShipped;
+            var pipelineDelivered = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Delivered || o.Status == OrderStatus.Confirmed);
+
+            // Zone 7: System Health
+            var totalWatches = await _context.Watches.CountAsync();
+            var publishedWatches = await _context.Watches.CountAsync(w => w.IsPublished);
+            var pendingReviews = await _context.Reviews.CountAsync(r => r.Status == ReviewStatus.Pending);
+
             return new DashboardKpiDto
             {
                 TotalRevenue = totalRevenue,
                 OrdersPending = pendingOrders,
                 ActiveUsers = activeUsers,
-                LowStockCount = lowStock
+                LowStockCount = lowStock,
+                TotalOrders = totalOrders,
+                OrdersShipped = ordersShipped,
+                RevenueTimeline = revenueTimeline,
+                PipelinePending = pipelinePending,
+                PipelinePaid = pipelinePaid,
+                PipelineProcessing = pipelineProcessing,
+                PipelineShipped = pipelineShipped,
+                PipelineDelivered = pipelineDelivered,
+                TotalWatches = totalWatches,
+                PublishedWatches = publishedWatches,
+                PendingReviews = pendingReviews
             };
+        }
+
+        public async Task<List<TopSellingWatchDto>> GetTopSellingWatchesAsync(int count = 3)
+        {
+            var indiaCulture = new System.Globalization.CultureInfo("hi-IN");
+
+            // Materialise order items then group in memory (EF Core GroupBy limitation)
+            var orderItems = await _context.Set<OrderItem>()
+                .Include(oi => oi.Watch).ThenInclude(w => w.Images)
+                .Where(oi => oi.Watch != null)
+                .ToListAsync();
+
+            return orderItems
+                .GroupBy(oi => oi.WatchId)
+                .Select(g => new TopSellingWatchDto
+                {
+                    Id = g.Key,
+                    Name = g.First().Watch!.Name,
+                    Brand = g.First().Watch!.Brand,
+                    ImageUrl = g.First().Watch!.Images.OrderBy(i => i.SortOrder)
+                                .Select(i => i.Path).FirstOrDefault() ?? "/images/placeholder.webp",
+                    UnitsSold = g.Sum(oi => oi.Quantity),
+                    RevenueFormatted = g.Sum(oi => oi.UnitPrice * oi.Quantity).ToString("C0", indiaCulture)
+                })
+                .OrderByDescending(x => x.UnitsSold)
+                .Take(count)
+                .ToList();
+        }
+
+        public async Task<List<RecentOrderDto>> GetRecentOrdersAsync(int count = 5)
+        {
+            var indiaCulture = new System.Globalization.CultureInfo("hi-IN");
+            var orders = await _context.Orders
+                .OrderByDescending(o => o.CreatedAt)
+                .Take(count)
+                .ToListAsync();
+
+            var userIds = orders.Select(o => o.UserId).Distinct().ToList();
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.FullName);
+
+            return orders.Select(o => new RecentOrderDto
+            {
+                Id = o.Id,
+                OrderNumber = $"#WW-{o.Id.ToString().Substring(0, 8).ToUpper()}",
+                CustomerName = users.GetValueOrDefault(o.UserId, "Unknown"),
+                TotalFormatted = o.TotalAmount.ToString("C0", indiaCulture),
+                Status = o.Status.ToString(),
+                TimeAgo = FormatTimeAgo(o.CreatedAt),
+                IsPayOnDelivery = o.IsPayOnDelivery
+            }).ToList();
+        }
+
+        private static string FormatTimeAgo(DateTime utcDate)
+        {
+            var diff = DateTime.UtcNow - utcDate;
+            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+            if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+            return utcDate.ToString("dd MMM");
         }
 
         public async Task<List<Watch>> GetInventoryAlertsAsync()

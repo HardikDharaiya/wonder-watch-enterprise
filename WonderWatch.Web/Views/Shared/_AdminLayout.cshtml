@@ -87,7 +87,126 @@
         @@media (min-width: 1280px) {
             .admin-td { padding: 20px; }
         }
+
+        /* ============================================
+           COMMAND CENTRE — 7-Zone Dashboard Styles
+           ============================================ */
+
+        /* KPI Card hover lift */
+        .cmd-kpi-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.9), rgba(15,15,15,0.95));
+            border: 1px solid rgba(201,167,74,0.12);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color 0.35s ease,
+                        box-shadow 0.35s ease;
+        }
+        .cmd-kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(201,167,74,0.35);
+            box-shadow: 0 12px 40px -12px rgba(201,167,74,0.15);
+        }
+        .cmd-kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #C9A74A, rgba(201,167,74,0.2));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .cmd-kpi-card:hover::before { opacity: 1; }
+
+        /* Zone panel card */
+        .cmd-panel {
+            background: rgba(26,26,26,0.7);
+            border: 1px solid rgba(201,167,74,0.08);
+            backdrop-filter: blur(12px);
+        }
+        .cmd-panel-title {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 800;
+            font-size: 11px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #8A816C;
+        }
+
+        /* Pipeline bar */
+        .cmd-pipeline-segment {
+            height: 6px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cmd-pipeline-pending { background: #F59E0B; }
+        .cmd-pipeline-paid { background: #3B82F6; }
+        .cmd-pipeline-processing { background: #8B5CF6; }
+        .cmd-pipeline-shipped { background: #06B6D4; }
+        .cmd-pipeline-delivered { background: #22C55E; }
+
+        /* Status badge micro-pill */
+        .cmd-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-radius: 12px;
+        }
+        .cmd-badge-pending { background: rgba(245,158,11,0.15); color: #F59E0B; }
+        .cmd-badge-paid { background: rgba(59,130,246,0.15); color: #3B82F6; }
+        .cmd-badge-processing { background: rgba(139,92,246,0.15); color: #8B5CF6; }
+        .cmd-badge-shipped { background: rgba(6,182,212,0.15); color: #06B6D4; }
+        .cmd-badge-delivered { background: rgba(34,197,94,0.15); color: #22C55E; }
+        .cmd-badge-confirmed { background: rgba(34,197,94,0.15); color: #22C55E; }
+        .cmd-badge-cancelled { background: rgba(239,68,68,0.15); color: #EF4444; }
+
+        /* Seller rank badge */
+        .cmd-rank { 
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800;
+            border: 1px solid rgba(201,167,74,0.3);
+            color: #C9A74A;
+        }
+
+        /* Shimmer loading placeholder */
+        @@keyframes cmdShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .cmd-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(201,167,74,0.06), transparent);
+            background-size: 200% 100%;
+            animation: cmdShimmer 2.5s ease-in-out infinite;
+        }
+
+        /* Health progress bar */
+        .cmd-health-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            overflow: hidden;
+        }
+        .cmd-health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #C9A74A, #22C55E);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Chart.js canvas wrapper */
+        .cmd-chart-wrap {
+            position: relative;
+            height: 200px;
+        }
+        @@media (min-width: 768px) {
+            .cmd-chart-wrap { height: 240px; }
+        }
     </style>
+    <!-- Chart.js CDN for Revenue Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col lg:flex-row selection:bg-gold selection:text-void">
 

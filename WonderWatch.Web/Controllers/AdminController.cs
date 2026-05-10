@@ -65,21 +65,69 @@ namespace WonderWatch.Web.Controllers
         {
             var kpis = await _adminService.GetDashboardKPIsAsync();
             var alerts = await _adminService.GetInventoryAlertsAsync();
+            var topSellers = await _adminService.GetTopSellingWatchesAsync(3);
+            var recentOrders = await _adminService.GetRecentOrdersAsync(5);
             var indiaCulture = new CultureInfo("hi-IN");
 
             var viewModel = new AdminDashboardViewModel
             {
+                // Zone 1
                 TotalRevenueFormatted = kpis.TotalRevenue.ToString("C0", indiaCulture),
                 OrdersPending = kpis.OrdersPending,
                 ActiveUsers = kpis.ActiveUsers,
                 LowStockCount = kpis.LowStockCount,
+
+                // Zone 2
+                TotalOrders = kpis.TotalOrders,
+                OrdersShipped = kpis.OrdersShipped,
+
+                // Zone 3: Chart.js JSON
+                RevenueLabelsJson = System.Text.Json.JsonSerializer.Serialize(
+                    kpis.RevenueTimeline.Select(r => r.Date)),
+                RevenueDataJson = System.Text.Json.JsonSerializer.Serialize(
+                    kpis.RevenueTimeline.Select(r => r.Amount)),
+
+                // Zone 4: Pipeline
+                PipelinePending = kpis.PipelinePending,
+                PipelinePaid = kpis.PipelinePaid,
+                PipelineProcessing = kpis.PipelineProcessing,
+                PipelineShipped = kpis.PipelineShipped,
+                PipelineDelivered = kpis.PipelineDelivered,
+
+                // Zone 5: Top Sellers
+                TopSellers = topSellers.Select(ts => new TopSellingWatchViewModel
+                {
+                    Id = ts.Id,
+                    Name = ts.Name,
+                    Brand = ts.Brand,
+                    ImageUrl = ts.ImageUrl,
+                    UnitsSold = ts.UnitsSold,
+                    RevenueFormatted = ts.RevenueFormatted
+                }).ToList(),
+
+                // Zone 6: Recent Orders + Alerts
+                RecentOrders = recentOrders.Select(ro => new RecentOrderViewModel
+                {
+                    Id = ro.Id,
+                    OrderNumber = ro.OrderNumber,
+                    CustomerName = ro.CustomerName,
+                    TotalFormatted = ro.TotalFormatted,
+                    Status = ro.Status,
+                    TimeAgo = ro.TimeAgo,
+                    IsPayOnDelivery = ro.IsPayOnDelivery
+                }).ToList(),
                 InventoryAlerts = alerts.Select(w => new AdminInventoryAlertViewModel
                 {
                     WatchId = w.Id,
                     Name = w.Name,
                     ReferenceNumber = w.ReferenceNumber,
                     StockQuantity = w.StockQuantity
-                }).ToList()
+                }).ToList(),
+
+                // Zone 7: System Health
+                TotalWatches = kpis.TotalWatches,
+                PublishedWatches = kpis.PublishedWatches,
+                PendingReviews = kpis.PendingReviews
             };
 
             return View(viewModel);
@@ -853,11 +901,59 @@ namespace WonderWatch.Web.ViewModels
     // ---------------------------------------------------------
     public class AdminDashboardViewModel
     {
+        // Zone 1: Primary KPI Cards
         public string TotalRevenueFormatted { get; set; } = string.Empty;
         public int OrdersPending { get; set; }
         public int ActiveUsers { get; set; }
         public int LowStockCount { get; set; }
+
+        // Zone 2: Extended KPI Strip
+        public int TotalOrders { get; set; }
+        public int OrdersShipped { get; set; }
+
+        // Zone 3: Revenue Chart (JSON for Chart.js)
+        public string RevenueLabelsJson { get; set; } = "[]";
+        public string RevenueDataJson { get; set; } = "[]";
+
+        // Zone 4: Order Pipeline
+        public int PipelinePending { get; set; }
+        public int PipelinePaid { get; set; }
+        public int PipelineProcessing { get; set; }
+        public int PipelineShipped { get; set; }
+        public int PipelineDelivered { get; set; }
+
+        // Zone 5: Top Sellers
+        public List<TopSellingWatchViewModel> TopSellers { get; set; } = new();
+
+        // Zone 6: Recent Orders + Inventory Alerts
+        public List<RecentOrderViewModel> RecentOrders { get; set; } = new();
         public List<AdminInventoryAlertViewModel> InventoryAlerts { get; set; } = new();
+
+        // Zone 7: System Health
+        public int TotalWatches { get; set; }
+        public int PublishedWatches { get; set; }
+        public int PendingReviews { get; set; }
+    }
+
+    public class TopSellingWatchViewModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public string RevenueFormatted { get; set; } = string.Empty;
+    }
+
+    public class RecentOrderViewModel
+    {
+        public Guid Id { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string TotalFormatted { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string TimeAgo { get; set; } = string.Empty;
+        public bool IsPayOnDelivery { get; set; }
     }
 
     public class AdminInventoryAlertViewModel

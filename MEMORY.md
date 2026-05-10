@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-05-10 | Session: 28
-Status: STABLE — Admin Orders enterprise overhaul complete. Platform is production-ready.
+Last updated: 2026-05-10 | Session: 31
+Status: STABLE — Admin Dashboard Command Centre overhaul complete. Platform is production-ready.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -45,12 +45,12 @@ Status: STABLE — Admin Orders enterprise overhaul complete. Platform is produc
 - [x] **Infrastructure:** AppDbContext (Fluent API), EF Core Migrations (InitialCreate, AddStrapMaterial, AddUserAvatarUrl, AddUserAddressesAndNotifications, AddFiltersConfig), SeedData (6 watches + Admin + Brands + FilterConfig).
 - [x] **Application:** Service Interfaces & Implementations (Catalog, Order, Payment, Wishlist, Asset, Admin, Email).
 - [x] **Web Core:** Program.cs (Middleware pipeline, DI, Serilog), GlobalExceptionMiddleware, tailwind.config.js.
-- [x] **Layouts:** `_Layout.cshtml` (Responsive transparent navbar + 4-column footer), `_VaultLayout.cshtml` (Responsive sidebar + Upgrade Plan CTA), `_AdminLayout.cshtml`.
+- [x] **Layouts:** `_Layout.cshtml` (Responsive transparent navbar + 4-column footer), `_VaultLayout.cshtml` (Responsive sidebar + Upgrade Plan CTA), `_AdminLayout.cshtml` (Chart.js CDN + Command Centre CSS).
 - [x] **Module 1 (Home):** Index (Full-bleed 3D background), Collections (Houses of Horology grid).
 - [x] **Module 2 (Catalog):** Index (DB-driven dynamic filters, Search bar, CSS Grid 3→2→2 responsive, Custom Checkboxes/Sliders, INR lakh/crore price slider).
 - [x] **Module 3 (Checkout):** CartController, `_CartDrawer` (AJAX), CheckoutController, Razorpay Integration, Confirmation page.
 - [x] **Module 4 (Vault):** AccountController (Login/Register split-screen, **OTP Verification**, **Forgot/Reset Password**), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
-- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), **Orders (Enterprise overhaul: KPI cards, status filter tabs, bulk updates, detail view with timeline stepper, status transitions, customer/payment/shipping info)**, Reviews, Settings (MailKit SMTP config via User Secrets), **Filters Management** (Brand CRUD + Price Range config).
+- [x] **Module 5 (Admin):** AdminController, **Dashboard Command Centre (7-zone: primary KPIs, extended strip, Chart.js 7-day revenue chart, order pipeline, top sellers, recent orders + inventory alerts, system health)**, Watches Inventory, CreateWatch (GLB/Image upload), **Orders (Enterprise overhaul: KPI cards, status filter tabs, bulk updates, detail view with timeline stepper, status transitions, customer/payment/shipping info)**, Reviews, Settings (MailKit SMTP config via User Secrets), **Filters Management** (Brand CRUD + Price Range config).
 - [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal, **Anime.js stagger integration**), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
 - [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET + Tests, conditional Azure deployment), `appsettings.Production.json` (Azure Key Vault schema).
@@ -378,3 +378,29 @@ Status: STABLE — Admin Orders enterprise overhaul complete. Platform is produc
   - **P8 FIXED**: Added `aria-label` to status dropdown and submit button.
 - **tailwind.config.js**: Registered `badge: '12px'` border-radius token; `rounded-badge` now a first-class design token replacing arbitrary `rounded-[12px]`.
 - **Build Verification**: `npm run build:css` — compiled in 488ms. `dotnet build` — 0 Errors, 11 pre-existing NuGet warnings.
+
+### Session 31 Summary — 2026-05-10 — Admin Dashboard Command Centre Overhaul
+- **Complete Dashboard Redesign**: Transformed the basic Admin Dashboard (`Admin/Index.cshtml`) into a 7-zone "Dark Luxury" Command Centre with real-time business intelligence.
+- **New DTOs Added to `ApplicationContracts.cs`**:
+  - `DailyRevenueDto` (Date + Amount) for Chart.js 7-day revenue timeline.
+  - `TopSellingWatchDto` (Name, Brand, ImagePath, UnitsSold, Revenue) for top seller rankings.
+  - `RecentOrderDto` (OrderId, CustomerName, Amount, Status, TimeAgo) for recent activity feed.
+  - Extended `DashboardKpiDto` with 11 new properties: `TotalOrderCount`, `ShippedOrderCount`, `RevenueTimeline`, `PendingCount`, `PaidCount`, `ProcessingCount`, `ShippedCount`, `DeliveredCount`, `TotalWatchCount`, `PublishedWatchCount`, `PendingReviewCount`.
+- **Service Layer Expansion (`ApplicationServices.cs`)**:
+  - Overhauled `AdminService.GetDashboardKPIsAsync()` — aggregates 7-day revenue timeline via LINQ GroupBy, computes order pipeline counts per status, calculates system health metrics (catalog saturation, pending reviews).
+  - Added `GetTopSellingWatchesAsync()` — GroupBy on `OrderItems` joined with `Watches`, ranked by units sold descending (top 5).
+  - Added `GetRecentOrdersAsync()` — Latest 5 orders with human-readable time-ago formatting ("2 hours ago", "Yesterday").
+- **Controller Updates (`AdminController.cs`)**:
+  - Expanded `AdminDashboardViewModel` with 8 new properties covering all 7 zones.
+  - Added `TopSellingWatchViewModel` and `RecentOrderViewModel` inner classes.
+  - Updated `Index()` action to orchestrate 3 parallel service calls and serialize chart data to JSON via `System.Text.Json`.
+- **UI Architecture (7 Zones)**:
+  - **Zone 1 (Primary KPIs)**: Revenue, Pending Orders, Active Users, Low Stock — hover-lift glassmorphism cards with gold accent icons.
+  - **Zone 2 (Extended Strip)**: Total Orders + Shipped count metrics.
+  - **Zone 3 (Revenue + Pipeline)**: Chart.js line chart (7-day trend, INR tooltips, gradient fill) + segmented CSS pipeline bar (Pending/Paid/Processing/Shipped/Delivered) with color legend.
+  - **Zone 5 (Top Sellers)**: Ranked product cards with images, revenue figures, units sold.
+  - **Zone 6 (Operational Control)**: Side-by-side Recent Orders (status badges, time-ago) + Inventory Alerts (stock count, action links).
+  - **Zone 7 (System Health)**: Catalog health bar (Published vs Total), pending reviews count, quick action links.
+- **Frontend Dependencies**: Added Chart.js v4.4.4 via CDN to `_AdminLayout.cshtml`. Injected ~120 lines of scoped Command Centre CSS (glassmorphism panels, pipeline bars, status micro-pills, health bars, shimmer loading states).
+- **Design Consistency**: Maintained strict Dark Luxury aesthetic — Void Black (`#0A0A0A`), Gold (`#C9A74A`), 0px border-radius, `font-mono` for data, `hi-IN` culture for INR formatting.
+- **Build**: `dotnet build` — 0 Errors. `npm run build:css` — compiled in 494ms.

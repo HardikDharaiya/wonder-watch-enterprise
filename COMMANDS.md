@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-05-10 (Session 29) | Location: India (IST)
+Last updated: 2026-05-10 (Session 31) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -361,3 +361,12 @@ dotnet user-secrets list --project WonderWatch.Web
 - `npm run build:css` ✅ (Tailwind CSS recompiled with new utility classes)
 - `dotnet build WonderWatch.Web --no-restore` ✅ (0 Errors, 10 pre-existing NuGet warnings)
 - **Documentation**: Updated `MEMORY.md`, `FILES.md`, `COMMANDS.md`, `task.md` with Session 29 records. ✅
+
+### Session 31 Final History — 2026-05-10
+- **Admin Dashboard Command Centre Overhaul**: Complete 7-zone redesign of `Admin/Index.cshtml` with Chart.js revenue visualization, order pipeline tracking, top sellers, and system health monitoring. ✅
+- **Backend Expansion**: Extended `DashboardKpiDto` with 11 new properties. Added 3 new DTOs (`DailyRevenueDto`, `TopSellingWatchDto`, `RecentOrderDto`). Added `GetTopSellingWatchesAsync()` and `GetRecentOrdersAsync()` to `AdminService`. ✅
+- **Controller Updates**: Expanded `AdminDashboardViewModel` with 8 new properties. Added `TopSellingWatchViewModel` + `RecentOrderViewModel`. Updated `Index()` to orchestrate 3 service calls with JSON serialization for Chart.js. ✅
+- **Frontend Dependencies**: Added Chart.js v4.4.4 CDN + ~120 lines Command Centre CSS to `_AdminLayout.cshtml`. ✅
+- `npm run build:css` ✅ (Tailwind CSS recompiled in 494ms)
+- `dotnet build --no-restore` ✅ (0 Errors, 11 pre-existing NuGet warnings)
+- **Documentation**: Updated `MEMORY.md`, `FILES.md`, `COMMANDS.md`, `DATABASE_SCHEMA.md`, `README.md` with Session 31 records. ✅

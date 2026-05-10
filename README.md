@@ -8,6 +8,7 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
 - **Database:** Entity Framework Core (SQL Server)
 - **Deployment:** Azure Web App CI/CD ready (`.github/workflows/ci-cd.yml`)
 - **Assets:** 3D model processing (`.glb`) and WebP optimized photography
+- **Charts:** Chart.js v4.4.4 (CDN) for admin revenue visualization
 
 ## 🚀 Local Setup Instructions
 
@@ -78,6 +79,7 @@ Welcome to the **Wonder Watch** source code repository. Wonder Watch is an enter
 - **The Concierge**: Seamless fetch-API integrated support communications pipeline.
 - **Pay on Delivery**: Robust fallback payment mechanisms supporting custom region rules logic.
 - **Vault Memberships**: Admin-driven tier management supporting recurrent logic and billing features via Razorpay.
+- **Admin Command Centre Dashboard**: 7-zone real-time operational dashboard featuring Chart.js revenue visualizations (7-day trend), order pipeline tracking, top-seller rankings, inventory alerts, and system health monitoring — all in the Dark Luxury glassmorphism aesthetic.
 - **Admin Management Portal**: Fully responsive CMS optimized for desktop, tablet, and mobile viewports with a polished Dark Luxury aesthetic for catalog control, order tracking, and settings configuration.
 ## 📁 Key File Contexts
 - **`.github/workflows/ci-cd.yml`**: Contains the GitHub Actions scripts responsible for checking out, building .NET, building Tailwind, testing, and deploying zero-downtime releases to our Azure environment.

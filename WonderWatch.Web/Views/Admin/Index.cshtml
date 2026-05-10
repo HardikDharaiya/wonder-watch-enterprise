@@ -1,134 +1,364 @@
 @model WonderWatch.Web.ViewModels.AdminDashboardViewModel
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Command Centre";
+
+    string GetStatusBadgeClass(string status) => status.ToLower() switch
+    {
+        "pending" => "cmd-badge-pending",
+        "paid" => "cmd-badge-paid",
+        "processing" => "cmd-badge-processing",
+        "shipped" => "cmd-badge-shipped",
+        "delivered" => "cmd-badge-delivered",
+        "confirmed" => "cmd-badge-confirmed",
+        "cancelled" => "cmd-badge-cancelled",
+        _ => "cmd-badge-pending"
+    };
+
+    var pipelineTotal = Model.PipelinePending + Model.PipelinePaid + Model.PipelineProcessing + Model.PipelineShipped + Model.PipelineDelivered;
+    double PipelinePct(int val) => pipelineTotal > 0 ? Math.Round((double)val / pipelineTotal * 100, 1) : 0;
+    int healthPct = Model.TotalWatches > 0 ? (int)Math.Round((double)Model.PublishedWatches / Model.TotalWatches * 100) : 0;
 }
 
 <div class="p-[16px] md:p-[48px] max-w-[1600px] mx-auto">
-    
-    <!-- HEADER -->
+
+    <!-- ═══════════════ ZONE 0: HEADER ═══════════════ -->
     <div class="admin-header-wrap flex flex-col md:flex-row md:items-end justify-between">
         <div>
-            <h1 class="admin-heading font-serif text-parchment tracking-[-1.2px] leading-none">Dashboard</h1>
-            <p class="font-sans text-[14px] text-muted">Overview & Key Performance Indicators.</p>
+            <h1 class="admin-heading font-serif text-parchment tracking-[-1.2px] leading-none">Command Centre</h1>
+            <p class="font-sans text-[14px] text-muted">Real-time business intelligence & operational control.</p>
         </div>
-        <div class="font-sans text-[12px] text-muted">
-            System Time: <span class="text-parchment font-mono">@DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") UTC</span>
+        <div class="flex items-center gap-[16px]">
+            <div class="flex items-center gap-[6px]">
+                <span class="w-[6px] h-[6px] bg-success animate-pulse" style="border-radius:50%;"></span>
+                <span class="font-sans text-[11px] text-success tracking-[1px] font-bold uppercase">Live</span>
+            </div>
+            <span class="font-mono text-[12px] text-muted">@DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") UTC</span>
         </div>
     </div>
 
-    <!-- KPI GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[24px] mb-[64px]">
-        
+    <!-- ═══════════════ ZONE 1: PRIMARY KPI CARDS ═══════════════ -->
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-[16px] md:gap-[24px] mb-[24px]">
+
         <!-- Total Revenue -->
-        <div class="admin-kpi-card bg-surface border border-white-faint flex flex-col justify-between relative overflow-hidden group hover:border-gold/40 transition-all duration-600 cursor-default">
-            <div class="absolute top-0 right-0 p-[24px] group-hover:opacity-30 transition-opacity duration-600" style="opacity: 0.15;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
+        <div class="cmd-kpi-card p-[20px] md:p-[32px] flex flex-col gap-[12px]">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] md:text-[11px] text-muted tracking-[2.2px] uppercase">Revenue</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square" class="opacity-40"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
-            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Total Revenue</span>
-            <span class="admin-kpi-value font-sans font-light text-gold tracking-[-1.5px] relative z-10">@Model.TotalRevenueFormatted</span>
+            <span class="font-sans font-light text-[22px] md:text-[30px] text-gold tracking-[-1.5px] leading-none">@Model.TotalRevenueFormatted</span>
         </div>
 
         <!-- Pending Orders -->
-        <div class="admin-kpi-card bg-surface border border-white-faint flex flex-col justify-between relative overflow-hidden group hover:border-gold/40 transition-all duration-600 cursor-default">
-            <div class="absolute top-0 right-0 p-[24px] group-hover:opacity-30 transition-opacity duration-600" style="opacity: 0.15;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
+        <div class="cmd-kpi-card p-[20px] md:p-[32px] flex flex-col gap-[12px]">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] md:text-[11px] text-muted tracking-[2.2px] uppercase">Pending</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="square" class="opacity-40"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Pending Orders</span>
-            <span class="admin-kpi-value font-sans font-light text-gold tracking-[-1.5px] relative z-10">@Model.OrdersPending</span>
+            <span class="font-sans font-light text-[22px] md:text-[30px] text-[#F59E0B] tracking-[-1.5px] leading-none">@Model.OrdersPending</span>
         </div>
 
         <!-- Active Users -->
-        <div class="admin-kpi-card bg-surface border border-white-faint flex flex-col justify-between relative overflow-hidden group hover:border-gold/40 transition-all duration-600 cursor-default">
-            <div class="absolute top-0 right-0 p-[24px] group-hover:opacity-30 transition-opacity duration-600" style="opacity: 0.15;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1" stroke-linecap="square">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
+        <div class="cmd-kpi-card p-[20px] md:p-[32px] flex flex-col gap-[12px]">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] md:text-[11px] text-muted tracking-[2.2px] uppercase">Users</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A74A" stroke-width="1.5" stroke-linecap="square" class="opacity-40"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Active Users</span>
-            <span class="admin-kpi-value font-sans font-light text-gold tracking-[-1.5px] relative z-10">@Model.ActiveUsers</span>
+            <span class="font-sans font-light text-[22px] md:text-[30px] text-gold tracking-[-1.5px] leading-none">@Model.ActiveUsers</span>
         </div>
 
-        <!-- Low Stock Alerts -->
-        <div class="admin-kpi-card bg-surface border border-white-faint flex flex-col justify-between relative overflow-hidden group hover:border-danger/50 transition-all duration-600 cursor-default">
-            <div class="absolute top-0 right-0 p-[24px] group-hover:opacity-30 transition-opacity duration-600" style="opacity: 0.15;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1" stroke-linecap="square">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
+        <!-- Low Stock -->
+        <div class="cmd-kpi-card p-[20px] md:p-[32px] flex flex-col gap-[12px]">
+            <div class="flex items-center justify-between">
+                <span class="font-sans font-bold text-[10px] md:text-[11px] text-muted tracking-[2.2px] uppercase">Low Stock</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="square" class="opacity-40"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             </div>
-            <span class="font-sans font-bold text-[11px] text-muted tracking-[2.2px] uppercase relative z-10">Low Stock Alerts</span>
-            <span class="admin-kpi-value font-sans font-light @(Model.LowStockCount > 0 ? "text-danger" : "text-gold") tracking-[-1.5px] relative z-10">@Model.LowStockCount</span>
+            <span class="font-sans font-light text-[22px] md:text-[30px] @(Model.LowStockCount > 0 ? "text-danger" : "text-gold") tracking-[-1.5px] leading-none">@Model.LowStockCount</span>
         </div>
-
     </div>
 
-    <!-- INVENTORY ALERTS TABLE -->
-    <div class="bg-surface border border-white-faint">
-        <div class="p-[24px] border-b border-white-faint flex items-center justify-between">
-            <h2 class="font-sans font-bold text-[14px] text-parchment tracking-[1.4px] uppercase">Inventory Alerts (Stock &le; 4)</h2>
-            <a href="/admin/watches" class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">View All Inventory &rarr;</a>
+    <!-- ═══════════════ ZONE 2: EXTENDED KPI STRIP ═══════════════ -->
+    <div class="grid grid-cols-2 gap-[16px] md:gap-[24px] mb-[24px]">
+        <div class="cmd-panel p-[16px] md:p-[24px] flex items-center justify-between">
+            <div class="flex flex-col">
+                <span class="cmd-panel-title mb-[4px]">Total Orders</span>
+                <span class="font-sans font-light text-[24px] text-parchment tracking-[-1px]">@Model.TotalOrders</span>
+            </div>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(201,167,74,0.2)" stroke-width="1"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         </div>
-        
-        <div class="overflow-x-auto table-fade-hint">
-            <table class="w-full text-left border-collapse" style="min-width: 600px;">
-                <thead>
-                    <tr>
-                        <th class="admin-table-cell font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase border-b border-white-faint">Reference</th>
-                        <th class="admin-table-cell font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase border-b border-white-faint">Watch Name</th>
-                        <th class="admin-table-cell font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase border-b border-white-faint">Stock Level</th>
-                        <th class="admin-table-cell font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase border-b border-white-faint text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.InventoryAlerts.Any())
+        <div class="cmd-panel p-[16px] md:p-[24px] flex items-center justify-between">
+            <div class="flex flex-col">
+                <span class="cmd-panel-title mb-[4px]">Shipped</span>
+                <span class="font-sans font-light text-[24px] text-[#06B6D4] tracking-[-1px]">@Model.OrdersShipped</span>
+            </div>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(6,182,212,0.2)" stroke-width="1"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+    </div>
+
+    <!-- ═══════════════ ZONE 3: REVENUE CHART + ORDER PIPELINE ═══════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-[16px] md:gap-[24px] mb-[24px]">
+
+        <!-- Revenue Sparkline Chart (3/5 width) -->
+        <div class="lg:col-span-3 cmd-panel p-[20px] md:p-[28px]">
+            <div class="flex items-center justify-between mb-[20px]">
+                <span class="cmd-panel-title">Revenue — Last 7 Days</span>
+                <span class="font-mono text-[11px] text-muted">Chart.js</span>
+            </div>
+            <div class="cmd-chart-wrap">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Order Pipeline (2/5 width) -->
+        <div class="lg:col-span-2 cmd-panel p-[20px] md:p-[28px]">
+            <span class="cmd-panel-title block mb-[20px]">Order Pipeline</span>
+
+            <!-- Pipeline Bar -->
+            <div class="flex w-full overflow-hidden mb-[24px]" style="height:6px;">
+                @if (pipelineTotal > 0)
+                {
+                    <div class="cmd-pipeline-segment cmd-pipeline-pending" style="width:@(PipelinePct(Model.PipelinePending))%"></div>
+                    <div class="cmd-pipeline-segment cmd-pipeline-paid" style="width:@(PipelinePct(Model.PipelinePaid))%"></div>
+                    <div class="cmd-pipeline-segment cmd-pipeline-processing" style="width:@(PipelinePct(Model.PipelineProcessing))%"></div>
+                    <div class="cmd-pipeline-segment cmd-pipeline-shipped" style="width:@(PipelinePct(Model.PipelineShipped))%"></div>
+                    <div class="cmd-pipeline-segment cmd-pipeline-delivered" style="width:@(PipelinePct(Model.PipelineDelivered))%"></div>
+                }
+                else
+                {
+                    <div class="w-full bg-[rgba(255,255,255,0.06)]" style="height:6px;"></div>
+                }
+            </div>
+
+            <!-- Pipeline Legend -->
+            <div class="flex flex-col gap-[12px]">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-[8px]"><span class="w-[8px] h-[8px] bg-[#F59E0B]"></span><span class="font-sans text-[12px] text-muted">Pending</span></div>
+                    <span class="font-mono text-[13px] text-parchment font-bold">@Model.PipelinePending</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-[8px]"><span class="w-[8px] h-[8px] bg-[#3B82F6]"></span><span class="font-sans text-[12px] text-muted">Paid</span></div>
+                    <span class="font-mono text-[13px] text-parchment font-bold">@Model.PipelinePaid</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-[8px]"><span class="w-[8px] h-[8px] bg-[#8B5CF6]"></span><span class="font-sans text-[12px] text-muted">Processing</span></div>
+                    <span class="font-mono text-[13px] text-parchment font-bold">@Model.PipelineProcessing</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-[8px]"><span class="w-[8px] h-[8px] bg-[#06B6D4]"></span><span class="font-sans text-[12px] text-muted">Shipped</span></div>
+                    <span class="font-mono text-[13px] text-parchment font-bold">@Model.PipelineShipped</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-[8px]"><span class="w-[8px] h-[8px] bg-[#22C55E]"></span><span class="font-sans text-[12px] text-muted">Delivered</span></div>
+                    <span class="font-mono text-[13px] text-parchment font-bold">@Model.PipelineDelivered</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ ZONE 5: TOP SELLERS ═══════════════ -->
+    @if (Model.TopSellers.Any())
+    {
+        <div class="cmd-panel p-[20px] md:p-[28px] mb-[24px]">
+            <span class="cmd-panel-title block mb-[20px]">Top Sellers</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-[16px]">
+                @{ var rank = 0; }
+                @foreach (var seller in Model.TopSellers)
+                {
+                    rank++;
+                    <div class="flex items-center gap-[16px] p-[12px] border border-[rgba(201,167,74,0.06)] hover:border-[rgba(201,167,74,0.2)] transition-colors">
+                        <span class="cmd-rank flex-shrink-0">@rank</span>
+                        <img src="@seller.ImageUrl" alt="@seller.Name" class="w-[48px] h-[48px] object-cover flex-shrink-0" onerror="this.style.display='none'" />
+                        <div class="flex flex-col min-w-0">
+                            <span class="font-sans font-bold text-[13px] text-parchment truncate">@seller.Name</span>
+                            <span class="font-sans text-[11px] text-muted">@seller.Brand</span>
+                            <div class="flex items-center gap-[8px] mt-[4px]">
+                                <span class="font-mono text-[11px] text-gold">@seller.RevenueFormatted</span>
+                                <span class="font-sans text-[10px] text-muted">· @seller.UnitsSold units</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- ═══════════════ ZONE 6: RECENT ORDERS + INVENTORY ALERTS ═══════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-[16px] md:gap-[24px] mb-[24px]">
+
+        <!-- Recent Orders -->
+        <div class="cmd-panel p-[20px] md:p-[28px]">
+            <div class="flex items-center justify-between mb-[20px]">
+                <span class="cmd-panel-title">Recent Orders</span>
+                <a href="/admin/orders" class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">View All &rarr;</a>
+            </div>
+            @if (!Model.RecentOrders.Any())
+            {
+                <p class="font-sans text-[14px] text-muted text-center py-[32px]">No orders yet.</p>
+            }
+            else
+            {
+                <div class="flex flex-col gap-[2px]">
+                    @foreach (var order in Model.RecentOrders)
                     {
-                        <tr>
-                            <td colspan="4" class="text-center" style="padding: 48px;">
-                                <span class="font-sans text-[14px] text-muted">Inventory levels are optimal. No alerts at this time.</span>
-                            </td>
-                        </tr>
+                        <a href="/admin/orders/@order.Id" class="flex items-center justify-between p-[12px] hover:bg-[rgba(201,167,74,0.04)] transition-colors group">
+                            <div class="flex flex-col min-w-0">
+                                <div class="flex items-center gap-[8px]">
+                                    <span class="font-mono text-[12px] text-gold">@order.OrderNumber</span>
+                                    <span class="cmd-status-badge @GetStatusBadgeClass(order.Status)">@order.Status</span>
+                                </div>
+                                <span class="font-sans text-[12px] text-muted mt-[4px]">@order.CustomerName · @order.TimeAgo</span>
+                            </div>
+                            <span class="font-mono text-[13px] text-parchment font-bold flex-shrink-0">@order.TotalFormatted</span>
+                        </a>
                     }
-                    else
+                </div>
+            }
+        </div>
+
+        <!-- Inventory Alerts -->
+        <div class="cmd-panel p-[20px] md:p-[28px]">
+            <div class="flex items-center justify-between mb-[20px]">
+                <span class="cmd-panel-title">Inventory Alerts</span>
+                <a href="/admin/watches" class="font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">Manage &rarr;</a>
+            </div>
+            @if (!Model.InventoryAlerts.Any())
+            {
+                <p class="font-sans text-[14px] text-muted text-center py-[32px]">All stock levels optimal.</p>
+            }
+            else
+            {
+                <div class="flex flex-col gap-[2px]">
+                    @foreach (var alert in Model.InventoryAlerts)
                     {
-                        foreach (var alert in Model.InventoryAlerts)
-                        {
-                            <tr class="border-b border-white-faint hover:bg-surface-alt transition-colors duration-600 last:border-0">
-                                <td class="admin-table-cell">
-                                    <span class="font-mono text-[12px] text-gold">@alert.ReferenceNumber</span>
-                                </td>
-                                <td class="admin-table-cell">
-                                    <span class="font-sans font-medium text-[14px] text-body">@alert.Name</span>
-                                </td>
-                                <td class="admin-table-cell">
-                                    <div class="flex items-center gap-[12px]">
-                                        <span class="font-sans font-bold text-[14px] text-parchment">@alert.StockQuantity</span>
-                                        <span class="bg-[rgba(127,29,29,0.4)] text-danger font-sans font-bold text-[9px] tracking-[0.9px] uppercase px-[8px] py-[4px] rounded-none">
-                                            Low Stock
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="admin-table-cell text-right">
-                                    <a href="/admin/watches/edit/@alert.WatchId" class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase hover:text-gold transition-colors">
-                                        Update Stock
-                                    </a>
-                                </td>
-                            </tr>
-                        }
+                        <div class="flex items-center justify-between p-[12px] hover:bg-[rgba(239,68,68,0.04)] transition-colors">
+                            <div class="flex flex-col">
+                                <span class="font-sans font-bold text-[13px] text-parchment">@alert.Name</span>
+                                <span class="font-mono text-[11px] text-muted">@alert.ReferenceNumber</span>
+                            </div>
+                            <div class="flex items-center gap-[12px]">
+                                <span class="font-mono font-bold text-[14px] text-danger">@alert.StockQuantity</span>
+                                <a href="/admin/watches/edit/@alert.WatchId" class="font-sans font-bold text-[10px] text-muted tracking-[1.5px] uppercase hover:text-gold transition-colors">Restock</a>
+                            </div>
+                        </div>
                     }
-                </tbody>
-            </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ═══════════════ ZONE 7: SYSTEM HEALTH ═══════════════ -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-[16px] md:gap-[24px]">
+        <div class="cmd-panel p-[20px] md:p-[24px]">
+            <span class="cmd-panel-title block mb-[12px]">Catalog Health</span>
+            <div class="flex items-end justify-between mb-[8px]">
+                <span class="font-sans text-[24px] font-light text-parchment">@Model.PublishedWatches<span class="text-[14px] text-muted">/@Model.TotalWatches</span></span>
+                <span class="font-mono text-[12px] text-gold">@(healthPct)%</span>
+            </div>
+            <div class="cmd-health-bar"><div class="cmd-health-fill" style="width:@(healthPct)%"></div></div>
+            <span class="font-sans text-[11px] text-muted mt-[8px] block">Published watches</span>
+        </div>
+
+        <div class="cmd-panel p-[20px] md:p-[24px]">
+            <span class="cmd-panel-title block mb-[12px]">Pending Reviews</span>
+            <span class="font-sans text-[24px] font-light @(Model.PendingReviews > 0 ? "text-[#F59E0B]" : "text-parchment")">@Model.PendingReviews</span>
+            <p class="font-sans text-[11px] text-muted mt-[8px]">Awaiting moderation</p>
+            @if (Model.PendingReviews > 0)
+            {
+                <a href="/admin/reviews" class="inline-block mt-[12px] font-sans font-bold text-[10px] text-gold tracking-[2px] uppercase hover:text-parchment transition-colors">Review Now &rarr;</a>
+            }
+        </div>
+
+        <div class="cmd-panel p-[20px] md:p-[24px]">
+            <span class="cmd-panel-title block mb-[12px]">Quick Actions</span>
+            <div class="flex flex-col gap-[8px]">
+                <a href="/admin/watches/create" class="flex items-center gap-[8px] font-sans text-[12px] text-muted hover:text-gold transition-colors py-[4px]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add New Watch
+                </a>
+                <a href="/admin/orders" class="flex items-center gap-[8px] font-sans text-[12px] text-muted hover:text-gold transition-colors py-[4px]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Process Orders
+                </a>
+                <a href="/admin/settings" class="flex items-center gap-[8px] font-sans text-[12px] text-muted hover:text-gold transition-colors py-[4px]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    System Settings
+                </a>
+            </div>
         </div>
     </div>
 
 </div>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('revenueChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+
+    var labels = @Html.Raw(Model.RevenueLabelsJson);
+    var data = @Html.Raw(Model.RevenueDataJson);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue',
+                data: data,
+                borderColor: '#C9A74A',
+                backgroundColor: 'rgba(201,167,74,0.08)',
+                borderWidth: 2,
+                pointBackgroundColor: '#C9A74A',
+                pointBorderColor: '#0A0A0A',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1A1A1A',
+                    titleColor: '#F5F0E8',
+                    bodyColor: '#C9A74A',
+                    borderColor: 'rgba(201,167,74,0.3)',
+                    borderWidth: 1,
+                    cornerRadius: 0,
+                    padding: 12,
+                    titleFont: { family: 'Manrope', size: 11, weight: '700' },
+                    bodyFont: { family: 'monospace', size: 13 },
+                    callbacks: {
+                        label: function(ctx) {
+                            return '₹' + ctx.parsed.y.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: { color: '#8A816C', font: { family: 'Manrope', size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: {
+                        color: '#8A816C',
+                        font: { family: 'monospace', size: 11 },
+                        callback: function(v) {
+                            if (v >= 100000) return '₹' + (v/100000).toFixed(1) + 'L';
+                            if (v >= 1000) return '₹' + (v/1000).toFixed(0) + 'K';
+                            return '₹' + v;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+}
