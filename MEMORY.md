@@ -1,6 +1,6 @@
 # MEMORY.md — Wonder Watch Enterprise Brain
-Last updated: 2026-05-07 | Session: 27
-Status: STABLE — Admin Panel UI/UX remediation complete. Platform is production-ready.
+Last updated: 2026-05-10 | Session: 28
+Status: STABLE — Admin Orders enterprise overhaul complete. Platform is production-ready.
 
 ## Project Identity
 - **Project name:** Wonder Watch
@@ -50,7 +50,7 @@ Status: STABLE — Admin Panel UI/UX remediation complete. Platform is productio
 - [x] **Module 2 (Catalog):** Index (DB-driven dynamic filters, Search bar, CSS Grid 3→2→2 responsive, Custom Checkboxes/Sliders, INR lakh/crore price slider).
 - [x] **Module 3 (Checkout):** CartController, `_CartDrawer` (AJAX), CheckoutController, Razorpay Integration, Confirmation page.
 - [x] **Module 4 (Vault):** AccountController (Login/Register split-screen, **OTP Verification**, **Forgot/Reset Password**), Vault Dashboard (OVERHAULED), Orders (OVERHAULED - filter tabs, progress tracker, invoice), Wishlist (OVERHAULED - REMOVE×, ADD TO CART, count), Profile (Redesigned), Addresses (CRUD + Slide-in), Notifications (Filtering + Read status).
-- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), Orders, Reviews, Settings (MailKit SMTP config), **Filters Management** (Brand CRUD + Price Range config).
+- [x] **Module 5 (Admin):** AdminController, KPI Dashboard, Watches Inventory, CreateWatch (GLB/Image upload), **Orders (Enterprise overhaul: KPI cards, status filter tabs, bulk updates, detail view with timeline stepper, status transitions, customer/payment/shipping info)**, Reviews, Settings (MailKit SMTP config via User Secrets), **Filters Management** (Brand CRUD + Price Range config).
 - [x] **Module 6 (JS/UI):** `viewer.js` (Dynamic 3D), `animation.js` (Track-based Marquee, Scroll Reveal, **Anime.js stagger integration**), `cart.js`, `wishlist.js`.
 - [x] **Module 7 (Tests):** xUnit tests for OrderService (State Machine), PaymentService (HMAC), CatalogService (LINQ).
 - [x] **Module 8 (DevOps):** GitHub Actions `ci-cd.yml` (Builds CSS + .NET + Tests, conditional Azure deployment), `appsettings.Production.json` (Azure Key Vault schema).
@@ -342,7 +342,17 @@ Status: STABLE — Admin Panel UI/UX remediation complete. Platform is productio
 
 ### Session 28 - SMTP Credential Leak Remediation
 - **Git Reset**: Cleaned up the local repository by fetching and hard-resetting to origin/main to remove any lingering secrets from git history.
-- **User Secrets Migration**: Migrated SMTP configuration out of ppsettings.json and into .NET User Secrets to prevent future accidental credential commits.
-- **appsettings Cleanup**: Cleared out existing sensitive values from ppsettings.json and created a reference ppsettings.template.json with dummy values.
-- **Admin Controller Refactor**: Refactored AdminController.SaveSettings to programmatically update the local secrets.json file instead of ppsettings.json. Added masking to the Settings UI to obscure existing passwords.
+- **User Secrets Migration**: Migrated SMTP configuration out of  ppsettings.json and into .NET User Secrets to prevent future accidental credential commits.
+- **appsettings Cleanup**: Cleared out existing sensitive values from  ppsettings.json and created a reference  ppsettings.template.json with dummy values.
+- **Admin Controller Refactor**: Refactored AdminController.SaveSettings to programmatically update the local secrets.json file instead of  ppsettings.json. Added masking to the Settings UI to obscure existing passwords.
 - **Cleanup & Verification**: Verified that EmailService reads correctly from IConfiguration, which seamlessly integrates User Secrets. Cleaned up temporary files and temporary repository clones.
+
+### Session 29 Summary — 2026-05-10 — Admin Orders Enterprise Overhaul
+- **Backend Foundation**: Added `OrderDetail`, `UpdateOrderStatus`, and `BulkUpdateStatus` actions to AdminController. Created ViewModels (`AdminOrderListViewModel`, `AdminOrderDetailViewModel`, `AdminOrderDetailItemViewModel`, `AdminOrderTimelineEntry`).
+- **Orders List (Orders.cshtml)**: Complete redesign with KPI summary cards (Total/Pending/In-Transit/Delivered), status filter tabs (All/Pending/Paid/Processing/Shipped/Delivered/Cancelled), bulk status update form, payment method column (Online/PoD badges), and "Manage" link per row.
+- **Order Detail (OrderDetail.cshtml)**: New full-page view with visual status timeline stepper (animated pulse for current step, checkmarks for completed, X for cancelled), order items table with product images, customer info card with avatar initial, shipping address card, payment info card (Razorpay IDs), order summary with totals, and inline status transition dropdown.
+- **State Machine Integration**: All status changes route through `IOrderService.TransitionStatusAsync` for strict lifecycle enforcement and automatic stock reconciliation on cancellations.
+- **Design Consistency**: All new UI follows the Dark Luxury aesthetic — Void Black backgrounds, gold accents, 0px border-radius (except badges/avatars), `font-mono` for IDs, INR Lakh format for prices.
+- **CSS Rebuild**: Ran `npm run build:css` to compile all new Tailwind utility classes.
+- **Documentation**: Updated `MEMORY.md`, `FILES.md` to reflect new views and capabilities.
+- **Build**: `dotnet build` — 0 Errors.

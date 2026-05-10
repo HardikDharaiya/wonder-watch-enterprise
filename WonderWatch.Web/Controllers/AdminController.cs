@@ -15,8 +15,10 @@ using Microsoft.Extensions.Logging;
 using WonderWatch.Application.Interfaces;
 using WonderWatch.Domain.Entities;
 using WonderWatch.Domain.Enums;
+using WonderWatch.Domain.Identity;
 using WonderWatch.Infrastructure;
 using WonderWatch.Web.ViewModels;
+using Microsoft.AspNetCore.Identity;
 
 namespace WonderWatch.Web.Controllers
 {
@@ -32,6 +34,8 @@ namespace WonderWatch.Web.Controllers
         private readonly IEmailService _emailService;
         private readonly IDatabaseManagementService _dbManagementService;
         private readonly IConfigurationRoot? _configRoot;
+        private readonly IOrderService _orderService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public AdminController(
             IAdminService adminService,
@@ -40,7 +44,9 @@ namespace WonderWatch.Web.Controllers
             ILogger<AdminController> logger,
             IConfiguration config,
             IEmailService emailService,
-            IDatabaseManagementService dbManagementService)
+            IDatabaseManagementService dbManagementService,
+            IOrderService orderService,
+            UserManager<ApplicationUser> userManager)
         {
             _adminService = adminService;
             _assetService = assetService;
@@ -50,6 +56,8 @@ namespace WonderWatch.Web.Controllers
             _emailService = emailService;
             _dbManagementService = dbManagementService;
             _configRoot = config as IConfigurationRoot;
+            _orderService = orderService;
+            _userManager = userManager;
         }
 
         [HttpGet("")]
@@ -339,31 +347,229 @@ namespace WonderWatch.Web.Controllers
         }
 
         [HttpGet("orders")]
-        public async Task<IActionResult> Orders()
+        public async Task<IActionResult> Orders(string? status)
         {
-            var orders = await _context.Orders
+            var query = _context.Orders
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Watch)
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
+                .AsQueryable();
+
+            // Apply status filter if provided
+            if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<OrderStatus>(status, true, out var filterStatus))
+            {
+                query = query.Where(o => o.Status == filterStatus);
+            }
+
+            var orders = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+
+            // Get all unique user IDs and fetch user info for customer names
+            var userIds = orders.Select(o => o.UserId).Distinct().ToList();
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email });
+
+            // Compute KPI counts (always from ALL orders, not filtered)
+            var allOrders = await _context.Orders.ToListAsync();
+            var totalCount = allOrders.Count;
+            var pendingCount = allOrders.Count(o => o.Status == OrderStatus.Pending);
+            var processingCount = allOrders.Count(o => o.Status == OrderStatus.Processing || o.Status == OrderStatus.Paid);
+            var shippedCount = allOrders.Count(o => o.Status == OrderStatus.Shipped);
+            var deliveredCount = allOrders.Count(o => o.Status == OrderStatus.Delivered || o.Status == OrderStatus.Confirmed);
 
             var indiaCulture = new CultureInfo("hi-IN");
 
             var viewModel = new AdminOrderListViewModel
             {
-                Orders = orders.Select(o => new AdminOrderItemViewModel
+                StatusFilter = status,
+                TotalOrderCount = totalCount,
+                PendingCount = pendingCount,
+                ProcessingCount = processingCount,
+                ShippedCount = shippedCount,
+                DeliveredCount = deliveredCount,
+                Orders = orders.Select(o =>
                 {
-                    Id = o.Id,
-                    OrderNumber = $"#WW-{o.Id.ToString().Substring(0, 8).ToUpper()}",
-                    CustomerName = o.ShippingAddress.Line1, // Simplified for list view
-                    Date = o.CreatedAt,
-                    TotalFormatted = o.TotalAmount.ToString("C0", indiaCulture),
-                    Status = o.Status.ToString(),
-                    ItemCount = o.Items.Sum(i => i.Quantity)
+                    users.TryGetValue(o.UserId, out var user);
+                    return new AdminOrderItemViewModel
+                    {
+                        Id = o.Id,
+                        OrderNumber = $"#WW-{o.Id.ToString().Substring(0, 8).ToUpper()}",
+                        CustomerName = user?.FullName ?? "Unknown",
+                        CustomerEmail = user?.Email ?? "",
+                        Date = o.CreatedAt,
+                        TotalFormatted = o.TotalAmount.ToString("C0", indiaCulture),
+                        Status = o.Status.ToString(),
+                        ItemCount = o.Items.Sum(i => i.Quantity),
+                        IsPayOnDelivery = o.IsPayOnDelivery
+                    };
                 }).ToList()
             };
 
             return View(viewModel);
+        }
+
+        [HttpGet("orders/detail/{id}")]
+        public async Task<IActionResult> OrderDetail(Guid id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Watch)
+                .ThenInclude(w => w.Images)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+            {
+                TempData["OrderError"] = "Order not found.";
+                return RedirectToAction(nameof(Orders));
+            }
+
+            var customer = await _context.Users.FirstOrDefaultAsync(u => u.Id == order.UserId);
+            var indiaCulture = new CultureInfo("hi-IN");
+
+            // Compute allowed transitions based on state machine
+            var allowedTransitions = GetAllowedTransitions(order.Status);
+
+            // Build status timeline
+            var timeline = BuildStatusTimeline(order.Status, order.CreatedAt, order.UpdatedAt);
+
+            var viewModel = new AdminOrderDetailViewModel
+            {
+                Id = order.Id,
+                OrderNumber = $"#WW-{order.Id.ToString().Substring(0, 8).ToUpper()}",
+                Status = order.Status.ToString(),
+                StatusEnum = order.Status,
+                CreatedAt = order.CreatedAt,
+                UpdatedAt = order.UpdatedAt,
+                TotalFormatted = order.TotalAmount.ToString("C0", indiaCulture),
+                SubtotalFormatted = order.TotalAmount.ToString("C0", indiaCulture),
+                IsPayOnDelivery = order.IsPayOnDelivery,
+                RazorpayOrderId = order.RazorpayOrderId,
+                RazorpayPaymentId = order.RazorpayPaymentId,
+                CustomerName = customer?.FullName ?? "Unknown",
+                CustomerEmail = customer?.Email ?? "",
+                ShippingLine1 = order.ShippingAddress.Line1,
+                ShippingLine2 = order.ShippingAddress.Line2 ?? "",
+                ShippingCity = order.ShippingAddress.City,
+                ShippingState = order.ShippingAddress.State,
+                ShippingPinCode = order.ShippingAddress.PinCode,
+                ShippingPhone = order.ShippingAddress.Phone,
+                Items = order.Items.Select(i => new AdminOrderDetailItemViewModel
+                {
+                    WatchName = i.Watch?.Name ?? "Deleted Watch",
+                    WatchBrand = i.Watch?.Brand ?? "",
+                    WatchRef = i.Watch?.ReferenceNumber ?? "",
+                    ImageUrl = i.Watch?.Images?.OrderBy(img => img.SortOrder).FirstOrDefault()?.Path ?? "/images/placeholder.webp",
+                    Quantity = i.Quantity,
+                    UnitPriceFormatted = i.UnitPrice.ToString("C0", indiaCulture),
+                    LineTotalFormatted = (i.UnitPrice * i.Quantity).ToString("C0", indiaCulture)
+                }).ToList(),
+                AllowedTransitions = allowedTransitions,
+                StatusTimeline = timeline
+            };
+
+            return View("OrderDetail", viewModel);
+        }
+
+        [HttpPost("orders/update-status/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateOrderStatus(Guid id, string newStatus)
+        {
+            try
+            {
+                if (!Enum.TryParse<OrderStatus>(newStatus, true, out var status))
+                {
+                    TempData["OrderError"] = $"Invalid status: {newStatus}";
+                    return RedirectToAction(nameof(OrderDetail), new { id });
+                }
+
+                await _orderService.TransitionStatusAsync(id, status);
+                TempData["OrderSuccess"] = $"Order status updated to {status}.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update order {OrderId} status.", id);
+                TempData["OrderError"] = $"Failed to update status: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(OrderDetail), new { id });
+        }
+
+        [HttpPost("orders/bulk-update-status")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BulkUpdateStatus(List<Guid> orderIds, string newStatus)
+        {
+            try
+            {
+                if (!orderIds.Any())
+                {
+                    TempData["OrderError"] = "No orders selected.";
+                    return RedirectToAction(nameof(Orders));
+                }
+
+                if (!Enum.TryParse<OrderStatus>(newStatus, true, out var status))
+                {
+                    TempData["OrderError"] = $"Invalid status: {newStatus}";
+                    return RedirectToAction(nameof(Orders));
+                }
+
+                await _orderService.BulkTransitionAsync(orderIds, status);
+                TempData["OrderSuccess"] = $"{orderIds.Count} order(s) updated to {status}.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed bulk status update.");
+                TempData["OrderError"] = $"Bulk update failed: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Orders));
+        }
+
+        // ── Helper: Compute valid next statuses from current ──
+        private List<string> GetAllowedTransitions(OrderStatus current)
+        {
+            return current switch
+            {
+                OrderStatus.Pending => new List<string> { "Paid", "Cancelled" },
+                OrderStatus.Paid => new List<string> { "Processing", "Cancelled" },
+                OrderStatus.Processing => new List<string> { "Shipped" },
+                OrderStatus.Shipped => new List<string> { "Delivered" },
+                OrderStatus.Delivered => new List<string> { "Confirmed" },
+                _ => new List<string>()
+            };
+        }
+
+        // ── Helper: Build status timeline for the stepper UI ──
+        private List<AdminOrderTimelineEntry> BuildStatusTimeline(OrderStatus current, DateTime created, DateTime updated)
+        {
+            var steps = new[] { "Pending", "Paid", "Processing", "Shipped", "Delivered", "Confirmed" };
+            var currentIndex = current == OrderStatus.Cancelled ? -1 : Array.IndexOf(steps, current.ToString());
+            var isCancelled = current == OrderStatus.Cancelled;
+
+            var timeline = new List<AdminOrderTimelineEntry>();
+            for (int i = 0; i < steps.Length; i++)
+            {
+                timeline.Add(new AdminOrderTimelineEntry
+                {
+                    Label = steps[i],
+                    IsCompleted = !isCancelled && i < currentIndex,
+                    IsCurrent = !isCancelled && i == currentIndex,
+                    IsCancelled = isCancelled && steps[i] == current.ToString(),
+                    Timestamp = i == 0 ? created.ToString("dd MMM yyyy HH:mm") : (i == currentIndex ? updated.ToString("dd MMM yyyy HH:mm") : null)
+                });
+            }
+
+            if (isCancelled)
+            {
+                timeline.Add(new AdminOrderTimelineEntry
+                {
+                    Label = "Cancelled",
+                    IsCompleted = false,
+                    IsCurrent = true,
+                    IsCancelled = true,
+                    Timestamp = updated.ToString("dd MMM yyyy HH:mm")
+                });
+            }
+
+            return timeline;
         }
         [HttpGet("reviews")]
         public async Task<IActionResult> Reviews()
@@ -396,9 +602,8 @@ namespace WonderWatch.Web.Controllers
             ViewBag.SmtpPort = _config["SmtpSettings:Port"];
             ViewBag.SmtpUsername = _config["SmtpSettings:Username"];
             
-            // Mask password for security
-            var hasPassword = !string.IsNullOrEmpty(_config["SmtpSettings:Password"]);
-            ViewBag.SmtpPassword = hasPassword ? "••••••••" : "";
+            // Pass actual password so the admin can view it via the toggle in the UI
+            ViewBag.SmtpPassword = _config["SmtpSettings:Password"] ?? "";
 
             ViewBag.SmtpFromEmail = _config["SmtpSettings:FromEmail"];
             ViewBag.SmtpFromName = _config["SmtpSettings:FromName"];
@@ -429,7 +634,23 @@ namespace WonderWatch.Web.Controllers
                     ? await System.IO.File.ReadAllTextAsync(secretsPath)
                     : "{}";
 
-                var root = System.Text.Json.Nodes.JsonNode.Parse(existingJson) as System.Text.Json.Nodes.JsonObject
+                if (string.IsNullOrWhiteSpace(existingJson))
+                {
+                    existingJson = "{}";
+                }
+
+                var documentOptions = new System.Text.Json.JsonDocumentOptions
+                {
+                    CommentHandling = System.Text.Json.JsonCommentHandling.Skip,
+                    AllowTrailingCommas = true
+                };
+
+                var nodeOptions = new System.Text.Json.Nodes.JsonNodeOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var root = System.Text.Json.Nodes.JsonNode.Parse(existingJson, nodeOptions, documentOptions) as System.Text.Json.Nodes.JsonObject
                            ?? new System.Text.Json.Nodes.JsonObject();
 
                 root["SmtpSettings:Host"] = SmtpHost ?? "";
@@ -742,6 +963,12 @@ namespace WonderWatch.Web.ViewModels
     public class AdminOrderListViewModel
     {
         public List<AdminOrderItemViewModel> Orders { get; set; } = new();
+        public string? StatusFilter { get; set; }
+        public int TotalOrderCount { get; set; }
+        public int PendingCount { get; set; }
+        public int ProcessingCount { get; set; }
+        public int ShippedCount { get; set; }
+        public int DeliveredCount { get; set; }
     }
 
     public class AdminOrderItemViewModel
@@ -749,10 +976,61 @@ namespace WonderWatch.Web.ViewModels
         public Guid Id { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
+        public string CustomerEmail { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public string TotalFormatted { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public int ItemCount { get; set; }
+        public bool IsPayOnDelivery { get; set; }
+    }
+
+    // ---------------------------------------------------------
+    // ORDER DETAIL VIEW MODELS
+    // ---------------------------------------------------------
+    public class AdminOrderDetailViewModel
+    {
+        public Guid Id { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public OrderStatus StatusEnum { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string TotalFormatted { get; set; } = string.Empty;
+        public string SubtotalFormatted { get; set; } = string.Empty;
+        public bool IsPayOnDelivery { get; set; }
+        public string RazorpayOrderId { get; set; } = string.Empty;
+        public string RazorpayPaymentId { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string CustomerEmail { get; set; } = string.Empty;
+        public string ShippingLine1 { get; set; } = string.Empty;
+        public string ShippingLine2 { get; set; } = string.Empty;
+        public string ShippingCity { get; set; } = string.Empty;
+        public string ShippingState { get; set; } = string.Empty;
+        public string ShippingPinCode { get; set; } = string.Empty;
+        public string ShippingPhone { get; set; } = string.Empty;
+        public List<AdminOrderDetailItemViewModel> Items { get; set; } = new();
+        public List<string> AllowedTransitions { get; set; } = new();
+        public List<AdminOrderTimelineEntry> StatusTimeline { get; set; } = new();
+    }
+
+    public class AdminOrderDetailItemViewModel
+    {
+        public string WatchName { get; set; } = string.Empty;
+        public string WatchBrand { get; set; } = string.Empty;
+        public string WatchRef { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public string UnitPriceFormatted { get; set; } = string.Empty;
+        public string LineTotalFormatted { get; set; } = string.Empty;
+    }
+
+    public class AdminOrderTimelineEntry
+    {
+        public string Label { get; set; } = string.Empty;
+        public bool IsCompleted { get; set; }
+        public bool IsCurrent { get; set; }
+        public bool IsCancelled { get; set; }
+        public string? Timestamp { get; set; }
     }
 
     // ---------------------------------------------------------

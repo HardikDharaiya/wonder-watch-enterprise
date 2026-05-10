@@ -1,0 +1,303 @@
+@model WonderWatch.Web.ViewModels.AdminOrderDetailViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = $"Order {Model.OrderNumber}";
+
+    string GetBadgeClasses(string status)
+    {
+        return status.ToUpper() switch
+        {
+            "PAID" or "PROCESSING" => "bg-[rgba(201,167,74,0.2)] border border-[rgba(201,167,74,0.3)] text-gold",
+            "SHIPPED" => "bg-[rgba(201,167,74,0.2)] border border-[rgba(201,167,74,0.3)] text-gold",
+            "DELIVERED" or "CONFIRMED" => "bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-[#22C55E]",
+            "PENDING" => "bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]",
+            "CANCELLED" => "bg-[rgba(127,29,29,0.4)] border border-danger/50 text-danger",
+            _ => "bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.4)]"
+        };
+    }
+}
+
+<div class="p-[16px] md:p-[48px] max-w-[1600px] mx-auto">
+
+    <!-- TOAST NOTIFICATIONS -->
+    @if (TempData["OrderSuccess"] != null)
+    {
+        <div class="mb-[32px] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] p-[16px] flex items-center gap-[12px]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="square"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="font-sans text-[14px] text-[#22C55E]">@TempData["OrderSuccess"]</span>
+        </div>
+    }
+    @if (TempData["OrderError"] != null)
+    {
+        <div class="mb-[32px] bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] p-[16px] flex items-center gap-[12px]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="square"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span class="font-sans text-[14px] text-danger">@TempData["OrderError"]</span>
+        </div>
+    }
+
+    <!-- HEADER BAR -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-[24px] mb-[40px]">
+        <div class="flex items-center gap-[24px]">
+            <!-- Back Arrow -->
+            <a href="/admin/orders" class="flex items-center justify-center w-[48px] h-[48px] border border-white-faint hover:border-gold-faint transition-colors duration-600 group">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" class="text-muted group-hover:text-gold transition-colors">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+            <div>
+                <div class="flex items-center gap-[16px] mb-[4px]">
+                    <h1 class="font-serif text-[36px] md:text-[48px] text-gold tracking-[-1.2px] leading-none">@Model.OrderNumber</h1>
+                    <span class="inline-block px-[11px] py-[3px] rounded-[12px] font-sans font-bold text-[10px] tracking-[0.5px] uppercase @GetBadgeClasses(Model.Status)">
+                        @Model.Status
+                    </span>
+                </div>
+                <p class="font-sans text-[12px] text-muted">
+                    Placed on @Model.CreatedAt.ToString("dd MMM yyyy") at @Model.CreatedAt.ToString("HH:mm") UTC
+                    &nbsp;·&nbsp; Last updated @Model.UpdatedAt.ToString("dd MMM yyyy HH:mm") UTC
+                </p>
+            </div>
+        </div>
+
+        <!-- Status Update Dropdown (only if transitions available) -->
+        @if (Model.AllowedTransitions.Any())
+        {
+            <form method="post" action="/admin/orders/update-status/@Model.Id" class="flex items-center gap-[12px]">
+                @Html.AntiForgeryToken()
+                <div class="relative">
+                    <select name="newStatus" class="bg-void border border-gold-faint text-parchment font-sans text-[12px] px-[16px] py-[14px] appearance-none focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors rounded-none cursor-pointer min-w-[200px]">
+                        <option value="" disabled selected>Transition To...</option>
+                        @foreach (var transition in Model.AllowedTransitions)
+                        {
+                            <option value="@transition">@transition</option>
+                        }
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-[16px] pointer-events-none text-gold">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <button type="submit" class="bg-gold text-void font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[28px] py-[14px] hover:bg-[#B8963F] transition-colors duration-600 whitespace-nowrap">
+                    Update Status
+                </button>
+            </form>
+        }
+    </div>
+
+    <!-- STATUS TIMELINE STEPPER -->
+    <div class="bg-surface border border-white-faint p-[32px] md:p-[48px] mb-[32px]">
+        <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase mb-[32px]">Order Lifecycle</p>
+        <div class="flex items-start justify-between relative">
+            <!-- Connecting Line -->
+            <div class="absolute top-[16px] left-[24px] right-[24px] h-[2px] bg-[rgba(255,255,255,0.06)]"></div>
+
+            @for (int i = 0; i < Model.StatusTimeline.Count; i++)
+            {
+                var step = Model.StatusTimeline[i];
+                var isLast = i == Model.StatusTimeline.Count - 1;
+                <div class="flex flex-col items-center relative z-10 @(isLast ? "" : "flex-1")">
+                    <!-- Circle -->
+                    @if (step.IsCancelled)
+                    {
+                        <div class="w-[32px] h-[32px] rounded-full border-2 border-danger bg-[rgba(239,68,68,0.2)] flex items-center justify-center mb-[12px]">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="square">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </div>
+                    }
+                    else if (step.IsCompleted)
+                    {
+                        <div class="w-[32px] h-[32px] rounded-full bg-gold flex items-center justify-center mb-[12px]">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="3" stroke-linecap="square">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                    }
+                    else if (step.IsCurrent)
+                    {
+                        <div class="w-[32px] h-[32px] rounded-full border-2 border-gold bg-[rgba(201,167,74,0.2)] flex items-center justify-center mb-[12px] relative">
+                            <div class="w-[10px] h-[10px] rounded-full bg-gold animate-pulse"></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="w-[32px] h-[32px] rounded-full border-2 border-[rgba(255,255,255,0.1)] bg-void flex items-center justify-center mb-[12px]">
+                            <div class="w-[8px] h-[8px] rounded-full bg-[rgba(255,255,255,0.1)]"></div>
+                        </div>
+                    }
+
+                    <!-- Label -->
+                    <span class="font-sans font-bold text-[9px] md:text-[10px] tracking-[1.5px] uppercase text-center @(step.IsCancelled ? "text-danger" : step.IsCompleted || step.IsCurrent ? "text-gold" : "text-muted")">
+                        @step.Label
+                    </span>
+
+                    <!-- Timestamp -->
+                    @if (step.Timestamp != null)
+                    {
+                        <span class="font-sans text-[9px] text-muted mt-[4px] text-center whitespace-nowrap">@step.Timestamp</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- TWO-COLUMN LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-[24px]">
+
+        <!-- LEFT COLUMN: Order Items -->
+        <div class="bg-surface border border-white-faint">
+            <div class="p-[24px] border-b border-white-faint">
+                <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase">Order Items · @Model.Items.Count item(s)</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr>
+                            <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[20px] border-b border-white-faint">Product</th>
+                            <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[20px] border-b border-white-faint text-center">Qty</th>
+                            <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[20px] border-b border-white-faint text-right">Unit Price</th>
+                            <th class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase p-[20px] border-b border-white-faint text-right">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr class="border-b border-white-faint last:border-0 hover:bg-surface-alt transition-colors duration-600">
+                                <td class="p-[20px]">
+                                    <div class="flex items-center gap-[16px]">
+                                        <div class="w-[64px] h-[64px] bg-surface-alt border border-white-faint flex-shrink-0 overflow-hidden">
+                                            <img src="@item.ImageUrl" alt="@item.WatchName" class="w-full h-full object-cover" onerror="this.src='/images/placeholder.webp'" />
+                                        </div>
+                                        <div>
+                                            <p class="font-sans font-medium text-[14px] text-parchment mb-[2px]">@item.WatchName</p>
+                                            <p class="font-sans text-[11px] text-muted">@item.WatchBrand</p>
+                                            <p class="font-mono text-[10px] text-gold mt-[2px]">@item.WatchRef</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-[20px] text-center">
+                                    <span class="font-sans font-bold text-[14px] text-body">@item.Quantity</span>
+                                </td>
+                                <td class="p-[20px] text-right">
+                                    <span class="font-sans text-[14px] text-body">@item.UnitPriceFormatted</span>
+                                </td>
+                                <td class="p-[20px] text-right">
+                                    <span class="font-sans font-bold text-[14px] text-gold">@item.LineTotalFormatted</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Info Cards -->
+        <div class="flex flex-col gap-[24px]">
+
+            <!-- Customer Information -->
+            <div class="bg-surface border border-white-faint">
+                <div class="p-[24px] border-b border-white-faint">
+                    <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase">Customer</p>
+                </div>
+                <div class="p-[24px]">
+                    <div class="flex items-center gap-[16px] mb-[16px]">
+                        <div class="w-[48px] h-[48px] rounded-full bg-surface-alt border border-white-faint flex items-center justify-center">
+                            <span class="font-serif text-[18px] text-gold">@Model.CustomerName.Substring(0, 1).ToUpper()</span>
+                        </div>
+                        <div>
+                            <p class="font-sans font-medium text-[14px] text-parchment">@Model.CustomerName</p>
+                            <p class="font-sans text-[12px] text-muted">@Model.CustomerEmail</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="bg-surface border border-white-faint">
+                <div class="p-[24px] border-b border-white-faint">
+                    <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase">Shipping Address</p>
+                </div>
+                <div class="p-[24px]">
+                    <p class="font-sans text-[14px] text-parchment leading-relaxed">
+                        @Model.ShippingLine1<br />
+                        @if (!string.IsNullOrWhiteSpace(Model.ShippingLine2))
+                        {
+                            @Model.ShippingLine2<br />
+                        }
+                        @Model.ShippingCity, @Model.ShippingState @Model.ShippingPinCode
+                    </p>
+                    <div class="flex items-center gap-[8px] mt-[16px] pt-[16px] border-t border-white-faint">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A816C" stroke-width="1.5" stroke-linecap="square">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                        <span class="font-mono text-[12px] text-muted">@Model.ShippingPhone</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="bg-surface border border-white-faint">
+                <div class="p-[24px] border-b border-white-faint">
+                    <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase">Payment Information</p>
+                </div>
+                <div class="p-[24px] space-y-[16px]">
+                    <div class="flex items-center justify-between">
+                        <span class="font-sans text-[12px] text-muted">Method</span>
+                        @if (Model.IsPayOnDelivery)
+                        {
+                            <span class="font-sans font-bold text-[12px] text-parchment">Pay on Delivery</span>
+                        }
+                        else
+                        {
+                            <span class="font-sans font-bold text-[12px] text-gold">Online Payment</span>
+                        }
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-sans text-[12px] text-muted">Razorpay Order</span>
+                        <span class="font-mono text-[11px] text-body max-w-[200px] truncate" title="@Model.RazorpayOrderId">@(string.IsNullOrEmpty(Model.RazorpayOrderId) ? "—" : Model.RazorpayOrderId)</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-sans text-[12px] text-muted">Payment ID</span>
+                        <span class="font-mono text-[11px] text-body max-w-[200px] truncate" title="@Model.RazorpayPaymentId">@(string.IsNullOrEmpty(Model.RazorpayPaymentId) ? "—" : Model.RazorpayPaymentId)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="bg-surface border border-white-faint">
+                <div class="p-[24px] border-b border-white-faint">
+                    <p class="font-sans font-bold text-[10px] text-muted tracking-[2px] uppercase">Order Summary</p>
+                </div>
+                <div class="p-[24px] space-y-[16px]">
+                    <div class="flex items-center justify-between">
+                        <span class="font-sans text-[13px] text-muted">Subtotal</span>
+                        <span class="font-sans text-[13px] text-body">@Model.SubtotalFormatted</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-sans text-[13px] text-muted">Shipping</span>
+                        <span class="font-sans text-[13px] text-[#22C55E]">Free</span>
+                    </div>
+                    <div class="border-t border-white-faint pt-[16px] flex items-center justify-between">
+                        <span class="font-sans font-bold text-[15px] text-parchment">Total</span>
+                        <span class="font-serif text-[24px] text-gold">@Model.TotalFormatted</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            @if (Model.AllowedTransitions.Any(t => t == "Cancelled"))
+            {
+                <form method="post" action="/admin/orders/update-status/@Model.Id" onsubmit="return confirm('Are you sure you want to cancel this order? This action will restore stock.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="newStatus" value="Cancelled" />
+                    <button type="submit" class="w-full border border-danger text-danger font-sans font-bold text-[11px] tracking-[2.2px] uppercase px-[24px] py-[16px] hover:bg-[rgba(239,68,68,0.1)] transition-colors duration-600">
+                        Cancel Order
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+</div>

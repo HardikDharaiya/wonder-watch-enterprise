@@ -1,5 +1,5 @@
 # FILES.md — Wonder Watch Directory Atlas
-Last updated: 2026-05-07 (Session 27)
+Last updated: 2026-05-10 (Session 28 — Admin Orders Overhaul)
 
 
 ## Project Root
@@ -110,7 +110,8 @@ WonderWatch.Web/
 │   │   ├── EditWatch.cshtml   ← Admin edit watch form
 │   │   ├── Filters.cshtml     ← Brand CRUD + Price range config
 │   │   ├── Index.cshtml
-│   │   ├── Orders.cshtml
+│   │   ├── OrderDetail.cshtml ← Full order detail: timeline stepper, items, customer/payment info, status update
+│   │   ├── Orders.cshtml      ← Enhanced order list: KPI cards, status tabs, bulk actions, payment column
 │   │   ├── Reviews.cshtml
 │   │   ├── Settings.cshtml
 │   │   ├── ViewWatch.cshtml   ← Admin watch detail view

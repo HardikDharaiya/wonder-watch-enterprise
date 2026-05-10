@@ -1,5 +1,5 @@
 # COMMANDS.md — Wonder Watch Command Reference + Error Log
-Last updated: 2026-05-07 (Session 27) | Location: India (IST)
+Last updated: 2026-05-10 (Session 29) | Location: India (IST)
 
 ## Essential Setup Commands (Run once on new machine)
 
@@ -346,10 +346,18 @@ dotnet user-secrets list --project WonderWatch.Web
 - **Documentation**: Updated `MEMORY.md`, `COMMANDS.md`, `FILES.md`, `README.md` with Session 27 records. ✅
 
 ### Session 28 Final History - 2026-05-09
-- **Git Reset Execution**: Executed \git fetch origin\ and \git reset --hard origin/main\ to completely wipe locally uncommitted credential leaks from the source tree.
-- **User Secrets Initialized**: Executed \dotnet user-secrets init --project WonderWatch.Web\ (conceptually utilized the existing \UserSecretsId\).
-- **Admin Controller Update**: Multi-replaced \SaveSettings\ POST endpoint in \AdminController.cs\ to save directly to the User Secrets JSON file instead of \ppsettings.json\.
-- **Appsettings Replacement**: Stripped \ppsettings.json\ of any real credentials and updated \ppsettings.template.json\ to act as a secure reference structure.
-- **Documentation Synchronization**: Updated \MEMORY.md\, \README.md\, \COMMANDS.md\, \FILES.md\ mapping User Secrets execution.
-- \dotnet build WonderWatch.sln\ (0 Errors, pipeline validated).
+- **Git Reset Execution**: Executed `git fetch origin` and `git reset --hard origin/main` to completely wipe locally uncommitted credential leaks from the source tree.
+- **User Secrets Initialized**: Executed `dotnet user-secrets init --project WonderWatch.Web` (conceptually utilized the existing `UserSecretsId`).
+- **Admin Controller Update**: Multi-replaced `SaveSettings` POST endpoint in `AdminController.cs` to save directly to the User Secrets JSON file instead of `appsettings.json`.
+- **Appsettings Replacement**: Stripped `appsettings.json` of any real credentials and updated `appsettings.template.json` to act as a secure reference structure.
+- **Documentation Synchronization**: Updated `MEMORY.md`, `README.md`, `COMMANDS.md`, `FILES.md` mapping User Secrets execution.
+- `dotnet build WonderWatch.sln` (0 Errors, pipeline validated).
 
+### Session 29 Final History — 2026-05-10
+- **Admin Orders Enterprise Overhaul**: Backend + Frontend complete redesign of the Admin Orders management system. ✅
+- **AdminController.cs Enhanced**: Added `OrderDetail`, `UpdateOrderStatus`, `BulkUpdateStatus` actions, `GetAllowedTransitions` + `BuildStatusTimeline` helpers, and 4 new ViewModels. ✅
+- **Orders.cshtml Rewritten**: KPI summary cards, status filter tabs, payment method column, bulk status form, TempData notifications. ✅
+- **OrderDetail.cshtml Created**: Visual status timeline stepper, order items table, customer/shipping/payment info cards, status transition dropdown, cancel order action. ✅
+- `npm run build:css` ✅ (Tailwind CSS recompiled with new utility classes)
+- `dotnet build WonderWatch.Web --no-restore` ✅ (0 Errors, 10 pre-existing NuGet warnings)
+- **Documentation**: Updated `MEMORY.md`, `FILES.md`, `COMMANDS.md`, `task.md` with Session 29 records. ✅
