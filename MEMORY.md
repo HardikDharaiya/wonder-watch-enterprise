@@ -356,3 +356,25 @@ Status: STABLE — Admin Orders enterprise overhaul complete. Platform is produc
 - **CSS Rebuild**: Ran `npm run build:css` to compile all new Tailwind utility classes.
 - **Documentation**: Updated `MEMORY.md`, `FILES.md` to reflect new views and capabilities.
 - **Build**: `dotnet build` — 0 Errors.
+
+### Session 30 Summary — 2026-05-10 — Admin Orders Design Audit & Remediation
+- **Design Audit Execution**: Executed comprehensive design audit remediation for Admin Orders list (`Orders.cshtml`) and Order Detail (`OrderDetail.cshtml`) pages, fixing 8 critical/major issues and 8 minor/polish items.
+- **_AdminLayout.cshtml**: Refined shared CSS — tab-scroll gradient uses correct Void Black (`#0A0A0A`), `.admin-td` padding scales across 3 breakpoints (12px → 18px → 20px at md/xl).
+- **Orders.cshtml Remediation**:
+  - **C1 FIXED**: Reduced table `min-w` from 1100px → 900px; applied `.admin-td` responsive padding.
+  - **C3 FIXED**: Bulk actions bar changed from `md:flex-row` → `lg:flex-row`; dropdown `lg:w-[220px]`.
+  - **M2 FIXED**: KPI cards now use `.admin-kpi-card` / `.admin-kpi-value` shared classes.
+  - **M3 FIXED**: Title uses `.admin-heading` class for mobile-responsive font sizing (32px→48px).
+  - **M5 FIXED**: Status tabs have `pb-[8px]` breathing room + scroll detection with gradient fade hint.
+  - **P2 FIXED**: KPI cards have `hover:-translate-y-1` effect matching Dashboard.
+  - **P3 FIXED**: Price column switched from `font-sans` → `font-mono`.
+  - **P8 FIXED**: Added `aria-label` to all interactive elements (checkboxes, selects, tabs, links).
+- **OrderDetail.cshtml Remediation**:
+  - **C2 FIXED**: Timeline stepper wrapped in `overflow-x-auto` with `min-w-[480px]`; labels increased to `text-[10px] md:text-[11px]`.
+  - **M1 FIXED**: Container padding standardized to `p-[16px] md:p-[32px] lg:p-[48px]`.
+  - **M4 FIXED**: Grid changed to `lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]`.
+  - **M6 FIXED**: Thumbnails responsive `w-[48px] h-[48px] md:w-[64px] md:h-[64px]`; cell padding `p-[12px] md:p-[20px]`.
+  - **P6 FIXED**: Items table `min-w` reduced from 600px → 500px.
+  - **P8 FIXED**: Added `aria-label` to status dropdown and submit button.
+- **tailwind.config.js**: Registered `badge: '12px'` border-radius token; `rounded-badge` now a first-class design token replacing arbitrary `rounded-[12px]`.
+- **Build Verification**: `npm run build:css` — compiled in 488ms. `dotnet build` — 0 Errors, 11 pre-existing NuGet warnings.

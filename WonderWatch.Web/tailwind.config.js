@@ -28,6 +28,7 @@ module.exports = {
     borderRadius: {
       none: '0px',
       DEFAULT: '0px',
+      badge: '12px',
       full: '9999px'
     },
     fontFamily: {

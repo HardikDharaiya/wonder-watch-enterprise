@@ -62,9 +62,30 @@
             .admin-heading { font-size: 48px; margin-bottom: 16px; }
             .admin-header-wrap { margin-bottom: 48px; gap: 24px; }
         }
-        .admin-table-cell { padding: 12px; }
+        /* Responsive scrollable tabs */
+        .admin-tab-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+        }
+        .admin-tab-scroll::-webkit-scrollbar {
+            display: none; /* Safari/Chrome */
+        }
+        .admin-tab-scroll.has-scroll::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; right: 0;
+            width: 48px;
+            background: linear-gradient(to right, transparent, #0A0A0A);
+            pointer-events: none;
+        }
+
+        .admin-td { padding: 12px; }
         @@media (min-width: 768px) {
-            .admin-table-cell { padding: 24px; }
+            .admin-td { padding: 18px; }
+        }
+        @@media (min-width: 1280px) {
+            .admin-td { padding: 20px; }
         }
     </style>
 </head>
